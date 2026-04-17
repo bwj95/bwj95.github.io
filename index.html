@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Aura Digital | Elevate Your Brand</title>
+    <!-- Use Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav id="mainNav" class="glass-nav">
+        <div class="logo">Aura</div>
+        <button id="menuToggle" aria-label="Toggle Menu">
+            <span></span>
+            <span></span>
+        </button>
+    </nav>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenu" class="mobile-menu hidden">
+        <ul>
+            <li><a href="#home">Home</a></li>
+            <li><a href="#services">Services</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Hero Section -->
+        <section id="home" class="hero fade-in">
+            <h1 class="hero-title">Shaping Digital Futures</h1>
+            <p class="hero-subtitle">We craft stunning cross-platform experiences that drive real business growth.</p>
+            <button class="cta-button" onclick="window.location.href='#services'">Explore Services</button>
+        </section>
+
+        <!-- Services Section -->
+        <section id="services" class="services-section fade-in">
+            <h2 class="section-heading">Our Expertise</h2>
+            <div class="services-grid">
+                <div class="service-card reveal">
+                    <div class="service-icon">✦</div>
+                    <h3>UI/UX Design</h3>
+                    <p>Intuitive, beautiful interfaces designed to convert and delight users.</p>
+                </div>
+                <div class="service-card reveal">
+                    <div class="service-icon">⚡️</div>
+                    <h3>Web Development</h3>
+                    <p>High-performant, responsive web applications built with modern stacks.</p>
+                </div>
+                <div class="service-card reveal">
+                    <div class="service-icon">📱</div>
+                    <h3>Mobile Apps</h3>
+                    <p>Cross-platform mobile applications tailored for iOS and Android.</p>
+                </div>
+                <div class="service-card reveal">
+                    <div class="service-icon">📈</div>
+                    <h3>Growth Strategy</h3>
+                    <p>Data-driven marketing and SEO strategies to scale your business.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Call to Action -->
+        <section id="contact" class="contact-section fade-in">
+            <div class="glass-panel">
+                <h2>Ready to start?</h2>
+                <p>Let's build something extraordinary together.</p>
+                <form id="contactForm" class="contact-form">
+                    <input type="text" placeholder="Your Name" required aria-label="Your Name">
+                    <input type="email" placeholder="Your Email" required aria-label="Your Email">
+                    <button type="submit" class="submit-button">Send Message</button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; <span id="year"></span> Aura Digital. All rights reserved.</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
