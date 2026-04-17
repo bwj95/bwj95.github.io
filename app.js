@@ -85,15 +85,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Glass Nav background opacity on scroll
+    // Scroll Effects for Navigation
     const nav = document.getElementById('mainNav');
     window.addEventListener('scroll', () => {
-        if (window.scrollY > 50) {
-            nav.style.background = 'rgba(11, 15, 25, 0.85)';
-            nav.style.boxShadow = '0 4px 30px rgba(0, 0, 0, 0.1)';
+        if (window.scrollY > 20) {
+            nav.classList.add('scrolled');
         } else {
-            nav.style.background = 'rgba(11, 15, 25, 0.6)';
-            nav.style.boxShadow = 'none';
+            nav.classList.remove('scrolled');
         }
     });
 });
