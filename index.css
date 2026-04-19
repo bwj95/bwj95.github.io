@@ -7,16 +7,6 @@
 }
 
 :root {
-    /* Color Tokens - Default (Light Mode) */
-    --bg-color: #ffffff;
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
-    --accent-color: #6366f1;
-    --accent-glow: rgba(99, 102, 241, 0.2);
-    --glass-bg: rgba(255, 255, 255, 0.7);
-    --glass-border: rgba(0, 0, 0, 0.1);
-    --glass-blur: 15px;
-    
     /* Typography */
     --font-heading: 'Outfit', sans-serif;
     --font-body: 'Inter', sans-serif;
@@ -26,17 +16,125 @@
     --safe-bottom: env(safe-area-inset-bottom, 20px);
     --safe-left: env(safe-area-inset-left, 0px);
     --safe-right: env(safe-area-inset-right, 0px);
+
+    /* Glass blur constant */
+    --glass-blur: 20px;
 }
 
-@media (prefers-color-scheme: dark) {
-    :root {
-        --bg-color: #0b0f19;
-        --text-primary: #f8fafc;
-        --text-secondary: #94a3b8;
-        --accent-glow: rgba(99, 102, 241, 0.4);
-        --glass-bg: rgba(255, 255, 255, 0.03);
-        --glass-border: rgba(255, 255, 255, 0.1);
-    }
+/* =============================================
+   THEME: Water (Default — Dark Blue / Indigo)
+   ============================================= */
+body, body[data-theme="water"] {
+    /* Page */
+    --bg-color: #07091a;
+    --bg-mesh-1: rgba(99, 102, 241, 0.18);
+    --bg-mesh-2: rgba(139, 92, 246, 0.12);
+    --text-primary: #eef3ff;
+    --text-secondary: #94a3b8;
+    --accent-color: #6366f1;
+    --accent-glow: rgba(99, 102, 241, 0.35);
+    --glass-bg: rgba(255, 255, 255, 0.04);
+    --glass-border: rgba(139, 146, 255, 0.15);
+    --logo-gradient: linear-gradient(135deg, #c7d2fe, #818cf8);
+    --hero-orb-1: #6366f1;
+    --hero-orb-2: #818cf8;
+    /* Notepad */
+    --np-panel: rgba(17, 24, 60, 0.88);
+    --np-panel-soft: rgba(22, 30, 70, 0.96);
+    --np-field: #080c20;
+    --np-line: rgba(111, 138, 220, 0.2);
+    --np-text: #eef3ff;
+    --np-text-dim: #6d7a95;
+    --np-accent: #6366f1;
+    --np-accent-glow: rgba(99, 102, 241, 0.3);
+    --np-shadow: 0 28px 80px rgba(0, 0, 0, 0.55);
+}
+
+/* =============================================
+   THEME: Fire — Dark Amber / Orange
+   ============================================= */
+body[data-theme="fire"] {
+    /* Page */
+    --bg-color: #0f0600;
+    --bg-mesh-1: rgba(251, 113, 33, 0.18);
+    --bg-mesh-2: rgba(234, 88, 12, 0.12);
+    --text-primary: #fff2e8;
+    --text-secondary: #c4855a;
+    --accent-color: #f97316;
+    --accent-glow: rgba(249, 115, 22, 0.35);
+    --glass-bg: rgba(255, 150, 50, 0.05);
+    --glass-border: rgba(249, 115, 22, 0.18);
+    --logo-gradient: linear-gradient(135deg, #fed7aa, #fb923c);
+    --hero-orb-1: #f97316;
+    --hero-orb-2: #dc2626;
+    /* Notepad */
+    --np-panel: rgba(50, 18, 5, 0.90);
+    --np-panel-soft: rgba(60, 22, 8, 0.97);
+    --np-field: #0f0600;
+    --np-line: rgba(249, 115, 22, 0.2);
+    --np-text: #fff2e8;
+    --np-text-dim: #a06040;
+    --np-accent: #f97316;
+    --np-accent-glow: rgba(249, 115, 22, 0.3);
+    --np-shadow: 0 28px 80px rgba(0, 0, 0, 0.6);
+}
+
+/* =============================================
+   THEME: Leaf — Light Glassmorphic Green
+   ============================================= */
+body[data-theme="leaf"] {
+    /* Page */
+    --bg-color: #ecf7f0;
+    --bg-mesh-1: rgba(16, 185, 129, 0.12);
+    --bg-mesh-2: rgba(52, 211, 153, 0.08);
+    --text-primary: #0f2e20;
+    --text-secondary: #3d6b52;
+    --accent-color: #059669;
+    --accent-glow: rgba(5, 150, 105, 0.25);
+    --glass-bg: rgba(255, 255, 255, 0.55);
+    --glass-border: rgba(16, 185, 129, 0.2);
+    --logo-gradient: linear-gradient(135deg, #0f2e20, #059669);
+    --hero-orb-1: #059669;
+    --hero-orb-2: #34d399;
+    /* Notepad */
+    --np-panel: rgba(255, 255, 255, 0.78);
+    --np-panel-soft: rgba(240, 253, 247, 0.95);
+    --np-field: #f0fdf4;
+    --np-line: rgba(16, 185, 129, 0.18);
+    --np-text: #0f2e20;
+    --np-text-dim: #5a8a70;
+    --np-accent: #059669;
+    --np-accent-glow: rgba(5, 150, 105, 0.25);
+    --np-shadow: 0 28px 80px rgba(0, 0, 0, 0.12);
+}
+
+/* =============================================
+   THEME: Minion — Dark Gold / Cobalt
+   ============================================= */
+body[data-theme="minion"] {
+    /* Page */
+    --bg-color: #07091a;
+    --bg-mesh-1: rgba(234, 179, 8, 0.15);
+    --bg-mesh-2: rgba(234, 179, 8, 0.08);
+    --text-primary: #fef9c3;
+    --text-secondary: #a38b2a;
+    --accent-color: #eab308;
+    --accent-glow: rgba(234, 179, 8, 0.35);
+    --glass-bg: rgba(234, 179, 8, 0.04);
+    --glass-border: rgba(234, 179, 8, 0.18);
+    --logo-gradient: linear-gradient(135deg, #fef9c3, #eab308);
+    --hero-orb-1: #eab308;
+    --hero-orb-2: #ca8a04;
+    /* Notepad */
+    --np-panel: rgba(20, 17, 0, 0.90);
+    --np-panel-soft: rgba(28, 24, 2, 0.97);
+    --np-field: #09090a;
+    --np-line: rgba(234, 179, 8, 0.2);
+    --np-text: #fef9c3;
+    --np-text-dim: #8a6d10;
+    --np-accent: #eab308;
+    --np-accent-glow: rgba(234, 179, 8, 0.3);
+    --np-shadow: 0 28px 80px rgba(0, 0, 0, 0.6);
 }
 
 html, body {
@@ -50,9 +148,10 @@ body {
     color: var(--text-primary);
     font-family: var(--font-body);
     line-height: 1.6;
-    /* Apply safe areas globally to main structure */
     padding-left: var(--safe-left);
     padding-right: var(--safe-right);
+    /* Smooth theme transitions */
+    transition: background-color 0.5s ease, color 0.4s ease;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -63,12 +162,11 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Navigation - Glassmorphism & Safe Area */
 .glass-nav {
-    position: sticky; /* Changed to sticky as per request */
+    position: sticky;
     top: 0;
     width: 100%;
     z-index: 1000;
-    /* Respect notch on iPhone 16/17 */
-    padding-top: var(--safe-top); 
+    padding-top: var(--safe-top);
     padding-left: max(1.5rem, var(--safe-left));
     padding-right: max(1.5rem, var(--safe-right));
     padding-bottom: 1rem;
@@ -79,7 +177,7 @@ h1, h2, h3, h4, h5, h6 {
     backdrop-filter: blur(var(--glass-blur));
     -webkit-backdrop-filter: blur(var(--glass-blur));
     border-bottom: 1px solid var(--glass-border);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.4s ease;
 }
 
 .glass-nav.scrolled {
@@ -92,10 +190,11 @@ h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
     font-size: 1.5rem;
     font-weight: 800;
-    background: linear-gradient(135deg, #fff, #a5b4fc);
+    background: var(--logo-gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     letter-spacing: -0.5px;
+    transition: background 0.4s ease;
 }
 
 /* Mobile Menu Button */
@@ -186,12 +285,12 @@ main {
     position: relative;
     overflow: hidden;
     background-color: var(--bg-color);
-    /* Mesh Gradient Effect */
-    background-image: 
-        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
-        radial-gradient(at 100% 0%, rgba(165, 180, 252, 0.1) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.1) 0px, transparent 50%),
-        radial-gradient(at 0% 100%, rgba(165, 180, 252, 0.15) 0px, transparent 50%);
+    background-image:
+        radial-gradient(at 0% 0%, var(--bg-mesh-1) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, var(--bg-mesh-2) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, var(--bg-mesh-1) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, var(--bg-mesh-2) 0px, transparent 50%);
+    transition: background-color 0.5s ease, background-image 0.5s ease;
 }
 
 .hero-card {
@@ -204,7 +303,8 @@ main {
     max-width: 800px;
     width: 100%;
     z-index: 2;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+    transition: background 0.4s ease, border-color 0.4s ease;
 }
 
 /* Decorative Mesh Accents */
@@ -220,15 +320,17 @@ main {
 }
 
 .hero::before {
-    background: var(--accent-color);
+    background: var(--hero-orb-1);
     top: -200px;
     left: -200px;
+    transition: background 0.5s ease;
 }
 
 .hero::after {
-    background: #818cf8;
+    background: var(--hero-orb-2);
     bottom: -200px;
     right: -200px;
+    transition: background 0.5s ease;
 }
 
 .hero-title {
@@ -249,24 +351,104 @@ main {
 }
 
 /* Buttons */
+/* Keyframe: shimmer sweep left → right */
+@keyframes ctaShimmer {
+    0%   { transform: translateX(-100%) skewX(-15deg); }
+    100% { transform: translateX(250%)  skewX(-15deg); }
+}
+
+/* Keyframe: pulsing outer glow ring */
+@keyframes ctaGlowPulse {
+    0%, 100% { opacity: 0.55; transform: scale(1);    }
+    50%       { opacity: 0.85; transform: scale(1.06); }
+}
+
 .cta-button {
-    background: var(--accent-color);
-    color: #fff;
-    border: none;
-    padding: 1rem 2rem;
-    font-size: 1.125rem;
-    font-weight: 600;
-    border-radius: 100px;
+    position: relative;
+    overflow: hidden;
+    padding: 1rem 2.4rem;
+    font-size: 1.1rem;
+    font-weight: 700;
     font-family: var(--font-body);
-    box-shadow: 0 4px 20px var(--accent-glow);
+    letter-spacing: 0.03em;
+    border-radius: 100px;
     cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    color: #fff;
+    /* Frosted-glass tinted base */
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.22) 0%,
+        color-mix(in srgb, var(--accent-color) 60%, transparent) 100%
+    );
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--accent-color) 40%, transparent),
+        0 8px 24px color-mix(in srgb, var(--accent-color) 50%, transparent),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.25);
+    transition:
+        transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.25s ease,
+        border-color 0.25s ease;
+}
+
+/* Pulsing glow ring — sits behind the button */
+.cta-button::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: inherit;
+    background: transparent;
+    border: 2px solid color-mix(in srgb, var(--accent-color) 60%, transparent);
+    animation: ctaGlowPulse 2.4s ease-in-out infinite;
+    pointer-events: none;
+}
+
+/* Shimmer streak */
+.cta-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 45%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.55) 50%,
+        transparent 100%
+    );
+    transform: translateX(-100%) skewX(-15deg);
+    pointer-events: none;
+}
+
+.cta-button:hover {
+    transform: translateY(-4px) scale(1.04);
+    border-color: rgba(255, 255, 255, 0.55);
+    box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--accent-color) 60%, transparent),
+        0 16px 40px color-mix(in srgb, var(--accent-color) 65%, transparent),
+        0 4px 12px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.55),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Trigger shimmer sweep on hover */
+.cta-button:hover::before {
+    animation: ctaShimmer 0.65s ease forwards;
 }
 
 .cta-button:active {
-    transform: scale(0.95);
-    box-shadow: 0 2px 10px var(--accent-glow);
+    transform: translateY(-1px) scale(0.97);
+    box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--accent-color) 40%, transparent),
+        0 4px 12px color-mix(in srgb, var(--accent-color) 45%, transparent),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
+
 
 /* Services */
 .services-section {
@@ -290,20 +472,41 @@ main {
     border: 1px solid var(--glass-border);
     backdrop-filter: blur(var(--glass-blur));
     -webkit-backdrop-filter: blur(var(--glass-blur));
-    padding: 2.5rem 2rem;
+    padding: 0; /* Remove padding here, move it to header/body */
     border-radius: 24px;
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     cursor: pointer;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .service-card:hover {
-    transform: translateY(-12px) scale(1.03);
+    transform: translateY(-8px);
     border-color: var(--accent-color);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
 
 .service-card:active {
     transform: scale(0.98);
+}
+
+.card-header {
+    padding: 2.5rem 2rem;
+    position: relative;
+}
+
+.dropdown-icon {
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+    color: var(--text-secondary);
+    transition: transform 0.3s ease;
+}
+
+.service-card.expanded .dropdown-icon {
+    transform: rotate(180deg);
+    color: var(--accent-color);
 }
 
 .service-icon {
@@ -324,6 +527,57 @@ main {
 .service-card p {
     color: var(--text-secondary);
     font-size: 0.95rem;
+}
+
+.card-body {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: max-height 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
+    background: linear-gradient(180deg, rgba(99, 102, 241, 0.05) 0%, transparent 100%);
+    border-top: 1px solid rgba(99, 102, 241, 0.05);
+}
+
+.service-card.expanded .card-body {
+    max-height: 500px;
+    opacity: 1;
+}
+
+.card-content {
+    padding: 1.5rem 2rem 2.5rem 2rem;
+    transform: translateY(10px);
+    transition: transform 0.5s ease 0.1s;
+}
+
+.service-card.expanded .card-content {
+    transform: translateY(0);
+}
+
+.card-content p {
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.feature-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.feature-list li {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.feature-list li::before {
+    content: '→';
+    color: var(--accent-color);
+    font-weight: bold;
 }
 
 /* Contact / Call to Action */
@@ -429,5 +683,218 @@ footer {
     .contact-form {
         max-width: 500px;
         margin: 0 auto;
+    }
+}
+
+/* =============================================
+   Floating Notepad Component
+   ============================================= */
+.floating-notepad {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 360px;
+    height: 460px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: var(--np-shadow);
+    background: var(--np-panel);
+    border: 1px solid var(--np-line);
+    backdrop-filter: blur(25px) saturate(180%);
+    -webkit-backdrop-filter: blur(25px) saturate(180%);
+    transition: height 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+                width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+                border-radius 0.35s ease,
+                box-shadow 0.3s ease;
+}
+
+.floating-notepad.collapsed {
+    height: 42px;
+    width: 190px;
+    border-radius: 16px;
+}
+
+/* Only hide the clear/copy/minimize buttons when collapsed — keep theme buttons and eye visible */
+.floating-notepad.collapsed .notepad-btn.clear,
+.floating-notepad.collapsed .notepad-btn.copy,
+.floating-notepad.collapsed .notepad-btn.minimize-btn {
+    display: none;
+}
+
+/* Hide body and footer entirely when collapsed */
+.floating-notepad.collapsed .notepad-body,
+.floating-notepad.collapsed .notepad-footer {
+    display: none;
+}
+
+
+/* Slim down the header in collapsed mode */
+.floating-notepad.collapsed .notepad-header {
+    height: 42px;
+    padding: 0 0.6rem;
+    border-bottom: none;
+    justify-content: space-between;
+}
+
+.notepad-header {
+    padding: 0.6rem 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: grab;
+    background: var(--np-panel-soft);
+    border-bottom: 1px solid var(--np-line);
+    gap: 0.4rem;
+    height: 50px;
+    flex-shrink: 0;
+    transition: background 0.3s ease;
+}
+
+.notepad-header:active {
+    cursor: grabbing;
+}
+
+.notepad-header .header-group {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.notepad-body {
+    flex: 1;
+    background: var(--np-field);
+    padding: 1.25rem;
+    overflow: hidden;
+    transition: background 0.3s ease;
+}
+
+.notepad-body textarea {
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    border: none;
+    color: var(--np-text);
+    font-family: var(--font-body);
+    resize: none;
+    outline: none;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    transition: color 0.3s ease;
+}
+
+.notepad-body textarea::placeholder {
+    color: var(--np-text-dim);
+}
+
+.notepad-footer {
+    padding: 0.4rem 1rem;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    background: var(--np-panel-soft);
+    min-height: 28px;
+    flex-shrink: 0;
+    border-top: 1px solid var(--np-line);
+    transition: background 0.3s ease;
+}
+
+/* Notepad control buttons */
+.notepad-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: 1px solid var(--np-line);
+    background: transparent;
+    color: var(--np-text-dim);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    flex-shrink: 0;
+}
+
+.notepad-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--np-text);
+    border-color: var(--np-accent);
+}
+
+.notepad-btn.clear:hover {
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.4);
+}
+
+.notepad-btn.copy:hover {
+    background: rgba(34, 197, 94, 0.12);
+    color: #22c55e;
+    border-color: rgba(34, 197, 94, 0.4);
+}
+
+.notepad-btn.copy.copied {
+    background: rgba(34, 197, 94, 0.18);
+    color: #22c55e;
+    border-color: rgba(34, 197, 94, 0.5);
+}
+
+.notepad-btn.minimize-btn:hover {
+    background: rgba(99, 102, 241, 0.12);
+    color: var(--np-accent);
+    border-color: color-mix(in srgb, var(--np-accent) 60%, transparent);
+}
+
+/* Theme Switcher — buttons sit bare on the header bar */
+.theme-switcher {
+    display: flex;
+    gap: 4px;
+}
+
+.theme-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    transition: all 0.18s ease;
+    background: transparent;
+    color: var(--np-text-dim);
+    flex-shrink: 0;
+}
+
+.theme-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--np-text);
+}
+
+.theme-btn.active {
+    background: var(--np-accent);
+    color: white;
+    box-shadow: 0 0 8px var(--np-accent-glow);
+}
+
+/* Resize handles — all 4 corners */
+.gt-resizer {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    z-index: 1001;
+}
+
+.gt-nw { top: 0;    left: 0;  cursor: nwse-resize; }
+.gt-ne { top: 0;    right: 0; cursor: nesw-resize; }
+.gt-sw { bottom: 0; left: 0;  cursor: nesw-resize; }
+.gt-se { bottom: 0; right: 0; cursor: nwse-resize; }
+
+/* Mobile adjustment */
+@media (max-width: 600px) {
+    .floating-notepad {
+        width: calc(100vw - 2rem);
+        right: 1rem;
+        bottom: 1rem;
     }
 }

@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="index.css">
 </head>
-<body>
+<body data-theme="water">
     <!-- Navigation -->
     <nav id="mainNav" class="glass-nav">
         <div class="logo">Aura</div>
@@ -46,24 +46,84 @@
             <h2 class="section-heading">Our Expertise</h2>
             <div class="services-grid">
                 <div class="service-card reveal">
-                    <div class="service-icon">✦</div>
-                    <h3>UI/UX Design</h3>
-                    <p>Intuitive, beautiful interfaces designed to convert and delight users.</p>
+                    <div class="card-header">
+                        <div class="service-icon">✦</div>
+                        <h3>UI/UX Design</h3>
+                        <p>Intuitive, beautiful interfaces designed to convert and delight users.</p>
+                        <div class="dropdown-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-content">
+                            <p>Our design process focuses on user-centric principles, ensuring every interaction is meaningful and every visual is impactful.</p>
+                            <ul class="feature-list">
+                                <li>User Research & Analysis</li>
+                                <li>Interactive Prototyping</li>
+                                <li>Visual Identity Design</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
                 <div class="service-card reveal">
-                    <div class="service-icon">⚡️</div>
-                    <h3>Web Development</h3>
-                    <p>High-performant, responsive web applications built with modern stacks.</p>
+                    <div class="card-header">
+                        <div class="service-icon">⚡️</div>
+                        <h3>Web Development</h3>
+                        <p>High-performant, responsive web applications built with modern stacks.</p>
+                        <div class="dropdown-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-content">
+                            <p>We build scalable solutions using the latest technologies, prioritizing speed, security, and seamless user experiences.</p>
+                            <ul class="feature-list">
+                                <li>Next.js & React Apps</li>
+                                <li>E-commerce Solutions</li>
+                                <li>API Integrations</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
                 <div class="service-card reveal">
-                    <div class="service-icon">📱</div>
-                    <h3>Mobile Apps</h3>
-                    <p>Cross-platform mobile applications tailored for iOS and Android.</p>
+                    <div class="card-header">
+                        <div class="service-icon">📱</div>
+                        <h3>Mobile Apps</h3>
+                        <p>Cross-platform mobile applications tailored for iOS and Android.</p>
+                        <div class="dropdown-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-content">
+                            <p>Create powerful, native-feeling mobile experiences that reach your users wherever they are.</p>
+                            <ul class="feature-list">
+                                <li>iOS & Android Development</li>
+                                <li>App Store Optimization</li>
+                                <li>Maintenance & Support</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
                 <div class="service-card reveal">
-                    <div class="service-icon">📈</div>
-                    <h3>Growth Strategy</h3>
-                    <p>Data-driven marketing and SEO strategies to scale your business.</p>
+                    <div class="card-header">
+                        <div class="service-icon">📈</div>
+                        <h3>Growth Strategy</h3>
+                        <p>Data-driven marketing and SEO strategies to scale your business.</p>
+                        <div class="dropdown-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="card-content">
+                            <p>Accelerate your business with comprehensive growth plans designed to increase visibility and ROI.</p>
+                            <ul class="feature-list">
+                                <li>SEO & SEM Management</li>
+                                <li>Content Strategy</li>
+                                <li>Analytics & Funnel Optimization</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -86,6 +146,55 @@
     <footer>
         <p>&copy; <span id="year"></span> Aura Digital. All rights reserved.</p>
     </footer>
+
+    <!-- Floating Notepad -->
+    <div id="floatingNotepad" class="floating-notepad glass collapsed">
+        <div class="gt-resizer gt-nw" id="gtResizerNW"></div>
+        <div class="gt-resizer gt-ne" id="gtResizerNE"></div>
+        <div class="gt-resizer gt-sw" id="gtResizerSW"></div>
+        <div class="gt-resizer gt-se" id="gtResizerSE"></div>
+        <div class="notepad-header">
+            <div class="header-group">
+                <div class="theme-switcher">
+                    <button class="theme-btn water" onclick="setTheme('water')" title="Water">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/></svg>
+                    </button>
+                    <button class="theme-btn fire" onclick="setTheme('fire')" title="Fire">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+                    </button>
+                    <button class="theme-btn leaf" onclick="setTheme('leaf')" title="Leaf">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 3.5 1 9.2A7 7 0 0 1 11 20z"></path><path d="M7 20l4-7"></path></svg>
+                    </button>
+                    <button class="theme-btn minion" onclick="setTheme('minion')" title="Lightning">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="header-group">
+                <button class="notepad-btn copy" id="copyNotepadBtn" onclick="copyNotepad()" title="Copy to clipboard">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                </button>
+                <button class="notepad-btn clear" onclick="clearNotepad()" title="Clear">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><line x1="10" y1="11" x2="14" y2="15"/><line x1="14" y1="11" x2="10" y2="15"/></svg>
+                </button>
+                <!-- Minimize: shrinks notepad to a tiny floating dot -->
+                <button class="notepad-btn minimize-btn" id="minimizeNotepadBtn" onclick="minimizeNotepad()" title="Minimize">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </button>
+                <!-- Eye: open = content visible, closed = collapsed header only -->
+                <button class="notepad-btn toggle-btn" id="toggleNotepadBtn" onclick="toggleNotepad()" title="Toggle">
+                    <svg id="eyeOpen" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:none;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <svg id="eyeClosed" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                </button>
+            </div>
+        </div>
+        <div class="notepad-body">
+            <textarea id="notepadContent" placeholder="Notes..."></textarea>
+        </div>
+        <div class="notepad-footer">
+            <span id="saveStatus" style="font-size: 0.7rem; opacity: 0.5;"></span>
+        </div>
+    </div>
 
     <script src="app.js"></script>
 </body>
