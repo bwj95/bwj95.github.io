@@ -273,7 +273,7 @@ main {
     padding-bottom: calc(2rem + var(--safe-bottom));
 }
 
-/* Hero Section - Mesh Gradient Background */
+/* Hero Section */
 .hero {
     min-height: 90vh;
     display: flex;
@@ -284,13 +284,7 @@ main {
     padding: 2rem 1.5rem;
     position: relative;
     overflow: hidden;
-    background-color: var(--bg-color);
-    background-image:
-        radial-gradient(at 0% 0%, var(--bg-mesh-1) 0px, transparent 50%),
-        radial-gradient(at 100% 0%, var(--bg-mesh-2) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, var(--bg-mesh-1) 0px, transparent 50%),
-        radial-gradient(at 0% 100%, var(--bg-mesh-2) 0px, transparent 50%);
-    transition: background-color 0.5s ease, background-image 0.5s ease;
+    /* Background removed — particles canvas shows through */
 }
 
 .hero-card {
@@ -305,6 +299,70 @@ main {
     z-index: 2;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
     transition: background 0.4s ease, border-color 0.4s ease;
+    position: relative;
+    overflow: visible;
+}
+
+/* Electric pulse traveling around card perimeter */
+@keyframes perimeterPulse {
+    0%   { --pulse-angle: 0deg;   }
+    100% { --pulse-angle: 360deg; }
+}
+
+@property --pulse-angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+}
+
+.hero-card::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    padding: 2px;
+    background: conic-gradient(
+        from var(--pulse-angle),
+        transparent 0deg,
+        transparent 310deg,
+        var(--accent-color) 340deg,
+        #fff 350deg,
+        var(--accent-color) 355deg,
+        transparent 360deg
+    );
+    -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: perimeterPulse 3.5s linear infinite;
+    pointer-events: none;
+    z-index: 3;
+    filter: drop-shadow(0 0 8px var(--accent-color)) drop-shadow(0 0 20px var(--accent-color));
+}
+
+.hero-card::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: inherit;
+    background: conic-gradient(
+        from var(--pulse-angle),
+        transparent 0deg,
+        transparent 320deg,
+        color-mix(in srgb, var(--accent-color) 30%, transparent) 345deg,
+        transparent 360deg
+    );
+    -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    padding: 6px;
+    animation: perimeterPulse 3.5s linear infinite;
+    pointer-events: none;
+    z-index: 2;
+    filter: blur(8px);
 }
 
 /* Decorative Mesh Accents */
@@ -334,20 +392,27 @@ main {
 }
 
 .hero-title {
+    font-family: var(--font-heading);
+    font-style: normal;
     font-size: clamp(2.5rem, 8vw, 4.5rem);
     line-height: 1.1;
+    letter-spacing: -0.02em;
     margin-bottom: 1.5rem;
     background: linear-gradient(135deg, var(--text-primary) 30%, var(--accent-color) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    background-clip: text;
     font-weight: 800;
 }
 
 .hero-subtitle {
+    font-family: var(--font-body);
+    font-style: normal;
     font-size: 1.125rem;
+    line-height: 1.7;
     color: var(--text-secondary);
     max-width: 500px;
-    margin-bottom: 2.5rem;
+    margin: 0 auto 2.5rem;
 }
 
 /* Buttons */
@@ -453,12 +518,59 @@ main {
 /* Services */
 .services-section {
     padding: 4rem 1.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 .section-heading {
     text-align: center;
     font-size: 2rem;
     margin-bottom: 3rem;
+}
+
+/* Premium Services heading block */
+.services-heading-block {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.services-title {
+    font-family: var(--font-heading);
+    font-size: clamp(2.4rem, 6vw, 3.8rem);
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, var(--text-primary) 30%, var(--accent-color) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0;
+}
+
+.services-tagline {
+    font-family: var(--font-body);
+    font-size: clamp(0.9rem, 2vw, 1.1rem);
+    color: var(--text-secondary);
+    letter-spacing: 0.04em;
+    opacity: 0.75;
+    margin: 0;
+}
+
+.ground-symbol {
+    color: var(--accent-color);
+    opacity: 0.7;
+    margin-top: 0.25rem;
+    filter: drop-shadow(0 0 6px var(--accent-color));
+    animation: groundPulse 2.5s ease-in-out infinite;
+}
+
+@keyframes groundPulse {
+    0%, 100% { opacity: 0.5; filter: drop-shadow(0 0 4px var(--accent-color)); }
+    50%      { opacity: 1;   filter: drop-shadow(0 0 12px var(--accent-color)); }
 }
 
 .services-grid {
@@ -468,10 +580,12 @@ main {
 }
 
 .service-card {
-    background: var(--glass-bg);
+    background: var(--bg-color);
     border: 1px solid var(--glass-border);
     backdrop-filter: blur(var(--glass-blur));
     -webkit-backdrop-filter: blur(var(--glass-blur));
+    position: relative;
+    z-index: 2; /* Force layer above the laser */
     padding: 0; /* Remove padding here, move it to header/body */
     border-radius: 24px;
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -479,6 +593,12 @@ main {
     overflow: hidden;
     display: flex;
     flex-direction: column;
+}
+
+.service-card.powered {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 35px color-mix(in srgb, var(--accent-color) 45%, transparent);
+    transform: translateY(-4px);
 }
 
 .service-card:hover {
@@ -512,9 +632,13 @@ main {
 .service-icon {
     font-size: 2.5rem;
     margin-bottom: 1rem;
-    display: inline-block;
-    padding: 1rem;
-    background: rgba(99, 102, 241, 0.1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    padding: 0;
+    background: color-mix(in srgb, var(--accent-color) 12%, transparent);
     border-radius: 16px;
     color: var(--accent-color);
 }
@@ -580,66 +704,194 @@ main {
     font-weight: bold;
 }
 
-/* Contact / Call to Action */
-.contact-section {
-    padding: 4rem 1.5rem;
+/* =============================================
+   CTA / Contact — Terminal-style footer
+   ============================================= */
+.contact-cta {
+    padding: 5rem 1.5rem 3rem;
+    text-align: center;
+    position: relative;
+    /* overflow: hidden removed: Allows the ambient light rays to cascade naturally into the section below without creating a hard horizontal cutoff edge. */
 }
 
-.glass-panel {
-    background: linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
-    border: 1px solid var(--glass-border);
-    border-radius: 24px;
+.cta-terminal {
+    max-width: 680px;
+    margin: 0 auto;
     padding: 2.5rem 2rem;
+    border-radius: 28px;
+    text-align: center;
+    background: var(--bg-color); /* completely solid fallback */
+    background:
+        linear-gradient(180deg,
+            color-mix(in srgb, var(--bg-color) 85%, var(--accent-color) 15%) 0%,
+            var(--bg-color) 100%);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    position: relative;
+    z-index: 2; /* explicitly above the laser */
+}
+
+/* Ambient glow & light beam behind the terminal panel */
+.cta-terminal::before {
+    content: '';
+    position: absolute;
+    top: -40px;
+    left: -40px;
+    right: -40px;
+    bottom: -200px; /* Stretch deep below the card */
+    background: 
+        /* The main diffuse aura around the box */
+        radial-gradient(ellipse at 50% 60%, color-mix(in srgb, var(--accent-color) 12%, transparent) 0%, transparent 65%),
+        /* A focused pillar of light extending naturally downwards */
+        linear-gradient(180deg, transparent 40%, color-mix(in srgb, var(--accent-color) 15%, transparent) 60%, transparent 100%);
+    filter: blur(28px);
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* Secondary concentrated ray of light cascading from the button specifically */
+.cta-terminal::after {
+    content: '';
+    position: absolute;
+    bottom: -160px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70%;
+    height: 220px;
+    background: conic-gradient(from 140deg at 50% 0%, transparent 0deg, color-mix(in srgb, var(--accent-color) 25%, transparent) 40deg, transparent 80deg);
+    filter: blur(35px);
+    pointer-events: none;
+    z-index: -2;
+}
+
+@keyframes rgbShadow {
+    0%   { box-shadow: 0 0 25px rgba(255, 0, 85, 0.5); border-color: rgba(255, 0, 85, 0.8); }
+    25%  { box-shadow: 0 0 25px rgba(170, 0, 255, 0.5); border-color: rgba(170, 0, 255, 0.8); }
+    50%  { box-shadow: 0 0 25px rgba(0, 170, 255, 0.5); border-color: rgba(0, 170, 255, 0.8); }
+    75%  { box-shadow: 0 0 25px rgba(0, 255, 170, 0.5); border-color: rgba(0, 255, 170, 0.8); }
+    100% { box-shadow: 0 0 25px rgba(255,  0, 85, 0.5); border-color: rgba(255,  0, 85, 0.8); }
+}
+
+.cta-terminal.powered {
+    animation: rgbShadow 4s linear infinite;
+    transition: box-shadow 0.6s ease;
+}
+
+.cta-heading {
+    font-family: var(--font-heading);
+    font-size: clamp(2.2rem, 6vw, 3.5rem);
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--text-primary) 20%, var(--accent-color) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.02em;
+    text-align: center;
+    width: 100%;
+}
+
+.cta-subtext {
+    font-family: var(--font-body);
+    font-size: 1.15rem;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
     text-align: center;
 }
 
-.glass-panel h2 {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
+/* Glow intensify on hover */
+@keyframes glowPulse {
+    0%, 100% { box-shadow: 0 0 4px color-mix(in srgb, var(--accent-color) 60%, transparent); }
+    50%      { box-shadow: 0 0 6px color-mix(in srgb, var(--accent-color) 80%, transparent),
+                           0 0 8px color-mix(in srgb, var(--accent-color) 40%, transparent); }
 }
 
-.glass-panel p {
-    color: var(--text-secondary);
-    margin-bottom: 2rem;
+/* The ultra-appealing email button */
+.email-glow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    text-decoration: none;
+    font-family: var(--font-heading);
+    font-size: clamp(1.2rem, 3vw, 1.6rem);
+    font-weight: 700;
+    padding: 1.2rem 2.5rem;
+    border-radius: 100px;
+    color: #ffffff;
+    background: linear-gradient(135deg, var(--accent-color), color-mix(in srgb, var(--accent-color) 50%, #000));
+    border: 1px solid color-mix(in srgb, var(--accent-color) 40%, #fff);
+    box-shadow: 0 0 4px color-mix(in srgb, var(--accent-color) 40%, transparent);
+    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    position: relative;
+    overflow: hidden;
 }
 
-.contact-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+/* Internal glare/shine effect */
+.email-glow::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 50%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transform: skewX(-20deg);
+    transition: left 0.6s ease;
 }
 
-.contact-form input {
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid var(--glass-border);
-    padding: 1rem;
-    border-radius: 12px;
-    color: var(--text-primary);
+.email-glow:hover {
+    transform: translateY(-4px) scale(1.02);
+    animation: glowPulse 2s ease-in-out infinite;
+    color: #ffffff;
+}
+
+.email-glow:hover::before {
+    left: 200%;
+}
+
+.email-glow:active {
+    transform: scale(0.98);
+}
+
+.email-glow svg {
+    flex-shrink: 0;
+    stroke-width: 2.5px;
+}
+
+/* Service card website link */
+.card-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 1.25rem;
+    padding: 0.5rem 1.1rem;
     font-family: var(--font-body);
-    font-size: 1rem;
-    outline: none;
-    transition: border-color 0.3s ease;
-}
-
-.contact-form input:focus {
-    border-color: var(--accent-color);
-}
-
-.submit-button {
-    background: var(--text-primary);
-    color: var(--bg-color);
-    border: none;
-    padding: 1rem;
-    border-radius: 12px;
+    font-size: 0.85rem;
     font-weight: 600;
-    font-size: 1rem;
-    font-family: var(--font-body);
-    cursor: pointer;
-    transition: opacity 0.2s ease;
+    text-decoration: none;
+    color: var(--accent-color);
+    border: 1px solid color-mix(in srgb, var(--accent-color) 35%, transparent);
+    border-radius: 100px;
+    background: color-mix(in srgb, var(--accent-color) 8%, transparent);
+    transition: all 0.25s ease;
 }
 
-.submit-button:active {
-    opacity: 0.8;
+.card-link:hover {
+    background: color-mix(in srgb, var(--accent-color) 18%, transparent);
+    border-color: var(--accent-color);
+    box-shadow: 0 0 16px color-mix(in srgb, var(--accent-color) 30%, transparent);
+    transform: translateY(-2px);
+}
+
+.card-link:active {
+    transform: scale(0.97);
+}
+
+.card-link svg {
+    flex-shrink: 0;
 }
 
 /* Footer */
@@ -651,7 +903,170 @@ footer {
     border-top: 1px solid var(--glass-border);
 }
 
-/* Animations (Intersection Observer Targets) */
+/* =============================================
+   Learn More Section
+   ============================================= */
+.learn-more-section {
+    padding: 3rem 1.5rem 4rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.learn-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border-radius: 28px;
+    padding: 2.5rem 2rem;
+    text-align: center;
+}
+
+.knowledge-quote {
+    position: relative;
+    font-family: var(--font-heading);
+    font-size: clamp(1.15rem, 3vw, 1.5rem);
+    font-weight: 600;
+    font-style: italic;
+    line-height: 1.6;
+    color: var(--text-primary);
+    margin: 0;
+    padding: 0 1rem;
+}
+
+.quote-mark {
+    font-size: 3.5rem;
+    line-height: 0;
+    vertical-align: -0.35em;
+    margin-right: 4px;
+    font-style: normal;
+    background: linear-gradient(135deg, var(--accent-color), color-mix(in srgb, var(--accent-color) 60%, #fff));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.knowledge-quote cite {
+    display: block;
+    margin-top: 0.75rem;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    font-weight: 400;
+    font-style: normal;
+    color: var(--text-secondary);
+}
+
+.learn-divider {
+    width: 60px;
+    height: 2px;
+    margin: 2rem auto;
+    background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+    border-radius: 2px;
+}
+
+.learn-heading {
+    font-family: var(--font-heading);
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 1.25rem;
+}
+
+.learn-links {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 0;
+}
+
+.learn-links li a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0.55rem 1.1rem;
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-decoration: none;
+    color: var(--text-primary);
+    border: 1px solid var(--glass-border);
+    border-radius: 100px;
+    background: color-mix(in srgb, var(--accent-color) 5%, transparent);
+    transition: all 0.25s ease;
+}
+
+.learn-links li a:hover {
+    color: var(--accent-color);
+    border-color: var(--accent-color);
+    background: color-mix(in srgb, var(--accent-color) 14%, transparent);
+    box-shadow: 0 0 14px color-mix(in srgb, var(--accent-color) 25%, transparent);
+    transform: translateY(-2px);
+}
+
+.learn-links li a svg {
+    flex-shrink: 0;
+    color: var(--accent-color);
+}
+
+/* =============================================
+   Advanced Animations & Layers
+   ============================================= */
+
+/* Canvas Particle System Layer */
+.bg-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;         /* Under everything else */
+    opacity: 0.45;
+    pointer-events: none;
+}
+
+/* Make sure main content is above canvas */
+main, nav, footer, .floating-notepad {
+    position: relative;
+    z-index: 10;
+}
+
+/* Dynamic Power Line Overlay */
+.blueprint-svg-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%; /* Will scale via JS */
+    pointer-events: none;
+    z-index: -1; /* Confined to bottom of main's stacking context */
+    overflow: visible;
+}
+
+.power-line-svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.dynamic-power-path {
+    fill: none;
+    stroke: var(--accent-color);
+    stroke-width: 5px;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: drop-shadow(0 0 8px var(--accent-color)) drop-shadow(0 0 24px var(--accent-color));
+}
+
+/* Lottie Container */
+.lottie-container {
+    display: none;
+}
+
+/* =============================================
+   Animations (Intersection Observer)
+   ============================================= */
 .fade-in {
     opacity: 0;
     transform: translateY(20px);
@@ -674,15 +1089,16 @@ footer {
     transform: translateY(0);
 }
 
-/* Responsive breakpoint for Tablets+ */
+/* =============================================
+   Responsive: Tablets+ (2×2 grid)
+   ============================================= */
 @media (min-width: 768px) {
     .services-grid {
         grid-template-columns: repeat(2, 1fr);
     }
-    
-    .contact-form {
-        max-width: 500px;
-        margin: 0 auto;
+
+    .cta-terminal {
+        padding: 4rem 3rem;
     }
 }
 
