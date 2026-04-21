@@ -59,10 +59,19 @@ document.addEventListener('DOMContentLoaded', () => {
         observer.observe(el);
     });
 
-    // Service Card Expansion Logic
+    // Service Card Logic
     const serviceCards = document.querySelectorAll('.service-card');
     serviceCards.forEach(card => {
         const header = card.querySelector('.card-header');
+        
+        // 1. Specular Mouse Glare
+        card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+            card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+        });
+
+        // 2. Expansion Logic
         if (header) {
             header.addEventListener('click', () => {
                 const isExpanded = card.classList.contains('expanded');
@@ -264,26 +273,71 @@ function initCanvasParticles() {
     
     let width, height;
     const particles = [];
-    const numParticles = 200; // Fewer particles for better performance and visual clarity
+    const numParticles = 200; 
     
     // Mouse tracking
-    const mouse = { x: -1000, y: -1000 };
-    window.addEventListener('mousemove', (e) => {
-        mouse.x = e.clientX;
-        mouse.y = e.clientY;
-    });
-    window.addEventListener('touchmove', (e) => {
-        if (e.touches[0]) {
-            mouse.x = e.touches[0].clientX;
-            mouse.y = e.touches[0].clientY;
+    const mouse = { x: -1000, y: -1000, isOverCard: false };
+    
+    function updateMouseContext(e) {
+        const x = e.clientX || (e.touches && e.touches[0].clientX);
+        const y = e.clientY || (e.touches && e.touches[0].clientY);
+        
+        if (x !== undefined && y !== undefined) {
+            mouse.x = x;
+            mouse.y = y;
+            
+            // Check if hovering over anything that looks like a card, nav, or terminal
+            const target = document.elementFromPoint(x, y);
+            mouse.isOverCard = !!(target && target.closest('.service-card, .hero-card, .cta-terminal, .learn-card, .floating-notepad, .glass-nav'));
         }
-    }, { passive: true });
+    }
+
+    window.addEventListener('mousemove', updateMouseContext);
+    window.addEventListener('touchmove', updateMouseContext, { passive: true });
     
     // Reset mouse when leaving
     window.addEventListener('mouseout', () => {
         mouse.x = -1000;
         mouse.y = -1000;
+        mouse.isOverCard = false;
     });
+
+    // Generic Explosion Trigger
+    function triggerExplosion(cX, cY) {
+        // 1. Forceful push on existing dots (Scatter effect)
+        particles.forEach(p => {
+            const dx = p.x - cX;
+            const dy = p.y - cY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const forceRadius = 400;
+            
+            if (dist < forceRadius) {
+                const force = (forceRadius - dist) / forceRadius;
+                const angle = Math.atan2(dy, dx);
+                // Heavier impulse kick for the scatter
+                p.vx += Math.cos(angle) * force * 35; 
+                p.vy += Math.sin(angle) * force * 35;
+
+                // INSTANTLY REVERT to original color on explosion
+                p.color = null;
+                p.explosionRevertTimer = 80; // Keep original color while flying away (~1.3s)
+            }
+        });
+    }
+
+    // Interaction Listeners
+    window.addEventListener('mousedown', (e) => {
+        // Check if user clicked a link or button to avoid annoying UX
+        if (e.target.closest('button, a, textarea, input')) return;
+        triggerExplosion(e.clientX, e.clientY);
+    });
+
+    window.addEventListener('touchstart', (e) => {
+        if (e.target.closest('button, a, textarea, input')) return;
+        if (e.touches[0]) {
+            triggerExplosion(e.touches[0].clientX, e.touches[0].clientY);
+        }
+    }, { passive: true });
 
     function resize() {
         width = canvas.width = window.innerWidth;
@@ -292,7 +346,7 @@ function initCanvasParticles() {
     window.addEventListener('resize', resize);
     resize();
 
-    // Init particles with random positions and velocities
+    // Init base particles
     for (let i = 0; i < numParticles; i++) {
         particles.push({ 
             x: Math.random() * width, 
@@ -305,52 +359,75 @@ function initCanvasParticles() {
     }
 
     function animate() {
-        // Clear canvas with slight trailing effect
         ctx.clearRect(0, 0, width, height);
         
         const style = getComputedStyle(document.body);
         const rawAccent = style.getPropertyValue('--accent-color').trim() || '#5b6cf9';
         
-        // Brighter glow setups
-        ctx.fillStyle = rawAccent;
-        ctx.shadowColor = rawAccent;
-        ctx.shadowBlur = 18; // Increased glow
-        
         particles.forEach(particle => {
-            // Mouse interaction logic
             const dx = mouse.x - particle.x;
             const dy = mouse.y - particle.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            const maxDist = 250;
+            const maxDist = 5000; 
+            const safeRadius = 0; 
+
+            // Handle luminosity & glow accumulation
+            if (particle.explosionRevertTimer > 0) {
+                particle.explosionRevertTimer--;
+                particle.packedTicks = 0;
+            } else if (!mouse.isOverCard && dist < 120) {
+                 particle.packedTicks = (particle.packedTicks || 0) + 1;
+            } else {
+                particle.packedTicks = 0;
+            }
+
+            // Brighter when close, darker when far (Luminosity via alpha)
+            const visibility = Math.min(1, Math.max(0.1, 1 - (dist / 1200)));
+            ctx.globalAlpha = visibility;
+
+            const activeColor = rawAccent; 
+            ctx.fillStyle = activeColor;
+            ctx.shadowColor = activeColor;
             
-            // If near mouse, attract to mouse. Otherwise, drift.
-            if (dist < maxDist) {
-                const force = (maxDist - dist) / maxDist;
-                // Move towards mouse
-                particle.vx += (dx / dist) * force * 0.4;
-                particle.vy += (dy / dist) * force * 0.4;
+            const glowBonus = Math.min(50, (particle.packedTicks || 0) / 3);
+            
+            // Only chase the mouse if NOT over a card
+            if (!mouse.isOverCard) {
+                // Blend between "Chase" and "Swirl" based on proximity
+                // proximity = 1.0 when at center, 0.0 when 12px+ away
+                const proximity = Math.min(1, Math.max(0, (12 - dist) / 12));
                 
-                // Add an extra intense glow when near the mouse
-                ctx.shadowBlur = 25; 
+                // 1. CHASE: Extremely lazy attraction
+                const pullStrength = 0.05 * (1 - proximity) + 0.01 * proximity;
+                const pullForce = Math.max(0.02, (maxDist - dist) / maxDist) * pullStrength;
+                
+                if (dist > 0.1) {
+                    particle.vx += (dx / dist) * pullForce;
+                    particle.vy += (dy / dist) * pullForce;
+
+                    // 2. SWIRL: Extremely tight orbit (only in the last 12px)
+                    const swirlStrength = 1.8 * proximity;
+                    particle.vx += (dy / dist) * swirlStrength;
+                    particle.vy += (-dx / dist) * swirlStrength;
+                }
+
+                ctx.shadowBlur = 18 + glowBonus; 
             } else {
                 ctx.shadowBlur = 12;
             }
+            // Friction/damping — particles drift farther when mouse is over a card
+            const friction = mouse.isOverCard ? 0.985 : 0.96;
+            particle.vx *= friction;
+            particle.vy *= friction;
             
-            // Friction/damping to prevent infinite acceleration
-            particle.vx *= 0.96;
-            particle.vy *= 0.96;
-            
-            // Add continuous random gentle drift
             particle.x += particle.vx + (Math.sin(Date.now() / 1000 + particle.size) * particle.baseSpeed);
             particle.y += particle.vy + (Math.cos(Date.now() / 1000 + particle.size) * particle.baseSpeed);
             
-            // Wrap around screen edges
             if (particle.x < 0) particle.x = width;
             if (particle.x > width) particle.x = 0;
             if (particle.y < 0) particle.y = height;
             if (particle.y > height) particle.y = 0;
             
-            // Draw particle
             ctx.beginPath();
             ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
             ctx.fill();
