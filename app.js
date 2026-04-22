@@ -33,6 +33,32 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Intercept CTA clicks for shine animation
+    document.querySelectorAll('.ghost-button, .service-cta, .hero-cta').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const href = btn.getAttribute('href');
+            if (href && href !== '#') {
+                e.preventDefault(); // Stop immediate navigation
+                btn.classList.add('clicked-shine');
+                
+                // Navigate after the animation plays
+                setTimeout(() => {
+                    if (btn.getAttribute('target') === '_blank') {
+                        window.open(href, '_blank');
+                    } else {
+                        window.location.href = href;
+                    }
+                    // Remove class in case they come back to the page
+                    btn.classList.remove('clicked-shine');
+                }, 500);
+            } else {
+                // If it's a dummy link, just shine
+                btn.classList.add('clicked-shine');
+                setTimeout(() => btn.classList.remove('clicked-shine'), 500);
+            }
+        });
+    });
+
     // Intersection Observer for scroll animations
     const observerOptions = {
         root: null,
@@ -100,8 +126,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Initialize notepad, theme, and advanced animations on load
-    setTheme(localStorage.getItem('aura-theme') || 'water');
+    setTheme(localStorage.getItem('aura-theme') || 'dark');
     initNotepad();
+    initQuotes();
     if (typeof gsap !== 'undefined' && typeof lottie !== 'undefined') {
         initAdvancedAnimations();
     }
@@ -113,6 +140,30 @@ document.addEventListener('DOMContentLoaded', () => {
 function initAdvancedAnimations() {
     gsap.registerPlugin(ScrollTrigger);
 
+    // 0. Hero Fade Out
+    gsap.to('.hero-content', {
+        opacity: 0,
+        y: -100,
+        scrollTrigger: {
+            trigger: '.hero',
+            start: 'top top',
+            end: '50% top',
+            scrub: true
+        }
+    });
+
+    // 0.5. Services Heading Fade In
+    gsap.from('.services-heading-block', {
+        opacity: 0,
+        y: 50,
+        scrollTrigger: {
+            trigger: '#services',
+            start: 'top 65%',
+            end: 'top 20%',
+            scrub: true
+        }
+    });
+
     // 1. Digital Circuit Lines (Trigger CSS Keyframes)
     ScrollTrigger.create({
         trigger: '#services',
@@ -122,121 +173,21 @@ function initAdvancedAnimations() {
         }
     });
 
-    // 2. Dynamic Trailing Laser SVG
-    const blueprintContainer = document.getElementById('blueprintContainer');
-    const svg = document.getElementById('blueprintSvg');
-    const cards = gsap.utils.toArray('.service-card');
-    const terminal = document.querySelector('.cta-terminal');
-       if (svg && cards.length && terminal) {
-        let powerPath;
-        let laserAnim;
-        
-        function drawDynamicLine() {
-            svg.innerHTML = '';
-            
-            powerPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            powerPath.classList.add('dynamic-power-path');
-            
-            const mainRect = document.querySelector('main').getBoundingClientRect();
-            
-            const getRelativeCenter = (el) => {
-                const rect = el.getBoundingClientRect();
-                return {
-                    x: rect.left + rect.width / 2 - mainRect.left,
-                    y: rect.top + rect.height / 2 - mainRect.top
-                };
-            };
-            
-            // Start the laser from the bottom of the ground symbol
-            const groundSymbol = document.querySelector('.ground-symbol');
-            let currentX, currentY;
-            if (groundSymbol) {
-                const gsRect = groundSymbol.getBoundingClientRect();
-                currentX = gsRect.left + gsRect.width / 2 - mainRect.left;
-                currentY = gsRect.top + gsRect.height - mainRect.top;
-            } else {
-                const gridCoords = document.querySelector('.services-grid').getBoundingClientRect();
-                currentX = mainRect.width / 2;
-                currentY = gridCoords.top - mainRect.top - 40;
-            }
-            
-            let d = `M ${currentX} ${currentY} `;
-            
-            let cumulativeLength = 0;
-            const triggerPoints = [];
-            
-            // Snake through each card
-            cards.forEach((card) => {
-                const pt = getRelativeCenter(card.querySelector('.card-header'));
-                d += `L ${pt.x} ${pt.y} `;
-                
-                // Track mathematically exactly how far down the path this card resides
-                const segmentLength = Math.sqrt(Math.pow(pt.x - currentX, 2) + Math.pow(pt.y - currentY, 2));
-                cumulativeLength += segmentLength;
-                
-                triggerPoints.push({
-                    card: card,
-                    triggerLength: cumulativeLength
-                });
-                
-                currentX = pt.x;
-                currentY = pt.y;
-            });
-            
-            // Connect the final trailing segment into the CTA terminal matrix
-            const targetPt = getRelativeCenter(terminal);
-            d += `L ${targetPt.x} ${targetPt.y}`;
-            const finalSegmentLength = Math.sqrt(Math.pow(targetPt.x - currentX, 2) + Math.pow(targetPt.y - currentY, 2));
-            cumulativeLength += finalSegmentLength;
-            const terminalTriggerLength = cumulativeLength;
-            
-            powerPath.setAttribute('d', d);
-            svg.appendChild(powerPath);
-            
-            // Enforce draw logic
-            const length = powerPath.getTotalLength();
-            powerPath.style.strokeDasharray = length;
-            powerPath.style.strokeDashoffset = length;
-            
-            if (laserAnim) laserAnim.kill();
-            
-            // Map the SVG rendering to scroll
-            laserAnim = gsap.to(powerPath, {
-                strokeDashoffset: 0,
-                ease: 'none',
-                scrollTrigger: {
-                    trigger: '#services',
-                    start: 'top 50%',
-                    endTrigger: '#contact',
-                    end: 'center center',
-                    scrub: 1,
-                    onUpdate: (self) => {
-                        // Dynamically calculate exactly how many pixels of the laser are currently visible
-                        const currentDrawLength = self.progress * length;
-                        
-                        // Fire the glows strictly when the laser beam passes the card's center coordinate!
-                        triggerPoints.forEach(point => {
-                            if (currentDrawLength >= point.triggerLength - 30) {
-                                point.card.classList.add('powered');
-                            } else {
-                                point.card.classList.remove('powered');
-                            }
-                        });
-                        
-                        // Trigger the terminal
-                        if (currentDrawLength >= terminalTriggerLength - 30) {
-                            terminal.classList.add('powered');
-                        } else {
-                            terminal.classList.remove('powered');
-                        }
-                    }
-                }
-            });
-        }
-        
-        drawDynamicLine();
-        window.addEventListener('resize', () => { setTimeout(drawDynamicLine, 100); });
-    } 
+    // 2. Individual Service Row Fades
+    const serviceRows = gsap.utils.toArray('.service-row');
+    serviceRows.forEach(row => {
+        gsap.from(row, {
+            scrollTrigger: {
+                trigger: row,
+                start: 'top 85%',
+                toggleActions: 'play none none reverse'
+            },
+            y: 50,
+            opacity: 0,
+            duration: 0.8,
+            ease: 'power3.out'
+        });
+    });
 
     // 3. Lottie Framework
     const lottieContainer = document.getElementById('lottieContainer');
@@ -273,7 +224,7 @@ function initCanvasParticles() {
     
     let width, height;
     const particles = [];
-    const numParticles = 200; 
+    const numParticles = 60; 
     
     // Mouse tracking
     const mouse = { x: -1000, y: -1000, isOverCard: false };
@@ -381,8 +332,8 @@ function initCanvasParticles() {
                 particle.packedTicks = 0;
             }
 
-            // Brighter when close, darker when far (Luminosity via alpha)
-            const visibility = Math.min(1, Math.max(0.1, 1 - (dist / 1200)));
+            // Particles always on
+            const visibility = 0.8;
             ctx.globalAlpha = visibility;
 
             const activeColor = rawAccent; 
@@ -391,30 +342,8 @@ function initCanvasParticles() {
             
             const glowBonus = Math.min(50, (particle.packedTicks || 0) / 3);
             
-            // Only chase the mouse if NOT over a card
-            if (!mouse.isOverCard) {
-                // Blend between "Chase" and "Swirl" based on proximity
-                // proximity = 1.0 when at center, 0.0 when 12px+ away
-                const proximity = Math.min(1, Math.max(0, (12 - dist) / 12));
-                
-                // 1. CHASE: Extremely lazy attraction
-                const pullStrength = 0.05 * (1 - proximity) + 0.01 * proximity;
-                const pullForce = Math.max(0.02, (maxDist - dist) / maxDist) * pullStrength;
-                
-                if (dist > 0.1) {
-                    particle.vx += (dx / dist) * pullForce;
-                    particle.vy += (dy / dist) * pullForce;
-
-                    // 2. SWIRL: Extremely tight orbit (only in the last 12px)
-                    const swirlStrength = 1.8 * proximity;
-                    particle.vx += (dy / dist) * swirlStrength;
-                    particle.vy += (-dx / dist) * swirlStrength;
-                }
-
-                ctx.shadowBlur = 18 + glowBonus; 
-            } else {
-                ctx.shadowBlur = 12;
-            }
+            // Particles drift naturally, no tracking
+            ctx.shadowBlur = 12 + glowBonus;
             // Friction/damping — particles drift farther when mouse is over a card
             const friction = mouse.isOverCard ? 0.985 : 0.96;
             particle.vx *= friction;
@@ -700,4 +629,32 @@ function setTheme(themeName) {
         const isActive = btn.getAttribute('onclick').includes(`'${themeName}'`);
         btn.classList.toggle('active', isActive);
     });
+}
+
+/// Randomize the philosopher quote at the bottom of the page
+function initQuotes() {
+    const quotes = [
+        { text: "The only true wisdom is in knowing you know nothing.", author: "Socrates" },
+        { text: "Everything has beauty, but not everyone sees it.", author: "Confucius" },
+        { text: "The unexamined life is not worth living.", author: "Socrates" },
+        { text: "He who has a why to live can bear almost any how.", author: "Friedrich Nietzsche" },
+        { text: "Happiness depends upon ourselves.", author: "Aristotle" },
+        { text: "We are what we repeatedly do. Excellence, then, is not an act, but a habit.", author: "Aristotle" },
+        { text: "The secret of happiness is not found in seeking more, but in developing the capacity to enjoy less.", author: "Socrates" },
+        { text: "Man is condemned to be free; because once thrown into the world, he is responsible for everything he does.", author: "Jean-Paul Sartre" },
+        { text: "The mind is furnished with ideas by experience alone.", author: "John Locke" },
+        { text: "Act only according to that maxim whereby you can will that it should become a universal law.", author: "Immanuel Kant" },
+        { text: "Life must be understood backward. But it must be lived forward.", author: "Søren Kierkegaard" },
+        { text: "The greater the difficulty, the more glory in surmounting it.", author: "Epicurus" }
+    ];
+
+    const quoteText = document.getElementById('quoteText');
+    const quoteAuthor = document.getElementById('quoteAuthor');
+
+    if (quoteText && quoteAuthor) {
+        const randomIndex = Math.floor(Math.random() * quotes.length);
+        const selected = quotes[randomIndex];
+        quoteText.textContent = selected.text;
+        quoteAuthor.textContent = `— ${selected.author}`;
+    }
 }
