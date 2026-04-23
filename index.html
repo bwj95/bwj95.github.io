@@ -90,11 +90,13 @@
             </div>
         </section>
 
-        <section id="services" class="services-section fade-in">
+        <section id="services" class="services-intro-section fade-in">
             <div class="services-heading-block">
-                <h2 class="section-heading services-title">Services</h2>
-                <p class="services-tagline">Bespoke digital architecture and intelligent integrations.</p>
+                <h2 class="section-heading services-title">Ser<span id="targetV">v</span><span id="targetI">i</span>ces</h2>
             </div>
+        </section>
+
+        <section id="services-list" class="services-section fade-in">
             <div class="services-stack">
                 <!-- Business Needs -->
                 <div class="service-row" id="cardBusinessNeeds">
@@ -182,7 +184,11 @@
                 <!-- Development Lab -->
                 <div class="service-row reverse" id="cardDevLab">
                     <div class="service-info">
-                        <h3>Development Lab</h3>
+                        <h3 class="dev-lab-title" aria-label="Development Lab">
+                            <svg viewBox="0 0 320 40" class="neon-svg">
+                                <text x="0" y="32" class="neon-text">Development Lab</text>
+                            </svg>
+                        </h3>
                         <p class="service-desc">Experimental builds, proofs-of-concept, and cutting-edge prototypes.</p>
                         <ul class="service-features">
                             <li>AI chatbot &amp; LLM integrations</li>
@@ -216,13 +222,12 @@
                 <h2 class="cta-heading">INITIATE CONTACT</h2>
                 <p class="cta-subtext">Secure direct access to our development and architecture teams.</p>
                 <a href="mailto:bwj95@protonmail.com" class="email-cta" id="ctaEmailLink">
-                    <span class="email-cta-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                            <polyline points="22,6 12,13 2,6"></polyline>
+
+                    <span class="email-cta-text">
+                        <svg viewBox="0 0 280 40" class="email-svg">
+                            <text x="50%" y="28" text-anchor="middle" class="email-text-path">info@lokisbeach.com</text>
                         </svg>
                     </span>
-                    <span class="email-cta-text">bwj95@protonmail.com</span>
                     <span class="email-cta-arrow">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -306,8 +311,8 @@
 
     <!-- Footer -->
     <footer>
-        <p>&copy; <span id="year"></span> Loki's Beach </p>
         <div class="footer-logo">
+            <span class="footer-copy-text">&copy; <span id="year"></span></span>
             <svg class="footer-logo-svg" width="36" height="36" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M 4 38 Q 14 30 24 38 T 44 38" stroke="url(#logoGradFooter)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                 <path d="M 14 38 L 14 20 L 20 8 L 24 14 L 32 14 L 30 20 L 24 22 L 24 38" stroke="url(#logoGradFooter)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -318,7 +323,11 @@
                     </linearGradient>
                 </defs>
             </svg>
-            <span>Loki's Beach</span>
+            <span class="brand-name">
+                <svg viewBox="0 0 160 40" class="footer-svg">
+                    <text x="0" y="28" class="footer-text-path">Loki's Beach</text>
+                </svg>
+            </span>
         </div>
     </footer>
 
@@ -359,15 +368,7 @@
                         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                     </svg>
                 </button>
-                <button class="notepad-btn clear" onclick="clearNotepad()" title="Clear">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2.5">
-                        <path d="M3 6h18" />
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                        <line x1="10" y1="11" x2="14" y2="15" />
-                        <line x1="14" y1="11" x2="10" y2="15" />
-                    </svg>
-                </button>
+
                 <!-- Minimize: shrinks notepad to a tiny floating dot -->
                 <button class="notepad-btn minimize-btn" id="minimizeNotepadBtn" onclick="minimizeNotepad()"
                     title="Minimize">

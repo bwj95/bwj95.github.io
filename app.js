@@ -223,8 +223,75 @@ function initCanvasParticles() {
     const ctx = canvas.getContext('2d');
     
     let width, height;
+    // Particle variables for interactions
+    let currentMode = 'drift';
+    let orbitCenter = { x: 0, y: 0 };
+
+    // Services title attraction logic
+    const servicesTitle = document.querySelector('.services-title');
+    const targetV = document.getElementById('targetV');
+    const targetI = document.getElementById('targetI');
+    let servicesTitleInView = false;
+
+    if (servicesTitle) {
+        ScrollTrigger.create({
+            trigger: '#services',
+            start: 'top 80%',
+            end: 'bottom 20%',
+            onToggle: self => servicesTitleInView = self.isActive
+        });
+    }
+
+    const itSection = document.getElementById('cardIT');
+    if (itSection) {
+        // Lightbulb illumination trigger
+        ScrollTrigger.create({
+            trigger: itSection,
+            start: 'top 75%',
+            onEnter: () => itSection.classList.add('illuminated'),
+            onLeaveBack: () => itSection.classList.remove('illuminated')
+        });
+    }
+
+    const devLabSection = document.getElementById('cardDevLab');
+    if (devLabSection) {
+        ScrollTrigger.create({
+            trigger: devLabSection,
+            start: 'top 80%',
+            onEnter: () => devLabSection.classList.add('active'),
+            onLeaveBack: () => devLabSection.classList.remove('active')
+        });
+    }
+
+    if (itSection) {
+        itSection.addEventListener('click', (e) => {
+            // Only trigger if clicking on the background or info, not on buttons
+            if (e.target.closest('a, button')) return;
+            
+            orbitCenter.x = e.clientX;
+            orbitCenter.y = e.clientY;
+            currentMode = 'it-orbit';
+            
+            // Auto-revert after 8 seconds
+            clearTimeout(window.orbitTimer);
+            window.orbitTimer = setTimeout(() => {
+                currentMode = 'drift';
+            }, 8000);
+        });
+    }
+
+    // Scroll-based deactivation
+    window.addEventListener('scroll', () => {
+        if (currentMode === 'it-orbit' && itSection) {
+            const rect = itSection.getBoundingClientRect();
+            if (rect.top > window.innerHeight || rect.bottom < 0) {
+                currentMode = 'drift';
+            }
+        }
+    });
+
     const particles = [];
-    const numParticles = 60; 
+    const numParticles = 25; // Ultra-minimalist particle count
     
     // Mouse tracking
     const mouse = { x: -1000, y: -1000, isOverCard: false };
@@ -260,14 +327,14 @@ function initCanvasParticles() {
             const dx = p.x - cX;
             const dy = p.y - cY;
             const dist = Math.sqrt(dx * dx + dy * dy);
-            const forceRadius = 400;
+            const forceRadius = 180;
             
             if (dist < forceRadius) {
                 const force = (forceRadius - dist) / forceRadius;
                 const angle = Math.atan2(dy, dx);
-                // Heavier impulse kick for the scatter
-                p.vx += Math.cos(angle) * force * 35; 
-                p.vy += Math.sin(angle) * force * 35;
+                // Softer impulse kick for the scatter
+                p.vx += Math.cos(angle) * force * 15; 
+                p.vy += Math.sin(angle) * force * 15;
 
                 // INSTANTLY REVERT to original color on explosion
                 p.color = null;
@@ -302,10 +369,10 @@ function initCanvasParticles() {
         particles.push({ 
             x: Math.random() * width, 
             y: Math.random() * height,
-            vx: (Math.random() - 0.5) * 1.5,
-            vy: (Math.random() - 0.5) * 1.5,
-            size: Math.random() * 2 + 1,
-            baseSpeed: Math.random() * 0.5 + 0.2
+            vx: (Math.random() - 0.5) * 0.6,
+            vy: (Math.random() - 0.5) * 0.6,
+            size: Math.random() * 1.8 + 1,
+            baseSpeed: Math.random() * 0.2 + 0.1
         });
     }
 
@@ -314,40 +381,147 @@ function initCanvasParticles() {
         
         const style = getComputedStyle(document.body);
         const rawAccent = style.getPropertyValue('--accent-color').trim() || '#5b6cf9';
-        
-        particles.forEach(particle => {
-            const dx = mouse.x - particle.x;
-            const dy = mouse.y - particle.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            const maxDist = 5000; 
-            const safeRadius = 0; 
 
-            // Handle luminosity & glow accumulation
+        // Reset connection status for membrane logic
+        particles.forEach(p => p.isConnected = false);
+
+        // Draw Molecular Membrane (Web connections)
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+                const p1 = particles[i];
+                const p2 = particles[j];
+                const dx = p1.x - p2.x;
+                const dy = p1.y - p2.y;
+                const distSq = dx * dx + dy * dy;
+                const maxDist = 95;
+                const maxDistSq = maxDist * maxDist;
+
+                if (distSq < maxDistSq) {
+                    p1.isConnected = true;
+                    p2.isConnected = true;
+                    const dist = Math.sqrt(distSq);
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    
+                    const opacity = (1 - dist / maxDist) * 0.22;
+                    ctx.globalAlpha = opacity;
+                    // Use a blend of colors if particles are different
+                    ctx.strokeStyle = p1.color || p2.color || rawAccent;
+                    ctx.lineWidth = 0.5;
+                    ctx.stroke();
+                }
+            }
+        }
+
+        // Get attractor position for Services title
+        let sAttractX = 0, sAttractY = 0;
+        if (targetV && targetI) {
+            const vRect = targetV.getBoundingClientRect();
+            const iRect = targetI.getBoundingClientRect();
+            sAttractX = (vRect.left + vRect.width / 2 + iRect.left + iRect.width / 2) / 2;
+            sAttractY = (vRect.top + vRect.height / 2 + iRect.top + iRect.height / 2) / 2;
+        }
+        
+        particles.forEach((particle, i) => {
+            const targetX = (currentMode === 'it-orbit' ? orbitCenter.x : mouse.x);
+            const targetY = (currentMode === 'it-orbit' ? orbitCenter.y : mouse.y);
+            
+            const dx = targetX - particle.x;
+            const dy = targetY - particle.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            // Interaction logic
+            if (currentMode === 'it-orbit') {
+                const angle = Math.atan2(dy, dx);
+                const targetRadius = 120 + (Math.sin(Date.now() / 1000 + i) * 30);
+                
+                // Pull towards shell
+                const radialForce = (dist - targetRadius) * 0.08;
+                particle.vx -= Math.cos(angle) * radialForce;
+                particle.vy -= Math.sin(angle) * radialForce;
+                
+                // Orbit
+                const orbitSpeed = 2.5;
+                particle.vx += Math.cos(angle + Math.PI/2) * orbitSpeed;
+                particle.vy += Math.sin(angle + Math.PI/2) * orbitSpeed;
+                
+
+                ctx.shadowBlur = 15;
+            } else {
+                const isLightMode = document.body.getAttribute('data-theme') === 'light';
+                
+                // 1. Services Title Attraction (Global)
+                if (targetV && targetI) {
+                    const sdx = sAttractX - particle.x;
+                    const sdy = sAttractY - particle.y;
+                    const sDist = Math.sqrt(sdx * sdx + sdy * sdy);
+                    const sAngle = Math.atan2(sdy, sdx);
+                    const sMu = 2800;
+                    const sForce = sMu / (sDist * sDist + 625);
+                    
+                    particle.vx += Math.cos(sAngle) * sForce * 0.35;
+                    particle.vy += Math.sin(sAngle) * sForce * 0.35;
+                    const sOrbitalBias = sForce * 0.7;
+                    particle.vx += (-Math.sin(sAngle)) * sOrbitalBias;
+                    particle.vy += (Math.cos(sAngle)) * sOrbitalBias;
+                    
+                    if (particle.isConnected && sDist < 250) {
+                        particle.color = isLightMode ? '#0019ff' : '#00f2ff';
+                    } else {
+                        particle.color = null;
+                    }
+                }
+
+                // 2. Mouse Orbital Pull (Global - Mirrors Services VI Physics)
+                const isBlue = (particle.color === '#0019ff' || particle.color === '#00f2ff');
+                
+                if (!isBlue) {
+                    const mAngle = Math.atan2(dy, dx);
+                    const mMu = 2800; 
+                    const mForce = mMu / (dist * dist + 625); 
+                    
+                    // Radial - Balanced pull
+                    particle.vx += Math.cos(mAngle) * mForce * 0.35;
+                    particle.vy += Math.sin(mAngle) * mForce * 0.35;
+                    
+                    // Orbital - Balanced swirl
+                    const mOrbitalBias = mForce * 0.7; 
+                    particle.vx += (-Math.sin(mAngle)) * mOrbitalBias;
+                    particle.vy += (Math.cos(mAngle)) * mOrbitalBias;
+                    
+                    // Mouse color priority if in the orbital field
+                    if (particle.isConnected && dist < 250) {
+                        particle.color = '#00ff88'; // Bright Green
+                    }
+                }
+
+                ctx.shadowBlur = (isLightMode ? 20 : 12) + Math.min(50, (particle.packedTicks || 0) / 3);
+            }
+
+            // Glow accumulation
             if (particle.explosionRevertTimer > 0) {
                 particle.explosionRevertTimer--;
                 particle.packedTicks = 0;
-            } else if (!mouse.isOverCard && dist < 120) {
+            } else if (!mouse.isOverCard && dist < 120 && currentMode !== 'it-orbit') {
                  particle.packedTicks = (particle.packedTicks || 0) + 1;
             } else {
                 particle.packedTicks = 0;
             }
 
-            // Particles always on
-            const visibility = 0.8;
-            ctx.globalAlpha = visibility;
-
-            const activeColor = rawAccent; 
-            ctx.fillStyle = activeColor;
-            ctx.shadowColor = activeColor;
+            const isLightMode = document.body.getAttribute('data-theme') === 'light';
+            ctx.globalAlpha = isLightMode ? 1.0 : 0.8;
+            ctx.fillStyle = particle.color || rawAccent;
+            ctx.shadowColor = particle.color || rawAccent;
             
-            const glowBonus = Math.min(50, (particle.packedTicks || 0) / 3);
-            
-            // Particles drift naturally, no tracking
-            ctx.shadowBlur = 12 + glowBonus;
-            // Friction/damping — particles drift farther when mouse is over a card
-            const friction = mouse.isOverCard ? 0.985 : 0.96;
+            // Physics - Lower friction for orbiting momentum
+            const friction = (mouse.isOverCard || currentMode === 'it-orbit') ? 0.94 : 0.98;
             particle.vx *= friction;
             particle.vy *= friction;
+
+            // Introduce Brownian Jitter for more randomness
+            particle.vx += (Math.random() - 0.5) * 0.12;
+            particle.vy += (Math.random() - 0.5) * 0.12;
             
             particle.x += particle.vx + (Math.sin(Date.now() / 1000 + particle.size) * particle.baseSpeed);
             particle.y += particle.vy + (Math.cos(Date.now() / 1000 + particle.size) * particle.baseSpeed);
@@ -392,6 +566,7 @@ function initNotepad() {
         const rect = notepad.getBoundingClientRect();
         initLeft = rect.left;
         initTop = rect.top;
+        notepad.style.transition = 'none';
         document.addEventListener('mousemove', onDrag);
         document.addEventListener('mouseup', stopDrag);
     });
@@ -419,6 +594,7 @@ function initNotepad() {
 
     function stopDrag() {
         isDragging = false;
+        notepad.style.transition = '';
         document.removeEventListener('mousemove', onDrag);
         document.removeEventListener('mouseup', stopDrag);
     }
@@ -444,6 +620,7 @@ function initNotepad() {
             notepad.style.top = initTop + 'px';
             notepad.style.bottom = 'auto';
             notepad.style.right = 'auto';
+            notepad.style.transition = 'none';
 
             function onCornerResize(e) {
                 if (!isResizing) return;
@@ -495,6 +672,7 @@ function initNotepad() {
 
             function stopCornerResize() {
                 isResizing = false;
+                notepad.style.transition = '';
                 document.removeEventListener('mousemove', onCornerResize);
                 document.removeEventListener('mouseup', stopCornerResize);
             }
@@ -589,6 +767,10 @@ function minimizeNotepad() {
     if (notepad.style.height) notepad.dataset.savedHeight = notepad.style.height;
     notepad.style.width  = '';
     notepad.style.height = '';
+    notepad.style.top    = '';
+    notepad.style.left   = '';
+    notepad.style.bottom = '';
+    notepad.style.right  = '';
 
     notepad.classList.remove('minimized');
     notepad.classList.add('collapsed');
