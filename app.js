@@ -472,25 +472,27 @@ function initCanvasParticles() {
                 // 2. Mouse Orbital Pull (Global - Mirrors Services VI Physics)
                 const isBlue = (particle.color === '#0019ff' || particle.color === '#00f2ff');
                 
-                if (!isBlue) {
-                    const mAngle = Math.atan2(dy, dx);
-                    const isFuncHover = mouse.isOverFunctionality;
-                    const mMu = isFuncHover ? 12000 : 2800; 
-                    const mForce = mMu / (dist * dist + 625); 
-                    
-                    // Radial - Balanced pull (Stronger if over functionality card)
-                    const pullFactor = isFuncHover ? 1.0 : 0.35;
-                    particle.vx += Math.cos(mAngle) * mForce * pullFactor;
-                    particle.vy += Math.sin(mAngle) * mForce * pullFactor;
-                    
-                    // Orbital - Balanced swirl (Less swirl, more direct pull if over functionality card)
-                    const mOrbitalBias = mForce * (isFuncHover ? 0.2 : 0.7); 
-                    particle.vx += (-Math.sin(mAngle)) * mOrbitalBias;
-                    particle.vy += (Math.cos(mAngle)) * mOrbitalBias;
-                    
-                    // Mouse color priority if in the orbital field
-                    if (particle.isConnected && dist < (isFuncHover ? 350 : 250)) {
-                        particle.color = '#00ff88'; // Bright Green
+                if (!isBlue && mouse.isOverFunctionality) {
+                    const maxDist = 250;
+                    if (dist < maxDist) {
+                        const force = (maxDist - dist) / maxDist;
+                        
+                        const bufferRadius = 25; 
+                        const proximity = Math.min(1, Math.max(0, (bufferRadius - dist) / bufferRadius));
+                        
+                        const pullForce = force * 0.4 * (1 - proximity * 0.8);
+                        particle.vx += (dx / dist) * pullForce;
+                        particle.vy += (dy / dist) * pullForce;
+                        
+                        if (dist > 0.1 && proximity > 0) {
+                            const swirlStrength = 2.5 * proximity;
+                            particle.vx += (dy / dist) * swirlStrength;
+                            particle.vy += (-dx / dist) * swirlStrength;
+                        }
+                        
+                        if (particle.isConnected) {
+                            particle.color = '#00ff88'; // Bright Green
+                        }
                     }
                 }
 
@@ -514,7 +516,7 @@ function initCanvasParticles() {
             
             // Physics - Lower friction for orbiting momentum
             let friction = (mouse.isOverCard || currentMode === 'it-orbit') ? 0.94 : 0.98;
-            if (mouse.isOverFunctionality) friction = 0.88; // Tighter control when swarming
+            if (mouse.isOverFunctionality) friction = 0.96; // Less friction to allow smooth satellite orbits
             particle.vx *= friction;
             particle.vy *= friction;
 

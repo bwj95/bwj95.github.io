@@ -628,6 +628,26 @@ body[data-theme="light"] .service-cta {
     transform: scale(0.98);
 }
 
+.dev-lab-links {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    .dev-lab-links {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .dev-lab-links .service-cta {
+        width: 100%;
+        justify-content: center;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}
+
 /* Services */
 .services-section {
     padding: 10rem 1.5rem;
@@ -1020,10 +1040,25 @@ body[data-theme="light"] .service-cta {
     pointer-events: none;
 }
 
+/* Functionality Card Overrides for See-Through effect */
+.service-media.glass-placeholder.functionality-card {
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 1px dashed var(--glass-border);
+    box-shadow: none;
+}
+
 body[data-theme="light"] .service-media.glass-placeholder {
     background: rgba(255, 255, 255, 0.4);
     border-color: rgba(0, 0, 0, 0.05);
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+}
+
+body[data-theme="light"] .service-media.glass-placeholder.functionality-card {
+    background: transparent;
+    border: 1px dashed rgba(0, 0, 0, 0.15);
+    box-shadow: none;
 }
 
 body[data-theme="light"] .placeholder-text {
