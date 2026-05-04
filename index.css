@@ -686,16 +686,59 @@ body[data-theme="light"] .service-cta {
 
 
 
+/* Services Tabs Layout */
+.service-tabs {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 4rem;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 10;
+}
+
+.service-tab {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+    padding: 0.8rem 2rem;
+    border-radius: 4px;
+    font-family: var(--font-heading);
+    font-weight: 300;
+    font-size: 0.85rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+
+.service-tab:hover {
+    color: var(--text-primary);
+    border-color: color-mix(in srgb, var(--text-primary) 30%, transparent);
+}
+
+.service-tab.active {
+    color: var(--text-primary);
+    border-color: var(--text-primary);
+    background: color-mix(in srgb, var(--text-primary) 5%, transparent);
+    box-shadow: 0 0 20px color-mix(in srgb, var(--text-primary) 10%, transparent);
+}
+
 /* Services Layout */
 .services-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 15rem;
-    margin-top: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+    position: relative;
     perspective: 1200px;
+    min-height: 400px;
 }
 
 .service-row {
+    grid-area: 1 / 1;
     display: flex;
     flex-direction: column;
     gap: 3rem;
@@ -703,16 +746,27 @@ body[data-theme="light"] .service-cta {
     justify-content: space-between;
     will-change: transform, opacity;
     transform-style: preserve-3d;
+    
+    /* Hide inactive rows */
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), visibility 0.5s ease;
+}
+
+.service-row.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+    z-index: 2;
 }
 
 @media (min-width: 768px) {
     .service-row {
         flex-direction: row;
         gap: 5rem;
-    }
-
-    .service-row.reverse {
-        flex-direction: row-reverse;
     }
 
     .service-info,
@@ -836,7 +890,7 @@ body[data-theme="light"] .service-cta {
     transition: all 0.4s ease;
 }
 
-#cardIT.illuminated .service-info h3 {
+#cardIT.active .service-info h3 {
     animation: bulbFlickerOn 1.2s ease-out forwards;
 }
 

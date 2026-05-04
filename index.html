@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Loki's Beach</title>
+    <title>LOKI UNLEASHED</title>
     <!-- Use Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -75,11 +75,11 @@
         <!-- Hero Section -->
         <section id="home" class="hero fade-in">
             <div class="hero-content">
-                <div class="hero-logo-text">LOKI'S BEACH</div>
-                <h1 class="hero-title">Reshaping the Digital Experience</h1>
-                <p class="hero-subtitle">A trusted leader in digital engineering, known for advanced architecture, clinical performance and product innovation.</p>
+                <div class="hero-logo-text">LOKI UNLEASHED</div>
+                <h1 class="hero-title">the Boss is off the leash</h1>
+                <p class="hero-subtitle">Unlocking your entrepreneurial creativity</p>
                 <button class="hero-cta" onclick="window.location.href='#services'">
-                    <span class="hero-cta-text">Discover More</span>
+                    <span class="hero-cta-text">ready?</span>
                     <span class="hero-cta-arrow">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -97,9 +97,16 @@
         </section>
 
         <section id="services-list" class="services-section fade-in">
+            <div class="service-tabs">
+                <button class="service-tab active" data-target="cardBusinessNeeds">Business Needs</button>
+                <button class="service-tab" data-target="cardHomeCare">Home Care</button>
+                <button class="service-tab" data-target="cardIT">IT</button>
+                <button class="service-tab" data-target="cardDevLab">Development Lab</button>
+            </div>
+
             <div class="services-stack">
                 <!-- Business Needs -->
-                <div class="service-row" id="cardBusinessNeeds">
+                <div class="service-row active" id="cardBusinessNeeds">
                     <div class="service-info">
                         <h3>Business Needs</h3>
                         <p class="service-desc">End-to-end digital presence for brands, startups, and enterprises.</p>
@@ -121,13 +128,13 @@
                             </span>
                         </a>
                     </div>
-                    <div class="service-media glass-placeholder">
-                        <span class="placeholder-text">MEDIA / VIDEO</span>
+                    <div class="service-media glass-placeholder functionality-card">
+                        <span class="placeholder-text">INTERACTIVE ZONE</span>
                     </div>
                 </div>
 
                 <!-- Home Care -->
-                <div class="service-row reverse" id="cardHomeCare">
+                <div class="service-row" id="cardHomeCare">
                     <div class="service-info">
                         <h3>Home Care</h3>
                         <p class="service-desc">Smart home technology and hands-on residential services.</p>
@@ -148,8 +155,8 @@
                             </span>
                         </a>
                     </div>
-                    <div class="service-media glass-placeholder">
-                        <span class="placeholder-text">MEDIA / VIDEO</span>
+                    <div class="service-media glass-placeholder functionality-card">
+                        <span class="placeholder-text">INTERACTIVE ZONE</span>
                     </div>
                 </div>
 
@@ -176,13 +183,13 @@
                             </span>
                         </a>
                     </div>
-                    <div class="service-media glass-placeholder">
-                        <span class="placeholder-text">MEDIA / VIDEO</span>
+                    <div class="service-media glass-placeholder functionality-card">
+                        <span class="placeholder-text">INTERACTIVE ZONE</span>
                     </div>
                 </div>
 
                 <!-- Development Lab -->
-                <div class="service-row reverse" id="cardDevLab">
+                <div class="service-row" id="cardDevLab">
                     <div class="service-info">
                         <h3 class="dev-lab-title" aria-label="Development Lab">
                             <svg viewBox="0 0 320 40" class="neon-svg">
@@ -198,18 +205,29 @@
                             <li>Automation scripts &amp; CI/CD pipelines</li>
                             <li>Open-source tooling contributions</li>
                         </ul>
-                        <a href="#" class="service-cta" target="_blank" rel="noopener noreferrer">
-                            <span class="service-cta-text">Visit Website</span>
-                            <span class="service-cta-arrow">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                                    <polyline points="12 5 19 12 12 19"></polyline>
-                                </svg>
-                            </span>
-                        </a>
+                        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                            <a href="https://bwj95.github.io/cosmicInvasion" class="service-cta" target="_blank" rel="noopener noreferrer">
+                                <span class="service-cta-text">Cosmic Observation</span>
+                                <span class="service-cta-arrow">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        <polyline points="12 5 19 12 12 19"></polyline>
+                                    </svg>
+                                </span>
+                            </a>
+                            <a href="https://bwj95.github.io/molecules" class="service-cta" target="_blank" rel="noopener noreferrer">
+                                <span class="service-cta-text">Molecules</span>
+                                <span class="service-cta-arrow">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        <polyline points="12 5 19 12 12 19"></polyline>
+                                    </svg>
+                                </span>
+                            </a>
+                        </div>
                     </div>
-                    <div class="service-media glass-placeholder">
-                        <span class="placeholder-text">MEDIA / VIDEO</span>
+                    <div class="service-media glass-placeholder functionality-card">
+                        <span class="placeholder-text">INTERACTIVE ZONE</span>
                     </div>
                 </div>
 
@@ -325,7 +343,7 @@
             </svg>
             <span class="brand-name">
                 <svg viewBox="0 0 160 40" class="footer-svg">
-                    <text x="0" y="28" class="footer-text-path">Loki's Beach</text>
+                    <text x="0" y="28" class="footer-text-path">LOKI UNLEASHED</text>
                 </svg>
             </span>
         </div>

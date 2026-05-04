@@ -173,19 +173,31 @@ function initAdvancedAnimations() {
         }
     });
 
-    // 2. Individual Service Row Fades
-    const serviceRows = gsap.utils.toArray('.service-row');
-    serviceRows.forEach(row => {
-        gsap.from(row, {
-            scrollTrigger: {
-                trigger: row,
-                start: 'top 85%',
-                toggleActions: 'play none none reverse'
-            },
-            y: 50,
-            opacity: 0,
-            duration: 0.8,
-            ease: 'power3.out'
+    // 2. Service Tabs Logic
+    const serviceTabs = document.querySelectorAll('.service-tab');
+    const serviceRowsArray = document.querySelectorAll('.service-row');
+
+    serviceTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            if (tab.classList.contains('active')) return;
+
+            // Remove active from all tabs
+            serviceTabs.forEach(t => t.classList.remove('active'));
+            // Add active to clicked
+            tab.classList.add('active');
+
+            const targetId = tab.getAttribute('data-target');
+
+            // Hide all rows
+            serviceRowsArray.forEach(row => {
+                row.classList.remove('active');
+            });
+
+            // Show target row
+            const targetRow = document.getElementById(targetId);
+            if (targetRow) {
+                targetRow.classList.add('active');
+            }
         });
     });
 
@@ -243,25 +255,7 @@ function initCanvasParticles() {
     }
 
     const itSection = document.getElementById('cardIT');
-    if (itSection) {
-        // Lightbulb illumination trigger
-        ScrollTrigger.create({
-            trigger: itSection,
-            start: 'top 75%',
-            onEnter: () => itSection.classList.add('illuminated'),
-            onLeaveBack: () => itSection.classList.remove('illuminated')
-        });
-    }
-
     const devLabSection = document.getElementById('cardDevLab');
-    if (devLabSection) {
-        ScrollTrigger.create({
-            trigger: devLabSection,
-            start: 'top 80%',
-            onEnter: () => devLabSection.classList.add('active'),
-            onLeaveBack: () => devLabSection.classList.remove('active')
-        });
-    }
 
     if (itSection) {
         itSection.addEventListener('click', (e) => {
@@ -294,7 +288,7 @@ function initCanvasParticles() {
     const numParticles = 25; // Ultra-minimalist particle count
     
     // Mouse tracking
-    const mouse = { x: -1000, y: -1000, isOverCard: false };
+    const mouse = { x: -1000, y: -1000, isOverCard: false, isOverFunctionality: false };
     
     function updateMouseContext(e) {
         const x = e.clientX || (e.touches && e.touches[0].clientX);
@@ -307,6 +301,7 @@ function initCanvasParticles() {
             // Check if hovering over anything that looks like a card, nav, or terminal
             const target = document.elementFromPoint(x, y);
             mouse.isOverCard = !!(target && target.closest('.service-card, .hero-card, .cta-terminal, .learn-card, .floating-notepad, .glass-nav'));
+            mouse.isOverFunctionality = !!(target && target.closest('.functionality-card'));
         }
     }
 
@@ -318,6 +313,7 @@ function initCanvasParticles() {
         mouse.x = -1000;
         mouse.y = -1000;
         mouse.isOverCard = false;
+        mouse.isOverFunctionality = false;
     });
 
     // Generic Explosion Trigger
@@ -478,20 +474,22 @@ function initCanvasParticles() {
                 
                 if (!isBlue) {
                     const mAngle = Math.atan2(dy, dx);
-                    const mMu = 2800; 
+                    const isFuncHover = mouse.isOverFunctionality;
+                    const mMu = isFuncHover ? 12000 : 2800; 
                     const mForce = mMu / (dist * dist + 625); 
                     
-                    // Radial - Balanced pull
-                    particle.vx += Math.cos(mAngle) * mForce * 0.35;
-                    particle.vy += Math.sin(mAngle) * mForce * 0.35;
+                    // Radial - Balanced pull (Stronger if over functionality card)
+                    const pullFactor = isFuncHover ? 1.0 : 0.35;
+                    particle.vx += Math.cos(mAngle) * mForce * pullFactor;
+                    particle.vy += Math.sin(mAngle) * mForce * pullFactor;
                     
-                    // Orbital - Balanced swirl
-                    const mOrbitalBias = mForce * 0.7; 
+                    // Orbital - Balanced swirl (Less swirl, more direct pull if over functionality card)
+                    const mOrbitalBias = mForce * (isFuncHover ? 0.2 : 0.7); 
                     particle.vx += (-Math.sin(mAngle)) * mOrbitalBias;
                     particle.vy += (Math.cos(mAngle)) * mOrbitalBias;
                     
                     // Mouse color priority if in the orbital field
-                    if (particle.isConnected && dist < 250) {
+                    if (particle.isConnected && dist < (isFuncHover ? 350 : 250)) {
                         particle.color = '#00ff88'; // Bright Green
                     }
                 }
@@ -515,7 +513,8 @@ function initCanvasParticles() {
             ctx.shadowColor = particle.color || rawAccent;
             
             // Physics - Lower friction for orbiting momentum
-            const friction = (mouse.isOverCard || currentMode === 'it-orbit') ? 0.94 : 0.98;
+            let friction = (mouse.isOverCard || currentMode === 'it-orbit') ? 0.94 : 0.98;
+            if (mouse.isOverFunctionality) friction = 0.88; // Tighter control when swarming
             particle.vx *= friction;
             particle.vy *= friction;
 
