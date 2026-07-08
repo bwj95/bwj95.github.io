@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VECTOR_FIELD SIMULATOR</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            background-color: #020204;
+            color: #00f0ff;
+            font-family: 'Share Tech Mono', monospace;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+        }
+        canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1;
+            background: #000;
+        }
+        /* HUD sidebar overlay */
+        .hud-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            width: 250px;
+            background: rgba(5, 5, 12, 0.85);
+            border: 1px solid #00f0ff;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+            padding: 15px;
+            backdrop-filter: blur(5px);
+        }
+        h3 {
+            font-size: 14px;
+            margin-bottom: 15px;
+            letter-spacing: 1.5px;
+            border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+            padding-bottom: 5px;
+            text-shadow: 0 0 5px rgba(0, 240, 255, 0.5);
+        }
+        .control-group {
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.6);
+            display: flex;
+            justify-content: space-between;
+        }
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            height: 4px;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            background: #00f0ff;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 5px #00f0ff;
+        }
+        .btn {
+            background: transparent;
+            border: 1px solid #00f0ff;
+            color: #00f0ff;
+            padding: 5px 10px;
+            font-family: inherit;
+            font-size: 11px;
+            cursor: pointer;
+            margin-top: 5px;
+            width: 100%;
+            transition: all 0.2s ease;
+        }
+        .btn:hover {
+            background: #00f0ff;
+            color: #000;
+            box-shadow: 0 0 10px #00f0ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="hud-panel">
+        <h3>FLOW_DIAGNOSTICS</h3>
+        <div class="control-group">
+            <label>PARTICLES <span id="val-count">3000</span></label>
+            <input type="range" id="param-count" min="500" max="6000" step="100" value="3000">
+        </div>
+        <div class="control-group">
+            <label>MAX SPEED <span id="val-speed">2.5</span></label>
+            <input type="range" id="param-speed" min="0.5" max="8.0" step="0.1" value="2.5">
+        </div>
+        <div class="control-group">
+            <label>LINE WIDTH <span id="val-size">1.5</span></label>
+            <input type="range" id="param-size" min="0.5" max="5.0" step="0.1" value="1.5">
+        </div>
+        <div class="control-group">
+            <label>FIELD CHAOS <span id="val-chaos">0.005</span></label>
+            <input type="range" id="param-chaos" min="0.001" max="0.02" step="0.0005" value="0.005">
+        </div>
+        <button class="btn" id="btn-color">TOGGLE COLOURWAY</button>
+        <button class="btn" id="btn-reset" style="margin-top: 8px;">SCRAMBLE PARTICLES</button>
+    </div>
+
+    <canvas id="flowCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('flowCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        let particles = [];
+        
+        // Control settings
+        let maxParticles = 3000;
+        let maxSpeed = 2.5;
+        let particleSize = 1.5;
+        let chaos = 0.005; // noise frequency scale
+        let colorTheme = 0; // 0: Neon Blue, 1: Neon Pink, 2: Multi-color neon
+        
+        // Vector grid parameters
+        const cols = Math.floor(width / 30);
+        const rows = Math.floor(height / 30);
+        
+        // Mouse coordinate
+        let mouse = { x: -1000, y: -1000, active: false };
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = 0;
+                this.vy = 0;
+                this.life = 100 + Math.random() * 200;
+                this.maxLife = this.life;
+                this.color = this.getRandomColor();
+            }
+
+            getRandomColor() {
+                if (colorTheme === 0) {
+                    return `hsla(180, 100%, 50%, ${0.3 + Math.random() * 0.4})`; // Cyan glows
+                } else if (colorTheme === 1) {
+                    return `hsla(330, 100%, 50%, ${0.3 + Math.random() * 0.4})`; // Pink glows
+                } else {
+                    const hues = [180, 330, 140, 60, 20]; // Cyberpunk hues
+                    const hue = hues[Math.floor(Math.random() * hues.length)];
+                    return `hsla(${hue}, 100%, 50%, ${0.4 + Math.random() * 0.4})`;
+                }
+            }
+
+            update(angle) {
+                // Acceleration from vector angle
+                const ax = Math.cos(angle) * 0.15;
+                const ay = Math.sin(angle) * 0.15;
+
+                this.vx += ax;
+                this.vy += ay;
+                
+                // Mouse repulsion or attraction
+                if (mouse.active) {
+                    const dx = mouse.x - this.x;
+                    const dy = mouse.y - this.y;
+                    const dist = Math.hypot(dx, dy);
+                    if (dist < 150) {
+                        const force = (1 - dist / 150) * 0.35;
+                        const angleToMouse = Math.atan2(dy, dx);
+                        // Repel particles
+                        this.vx -= Math.cos(angleToMouse) * force;
+                        this.vy -= Math.sin(angleToMouse) * force;
+                    }
+                }
+
+                // Apply velocity and drag
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vx *= 0.96;
+                this.vy *= 0.96;
+
+                // Speed limit
+                const speed = Math.hypot(this.vx, this.vy);
+                if (speed > maxSpeed) {
+                    this.vx = (this.vx / speed) * maxSpeed;
+                    this.vy = (this.vy / speed) * maxSpeed;
+                }
+
+                // Age particle
+                this.life--;
+                
+                // Screen wrapping / border checks
+                if (this.x < 0 || this.x > width || this.y < 0 || this.y > height || this.life <= 0) {
+                    this.reset();
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.fillStyle = this.color;
+                
+                // Draw trailing trace
+                ctx.arc(this.x, this.y, particleSize, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Initialize particles
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < maxParticles; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        // Simulating 2D Simplex/Perlin Noise via trigonometric combinations (no large external libraries)
+        function getFieldAngle(x, y) {
+            // Complex wave combination to create an organic flow field
+            const val1 = Math.sin(x * chaos) * Math.cos(y * chaos);
+            const val2 = Math.cos((x + y) * chaos * 0.5) * Math.sin((x - y) * chaos * 1.5);
+            const val3 = Math.sin(Math.hypot(x, y) * chaos * 0.2);
+            
+            // Combine values and scale to full angle circle
+            return (val1 + val2 + val3) * Math.PI * 2;
+        }
+
+        // Resize handler
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            initParticles();
+        });
+
+        // Mouse inputs
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+            mouse.active = true;
+        });
+
+        window.addEventListener('mouseleave', () => {
+            mouse.active = false;
+        });
+
+        // Touch support
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) {
+                mouse.x = e.touches[0].clientX;
+                mouse.y = e.touches[0].clientY;
+                mouse.active = true;
+            }
+        }, { passive: true });
+
+        window.addEventListener('touchend', () => {
+            mouse.active = false;
+        });
+
+        // Control binds
+        document.getElementById('param-count').addEventListener('input', (e) => {
+            maxParticles = parseInt(e.target.value);
+            document.getElementById('val-count').textContent = maxParticles;
+            initParticles();
+        });
+
+        document.getElementById('param-speed').addEventListener('input', (e) => {
+            maxSpeed = parseFloat(e.target.value);
+            document.getElementById('val-speed').textContent = maxSpeed;
+        });
+
+        document.getElementById('param-size').addEventListener('input', (e) => {
+            particleSize = parseFloat(e.target.value);
+            document.getElementById('val-size').textContent = particleSize;
+        });
+
+        document.getElementById('param-chaos').addEventListener('input', (e) => {
+            chaos = parseFloat(e.target.value);
+            document.getElementById('val-chaos').textContent = chaos;
+        });
+
+        document.getElementById('btn-color').addEventListener('click', () => {
+            colorTheme = (colorTheme + 1) % 3;
+            // Update current particles theme colors
+            particles.forEach(p => p.color = p.getRandomColor());
+        });
+
+        document.getElementById('btn-reset').addEventListener('click', () => {
+            particles.forEach(p => p.reset());
+        });
+
+        // Loop animation
+        function tick() {
+            // Draw slightly translucent black block to create glowing trails
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+            ctx.fillRect(0, 0, width, height);
+
+            particles.forEach(p => {
+                const angle = getFieldAngle(p.x, p.y);
+                p.update(angle);
+                p.draw();
+            });
+
+            requestAnimationFrame(tick);
+        }
+
+        // Initialize and Start
+        initParticles();
+        tick();
+    </script>
+</body>
+</html>

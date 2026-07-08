@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYBER_SNAKE v1.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            background-color: #030307;
+            color: #ff007f;
+            font-family: 'Share Tech Mono', monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .game-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            background: rgba(13, 13, 26, 0.85);
+            border: 2px solid #ff007f;
+            box-shadow: 0 0 25px rgba(255, 0, 127, 0.25);
+            padding: 20px;
+            position: relative;
+        }
+        .game-wrapper::before {
+            content: 'NEURAL_LINK ACTIVE';
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            background: #030307;
+            padding: 0 10px;
+            font-size: 11px;
+            color: #00f0ff;
+            letter-spacing: 1px;
+            border: 1px solid #00f0ff;
+        }
+        .header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            font-size: 18px;
+            color: #00f0ff;
+            text-shadow: 0 0 5px rgba(0, 240, 255, 0.4);
+            border-bottom: 1px solid rgba(0, 240, 255, 0.15);
+            padding-bottom: 8px;
+        }
+        canvas {
+            background: #000;
+            border: 1px solid rgba(255, 0, 127, 0.15);
+            display: block;
+        }
+        .instructions {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            text-align: center;
+            margin-top: 5px;
+        }
+        .game-over-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            color: #ff007f;
+            text-shadow: 0 0 10px #ff007f;
+            z-index: 10;
+        }
+        .btn {
+            background: transparent;
+            border: 1px solid #ff007f;
+            color: #ff007f;
+            padding: 8px 20px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn:hover {
+            background: #ff007f;
+            color: #000;
+            box-shadow: 0 0 15px #ff007f;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-wrapper">
+        <header class="header">
+            <div>SCORE: <span id="score-val">0000</span></div>
+            <div>HIGH: <span id="high-val">0000</span></div>
+        </header>
+
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+        <div class="instructions">> ARROWS / WASD to route. Click canvas to start audio.</div>
+
+        <div class="game-over-screen" id="game-over">
+            <h1 style="font-size: 32px; letter-spacing: 2px;">GRID_COLLAPSED</h1>
+            <p style="color: #fff; font-size: 16px;">SCORE SECURED: <span id="final-score">0</span></p>
+            <button class="btn" id="restart-btn">REBOOT_ROUTINE</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreVal = document.getElementById('score-val');
+        const highVal = document.getElementById('high-val');
+        const gameOverScreen = document.getElementById('game-over');
+        const restartBtn = document.getElementById('restart-btn');
+        const finalScoreVal = document.getElementById('final-score');
+
+        const GRID_SIZE = 20;
+        const TILE_COUNT = canvas.width / GRID_SIZE;
+
+        let snake = [];
+        let dx = GRID_SIZE;
+        let dy = 0;
+        let food = {x: 0, y: 0};
+        let score = 0;
+        let highScore = localStorage.getItem('snake_highscore') || 0;
+        let gameInterval = null;
+        let gameSpeed = 100; // ms
+        let isStarted = false;
+        let audioCtx = null;
+        let foodGlowPulse = 0;
+
+        // Particle sparks for eating and dying
+        let sparks = [];
+
+        highVal.textContent = String(highScore).padStart(4, '0');
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function synthBeep(freq, duration, type = 'sine') {
+            if (!audioCtx) return;
+            try {
+                audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {}
+        }
+
+        function resetGame() {
+            snake = [
+                {x: 6 * GRID_SIZE, y: 10 * GRID_SIZE},
+                {x: 5 * GRID_SIZE, y: 10 * GRID_SIZE},
+                {x: 4 * GRID_SIZE, y: 10 * GRID_SIZE}
+            ];
+            dx = GRID_SIZE;
+            dy = 0;
+            score = 0;
+            scoreVal.textContent = '0000';
+            gameSpeed = 100;
+            sparks = [];
+            spawnFood();
+            gameOverScreen.style.display = 'none';
+            
+            if (gameInterval) clearInterval(gameInterval);
+            gameInterval = setInterval(gameLoop, gameSpeed);
+            isStarted = true;
+        }
+
+        function spawnFood() {
+            food.x = Math.floor(Math.random() * TILE_COUNT) * GRID_SIZE;
+            food.y = Math.floor(Math.random() * TILE_COUNT) * GRID_SIZE;
+            
+            // Make sure food doesn't spawn on snake
+            snake.forEach(part => {
+                if (part.x === food.x && part.y === food.y) {
+                    spawnFood();
+                }
+            });
+        }
+
+        function triggerSparks(x, y, color) {
+            for (let i = 0; i < 15; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 1 + Math.random() * 4;
+                sparks.push({
+                    x: x + GRID_SIZE/2,
+                    y: y + GRID_SIZE/2,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    color: color,
+                    alpha: 1.0,
+                    size: 2 + Math.random() * 2
+                });
+            }
+        }
+
+        function gameLoop() {
+            updateSnake();
+            if (checkCollision()) {
+                endGame();
+                return;
+            }
+            updateSparks();
+            draw();
+        }
+
+        function updateSnake() {
+            const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+            snake.unshift(head);
+
+            // Check if snake ate food
+            if (head.x === food.x && head.y === food.y) {
+                score += 10;
+                scoreVal.textContent = String(score).padStart(4, '0');
+                synthBeep(700 + score * 2, 0.08, 'sine');
+                triggerSparks(food.x, food.y, '#00f0ff');
+                spawnFood();
+                
+                // Speed up game gradually
+                if (gameSpeed > 50) {
+                    gameSpeed -= 2;
+                    clearInterval(gameInterval);
+                    gameInterval = setInterval(gameLoop, gameSpeed);
+                }
+            } else {
+                snake.pop();
+            }
+        }
+
+        function updateSparks() {
+            for (let i = sparks.length - 1; i >= 0; i--) {
+                const s = sparks[i];
+                s.x += s.vx;
+                s.y += s.vy;
+                s.alpha -= 0.04;
+                if (s.alpha <= 0) {
+                    sparks.splice(i, 1);
+                }
+            }
+        }
+
+        function checkCollision() {
+            const head = snake[0];
+            
+            // Wall collisions
+            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
+                return true;
+            }
+
+            // Self collisions
+            for (let i = 1; i < snake.length; i++) {
+                if (head.x === snake[i].x && head.y === snake[i].y) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function endGame() {
+            clearInterval(gameInterval);
+            synthBeep(120, 0.45, 'sawtooth');
+            triggerSparks(snake[0].x, snake[0].y, '#ff007f');
+            
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('snake_highscore', highScore);
+                highVal.textContent = String(highScore).padStart(4, '0');
+            }
+
+            finalScoreVal.textContent = score;
+            gameOverScreen.style.display = 'flex';
+            isStarted = false;
+        }
+
+        function draw() {
+            // Clear board
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw circuit grid lines in background
+            ctx.strokeStyle = 'rgba(255, 0, 127, 0.05)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= TILE_COUNT; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * GRID_SIZE, 0);
+                ctx.lineTo(i * GRID_SIZE, canvas.height);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(0, i * GRID_SIZE);
+                ctx.lineTo(canvas.width, i * GRID_SIZE);
+                ctx.stroke();
+            }
+
+            // Draw glowing food particle
+            foodGlowPulse += 0.15;
+            const glowRadius = GRID_SIZE * 0.4 + Math.sin(foodGlowPulse) * 4;
+            ctx.beginPath();
+            ctx.fillStyle = '#00f0ff';
+            ctx.shadowColor = '#00f0ff';
+            ctx.shadowBlur = 12;
+            ctx.arc(food.x + GRID_SIZE/2, food.y + GRID_SIZE/2, GRID_SIZE * 0.35, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Food halo
+            ctx.beginPath();
+            ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
+            ctx.arc(food.x + GRID_SIZE/2, food.y + GRID_SIZE/2, glowRadius, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Draw snake with gradient color
+            snake.forEach((part, index) => {
+                const isHead = index === 0;
+                ctx.fillStyle = isHead ? '#ffffff' : (index % 2 === 0 ? '#ff007f' : '#b30059');
+                ctx.shadowColor = '#ff007f';
+                ctx.shadowBlur = isHead ? 15 : 6;
+                
+                // Draw rounded modules
+                ctx.fillRect(part.x + 1, part.y + 1, GRID_SIZE - 2, GRID_SIZE - 2);
+                
+                // Draw cute vector indicator on head
+                if (isHead) {
+                    ctx.fillStyle = '#00f0ff';
+                    ctx.fillRect(part.x + GRID_SIZE/2 - 2, part.y + GRID_SIZE/2 - 2, 4, 4);
+                }
+            });
+
+            // Reset shadows
+            ctx.shadowBlur = 0;
+
+            // Draw explosion sparks
+            sparks.forEach(s => {
+                ctx.beginPath();
+                ctx.fillStyle = s.color;
+                ctx.globalAlpha = s.alpha;
+                ctx.shadowColor = s.color;
+                ctx.shadowBlur = 8;
+                ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1.0;
+            ctx.shadowBlur = 0;
+        }
+
+        // Event listener for keys
+        window.addEventListener('keydown', (e) => {
+            initAudio();
+            
+            const key = e.key;
+            if ((key === 'ArrowUp' || key === 'w') && dy === 0) {
+                dx = 0; dy = -GRID_SIZE;
+                synthBeep(400, 0.02);
+            } else if ((key === 'ArrowDown' || key === 's') && dy === 0) {
+                dx = 0; dy = GRID_SIZE;
+                synthBeep(400, 0.02);
+            } else if ((key === 'ArrowLeft' || key === 'a') && dx === 0) {
+                dx = -GRID_SIZE; dy = 0;
+                synthBeep(400, 0.02);
+            } else if ((key === 'ArrowRight' || key === 'd') && dx === 0) {
+                dx = GRID_SIZE; dy = 0;
+                synthBeep(400, 0.02);
+            }
+        });
+
+        // Click canvas to boot audio & game
+        canvas.addEventListener('click', () => {
+            initAudio();
+            if (!isStarted) {
+                resetGame();
+            }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            initAudio();
+            resetGame();
+        });
+
+        // Draw initial startup board
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.font = '20px "Share Tech Mono"';
+        ctx.fillStyle = '#ff007f';
+        ctx.textAlign = 'center';
+        ctx.fillText('> PRESS_ENTER / CLICK GRID <', canvas.width/2, canvas.height/2 - 10);
+        ctx.fillStyle = '#00f0ff';
+        ctx.fillText('TO RUN CYBER_SNAKE v1.0', canvas.width/2, canvas.height/2 + 25);
+    </script>
+</body>
+</html>

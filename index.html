@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEONEXUS // Browser Portal & Showcase</title>
+    <meta name="description" content="An advanced browser-based portal showcasing games, tools, and informational websites. Features retro-cyberpunk designs, interactive canvas physics, and hidden terminal features.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=JetBrains+Mono:wght@300;400;700&display=swap" rel="stylesheet">
+    <!-- Main stylesheet -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="crt-screen">
+    <!-- Interactive Background Canvases -->
+    <canvas id="bg-grid-canvas"></canvas>
+    <canvas id="mouse-dots-canvas"></canvas>
+
+    <!-- Scanline & Noise CRT Overlay -->
+    <div class="crt-overlay"></div>
+    <div class="glitch-overlay" id="glitch-overlay"></div>
+
+    <!-- Main Container -->
+    <div class="app-container">
+        <!-- Top Status Bar / Header -->
+        <header class="main-header">
+            <div class="header-left">
+                <div class="status-indicator">
+                    <span class="pulse-dot"></span>
+                    <span class="status-text">SYSTEM: ACTIVE</span>
+                </div>
+                <div class="node-id">NODE: NX-9082</div>
+            </div>
+            <div class="header-logo" id="logo">
+                <span class="glitch-text" data-text="NEONEXUS">NEONEXUS</span>
+                <span class="sub-logo">// HYPER_PORTAL v2.6</span>
+            </div>
+            <div class="header-right">
+                <div class="time-display" id="time-display">00:00:00</div>
+                <button class="terminal-toggle-btn" id="terminal-toggle" title="Toggle System Terminal (`)">
+                    <span class="btn-bracket">[</span>
+                    <span class="btn-text">TERMINAL</span>
+                    <span class="btn-bracket">]</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Sidebar / Control Panel -->
+            <aside class="control-panel">
+                <div class="panel-section">
+                    <h3 class="section-title">SYSTEM_DIAGNOSTICS</h3>
+                    <div class="diagnostics-grid">
+                        <div class="diag-item">
+                            <span class="label">FPS</span>
+                            <span class="value" id="diag-fps">60</span>
+                        </div>
+                        <div class="diag-item">
+                            <span class="label">MOUSE_X</span>
+                            <span class="value" id="diag-mx">0</span>
+                        </div>
+                        <div class="diag-item">
+                            <span class="label">MOUSE_Y</span>
+                            <span class="value" id="diag-my">0</span>
+                        </div>
+                        <div class="diag-item">
+                            <span class="label">PARTICLES</span>
+                            <span class="value" id="diag-particles">12</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-section">
+                    <h3 class="section-title">PORTAL_FILTER</h3>
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" data-filter="all">
+                            <span class="tab-indicator"></span>
+                            <span class="tab-text">ALL_UNITS</span>
+                        </button>
+                        <button class="filter-tab" data-filter="game">
+                            <span class="tab-indicator"></span>
+                            <span class="tab-text">GAMES</span>
+                        </button>
+                        <button class="filter-tab" data-filter="tool">
+                            <span class="tab-indicator"></span>
+                            <span class="tab-text">UTILITIES</span>
+                        </button>
+                        <button class="filter-tab" data-filter="info">
+                            <span class="tab-indicator"></span>
+                            <span class="tab-text">INFO_NET</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="panel-section instructions-section">
+                    <h3 class="section-title">USER_MANUAL</h3>
+                    <p class="instruction-text">> Drag mouse to control gravity dots.</p>
+                    <p class="instruction-text">> Click to inject grid warp impulses.</p>
+                    <p class="instruction-text">> Press <kbd class="kbd-key">`</kbd> to access root terminal.</p>
+                    <p class="instruction-text">> Secret Konami code unlocks matrix override.</p>
+                </div>
+                
+                <div class="panel-section audio-controls">
+                    <h3 class="section-title">AUDIO_SYNTH</h3>
+                    <div class="audio-switch-container">
+                        <span class="label">SYSTEM AUDIO</span>
+                        <button id="audio-toggle" class="audio-btn off">OFF</button>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Grid of Showcased Websites -->
+            <section class="portal-grid-container">
+                <div class="search-bar-container">
+                    <span class="search-prompt">root@neonexus:~$ search --term </span>
+                    <input type="text" id="portal-search" class="search-input" placeholder="Type here to search nodes..." autocomplete="off">
+                </div>
+                
+                <div class="portal-grid" id="portal-grid">
+                    <!-- Cards will be dynamically injected here via JS -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Hidden Terminal Overlay -->
+    <div class="terminal-overlay" id="terminal-overlay">
+        <div class="terminal-window">
+            <header class="terminal-header">
+                <div class="terminal-title">SYSTEM_SHELL // root@neonexus</div>
+                <div class="terminal-controls">
+                    <span class="term-dot min"></span>
+                    <span class="term-dot max"></span>
+                    <button class="term-close-btn" id="terminal-close">&times;</button>
+                </div>
+            </header>
+            <div class="terminal-body" id="terminal-body">
+                <div class="terminal-output" id="terminal-output">
+                    <p>NEONEXUS OS v2.6.0-release</p>
+                    <p>Connection established. Access level: ROOT_USER.</p>
+                    <p>Type <span class="highlight">help</span> for a list of available sub-routines.</p>
+                    <br>
+                </div>
+                <div class="terminal-input-line">
+                    <span class="prompt">root@neonexus:~$</span>
+                    <input type="text" id="terminal-input" class="terminal-input" autofocus autocomplete="off" spellcheck="false">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Iframe Preview Modal -->
+    <div class="iframe-modal" id="iframe-modal">
+        <div class="iframe-window">
+            <header class="iframe-header">
+                <div class="iframe-title" id="iframe-title">NEURAL_LINK // connecting...</div>
+                <div class="iframe-controls">
+                    <button class="iframe-btn" id="iframe-open-tab" title="Open in new tab">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                    </button>
+                    <button class="iframe-close-btn" id="iframe-close">&times;</button>
+                </div>
+            </header>
+            <div class="iframe-body">
+                <iframe id="portal-iframe" src="" frameborder="0" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+            </div>
+            <footer class="iframe-footer">
+                <div class="connection-status">
+                    <span class="pulse-dot green"></span>
+                    <span id="iframe-status-text">SECURE NEURAL_LINK ESTABLISHED</span>
+                </div>
+                <div class="iframe-stats">SPEED: 10.4 Gbps | LATENCY: 2ms</div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Modules and Core Logic -->
+    <script src="portal.js"></script>
+    <script src="cursor-dots.js"></script>
+    <script src="glitch.js"></script>
+    <script src="terminal.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
