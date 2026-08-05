@@ -299,3 +299,91 @@ body, .glass, .card, .btn, .nav, .marquee { transition:
 :root[data-style="neon"] .nav { border-color: rgba(0,245,255,0.4); box-shadow: 0 0 32px rgba(0,245,255,0.22); }
 :root[data-style="neon"] .card:hover { box-shadow: 0 0 42px rgba(0,245,255,0.28); }
 :root[data-style="neon"] ::selection { background: rgba(0,245,255,0.4); color: #000; }
+
+/* ---------- BENTO — soft dark, big radius, colourful mosaic grid ---------- */
+:root[data-style="bento"] {
+  --bg: #0c0d12; --bg-2: #12131a;
+  --panel: rgba(255,255,255,0.04); --panel-2: rgba(255,255,255,0.07);
+  --border: rgba(255,255,255,0.08); --border-bright: rgba(255,255,255,0.16); --blur: 20px;
+  --text: #f4f4f8; --text-dim: #9a9aa6; --text-faint: #63636e;
+  --accent: #ffb86b; --accent-soft: rgba(255,184,107,0.14);
+  --spectrum: linear-gradient(115deg,#ff8fb1,#ffb86b,#7ce0ff);
+  --spectrum-soft: linear-gradient(115deg,rgba(255,143,177,0.16),rgba(124,224,255,0.16));
+  --radius: 26px; --radius-sm: 18px;
+  --font-display: 'Alpino', system-ui, sans-serif;
+}
+:root[data-style="bento"] body::before {
+  background:
+    radial-gradient(50vw 50vw at 10% -5%, rgba(255,143,177,0.10), transparent 55%),
+    radial-gradient(48vw 48vw at 100% 10%, rgba(124,224,255,0.09), transparent 55%),
+    radial-gradient(55vw 55vw at 85% 105%, rgba(255,184,107,0.09), transparent 60%),
+    var(--bg);
+}
+@media (min-width: 760px) {
+  :root[data-style="bento"] .grid { grid-template-columns: repeat(4, 1fr); grid-auto-rows: 1fr; grid-auto-flow: dense; }
+  :root[data-style="bento"] .grid > *:nth-child(1) { grid-column: span 2; grid-row: span 2; }
+  :root[data-style="bento"] .grid > *:nth-child(4) { grid-column: span 2; }
+}
+:root[data-style="bento"] .card { background: var(--panel-2); }
+
+/* ---------- KINETIC — bold, everything in motion ---------- */
+:root[data-style="kinetic"] {
+  --bg: #08070f; --bg-2: #0d0b16;
+  --panel: rgba(255,255,255,0.035); --panel-2: rgba(255,255,255,0.06);
+  --border: rgba(255,255,255,0.1); --border-bright: rgba(255,255,255,0.2); --blur: 16px;
+  --text: #f6f5fb; --text-dim: #9c98b4; --text-faint: #635f7e;
+  --accent: #b8a6ff; --accent-soft: rgba(184,166,255,0.16);
+  --spectrum: linear-gradient(115deg,#7cf7ff,#a78bfa,#ff6ec7,#ffd36e,#7cf7ff);
+  --spectrum-soft: linear-gradient(115deg,rgba(167,139,250,0.18),rgba(255,110,199,0.18));
+  --radius: 20px;
+}
+:root[data-style="kinetic"] body::before {
+  background:
+    radial-gradient(60vw 60vw at 12% -8%, rgba(167,139,250,0.14), transparent 60%),
+    radial-gradient(50vw 50vw at 100% 10%, rgba(255,110,199,0.11), transparent 55%),
+    var(--bg);
+  animation: ws-drift 14s ease-in-out infinite alternate;
+}
+:root[data-style="kinetic"] .gradient-text,
+:root[data-style="kinetic"] .font-hero {
+  background: var(--spectrum); background-size: 300% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: ws-slide 5s linear infinite;
+}
+:root[data-style="kinetic"] .marquee__track { animation-duration: 16s; }
+:root[data-style="kinetic"] .card:hover { transform: translateY(-8px) scale(1.015); }
+@keyframes ws-slide { to { background-position: 300% 0; } }
+@keyframes ws-drift { from { transform: translate3d(0,0,0); } to { transform: translate3d(-3%, 2%, 0); } }
+
+/* =========================================================================
+   COMPONENT OPTIONS — data-* attributes toggled by the Design Console.
+   Placed after the style modes so they compose on top of any vibe.
+   ========================================================================= */
+
+/* -- HERO TITLE effect -- */
+:root[data-hero="outline"] .font-hero { color: transparent; -webkit-text-stroke: 1.5px var(--text); }
+:root[data-hero="outline"] .font-hero .gradient-text { background: none; color: transparent; -webkit-text-stroke: 1.5px var(--accent); }
+:root[data-hero="glow"] .font-hero { text-shadow: 0 0 28px var(--accent), 0 0 60px var(--accent-soft); }
+
+/* -- TASKBAR (nav) layout -- */
+:root[data-nav="bar"] .nav { top: 0; left: 0; right: 0; width: 100%; max-width: 100%; transform: none; border-radius: 0; border-width: 0 0 1px 0; box-shadow: none; }
+:root[data-nav="bar"] .nav.is-hidden { transform: translateY(-100%); }
+:root[data-nav="mini"] .nav__links { display: none; }
+
+/* -- BANNER (marquee) -- */
+:root[data-banner="off"] .marquee { display: none; }
+
+/* -- CORNERS -- */
+:root[data-corners="sharp"] { --radius: 0px; --radius-sm: 0px; }
+:root[data-corners="sharp"] .btn,
+:root[data-corners="sharp"] .nav,
+:root[data-corners="sharp"] .chip,
+:root[data-corners="sharp"] .console__act { border-radius: 2px; }
+:root[data-corners="sharp"] .swatch { border-radius: 4px; }
+
+/* -- MOTION -- */
+:root[data-motion="off"] #field { display: none; }
+:root[data-motion="off"] .marquee__track { animation: none; }
+:root[data-motion="off"] body::before { animation: none; }
+:root[data-motion="off"] .gradient-text,
+:root[data-motion="off"] .font-hero { animation: none; }

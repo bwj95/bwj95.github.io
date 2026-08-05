@@ -1,5 +1,5 @@
 ---
-import { styles, fonts, accents } from '../data/themes';
+import { styles, fonts, accents, options } from '../data/themes';
 ---
 <aside class="console glass" id="console" data-open="false" aria-label="Design this site">
   <button class="console__toggle" id="consoleToggle" aria-expanded="false">
@@ -36,6 +36,20 @@ import { styles, fonts, accents } from '../data/themes';
           <button class="swatch" data-val={i} title={a.label} aria-label={a.label} style={`background:${a.spectrum}`}></button>
         ))}
       </div>
+    </div>
+
+    <div class="console__group">
+      <span class="console__label">Components</span>
+      {options.map((op) => (
+        <div class="console__opt">
+          <span class="console__optlabel">{op.label}</span>
+          <div class="console__row" data-ctl="opt" data-key={op.key}>
+            {op.choices.map((c) => (
+              <button class="chip chip--sm" data-val={c.val}>{c.label}</button>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
 
     <div class="console__actions">
@@ -95,6 +109,10 @@ import { styles, fonts, accents } from '../data/themes';
   .swatch:hover { transform: scale(1.12); }
   .swatch.is-active { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--text); }
 
+  .console__opt { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.4rem; }
+  .console__optlabel { flex: 0 0 66px; font-size: 0.74rem; color: var(--text-dim); }
+  .chip--sm { padding: 0.28rem 0.6rem; font-size: 0.72rem; }
+
   .console__actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.4rem; padding-top: 0.8rem; border-top: 1px solid var(--border); }
   .console__act { flex: 1; min-width: 108px; padding: 0.55rem 0.7rem; border-radius: 10px; border: 1px solid var(--border-bright); background: var(--panel-2); color: var(--text); font-size: 0.78rem; font-family: var(--font-mono); transition: background 0.2s, border-color 0.2s; }
   .console__act:hover { background: var(--panel); border-color: var(--accent); }
@@ -140,6 +158,7 @@ import { styles, fonts, accents } from '../data/themes';
       if (ctl === 'style') T.setStyle(val);
       else if (ctl === 'font') T.setFont(parseInt(val));
       else if (ctl === 'accent') T.setAccent(parseInt(val));
+      else if (ctl === 'opt') T.setOpt(row.dataset.key!, val);
     });
   });
 
@@ -171,6 +190,14 @@ import { styles, fonts, accents } from '../data/themes';
       el.classList.toggle('is-active', s.f != null && +el.dataset.val! === s.f));
     document.querySelectorAll<HTMLElement>('[data-ctl="accent"] [data-val]').forEach((el) =>
       el.classList.toggle('is-active', s.a != null && +el.dataset.val! === s.a));
+    // component options: active = current attribute value (or the option default)
+    document.querySelectorAll<HTMLElement>('[data-ctl="opt"]').forEach((row) => {
+      const op = (T.OPTIONS || []).find((o: any) => o.key === row.dataset.key);
+      if (!op) return;
+      const cur = document.documentElement.getAttribute(op.attr) || op.default;
+      row.querySelectorAll<HTMLElement>('[data-val]').forEach((el) =>
+        el.classList.toggle('is-active', el.dataset.val === cur));
+    });
   };
   (window as any).__wsSync();
 </script>

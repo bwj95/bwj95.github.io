@@ -4,7 +4,7 @@ import ParticleField from '../components/ParticleField.astro';
 import Nav from '../components/Nav.astro';
 import ThemeConsole from '../components/ThemeConsole.astro';
 import { site } from '../data/site';
-import { fonts, accents } from '../data/themes';
+import { fonts, accents, options } from '../data/themes';
 
 interface Props { title?: string; description?: string; }
 const {
@@ -25,14 +25,20 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
 
     <!-- Design Console theme engine — runs pre-paint to apply the saved / shared
          look before first render (no flash). Data comes from src/data/themes.ts. -->
-    <script define:vars={{ FONTS: fonts, ACCENTS: accents }}>
+    <script define:vars={{ FONTS: fonts, ACCENTS: accents, OPTIONS: options }}>
       (function () {
         var root = document.documentElement;
-        var state = { s: 'aurora', f: null, a: null };
+        var state = { s: 'aurora', f: null, a: null, o: {} };
         function applyStyle(v) {
           state.s = v || 'aurora';
           if (state.s === 'aurora') root.removeAttribute('data-style');
           else root.setAttribute('data-style', state.s);
+        }
+        function optByKey(k) { for (var i = 0; i < OPTIONS.length; i++) if (OPTIONS[i].key === k) return OPTIONS[i]; return null; }
+        function applyOpt(k, val) {
+          var op = optByKey(k); if (!op) return;
+          if (val == null || val === op.default) { root.removeAttribute(op.attr); delete state.o[k]; }
+          else { root.setAttribute(op.attr, val); state.o[k] = val; }
         }
         function applyFont(i) {
           state.f = (i == null || i === '') ? null : +i;
@@ -61,6 +67,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
           if (state.s !== 'aurora') p.push('s=' + state.s);
           if (state.f != null) p.push('f=' + state.f);
           if (state.a != null) p.push('a=' + state.a);
+          for (var k in state.o) if (state.o[k]) p.push(k + '=' + state.o[k]);
           var h = p.join('&');
           try { history.replaceState(null, '', h ? '#' + h : location.pathname + location.search); } catch (e) {}
           try { localStorage.setItem('ws-theme', h); } catch (e) {}
@@ -78,18 +85,25 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
           if (o.s) applyStyle(o.s);
           if (o.f != null) applyFont(o.f);
           if (o.a != null) applyAccent(o.a);
+          OPTIONS.forEach(function (op) { if (o[op.key] != null) applyOpt(op.key, o[op.key]); });
         }
         window.__wsTheme = {
-          state: state,
+          state: state, OPTIONS: OPTIONS,
           setStyle: function (v) { applyStyle(v); applyFont(null); applyAccent(null); persist(); },
           setFont: function (i) { applyFont(i); persist(); },
           setAccent: function (i) { applyAccent(i); persist(); },
-          reset: function () { applyStyle('aurora'); applyFont(null); applyAccent(null); persist(); },
+          setOpt: function (k, v) { applyOpt(k, v); persist(); },
+          reset: function () {
+            applyStyle('aurora'); applyFont(null); applyAccent(null);
+            OPTIONS.forEach(function (op) { root.removeAttribute(op.attr); }); state.o = {};
+            persist();
+          },
           random: function () {
-            var modes = ['aurora', 'brutalist', 'editorial', 'neon'];
+            var modes = ['aurora', 'brutalist', 'editorial', 'neon', 'bento', 'kinetic'];
             applyStyle(modes[(Math.random() * modes.length) | 0]);
             applyFont((Math.random() * FONTS.length) | 0);
             applyAccent((Math.random() * ACCENTS.length) | 0);
+            OPTIONS.forEach(function (op) { applyOpt(op.key, op.choices[(Math.random() * op.choices.length) | 0].val); });
             persist();
           }
         };
