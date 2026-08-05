@@ -472,6 +472,40 @@ body, .glass, .card, .btn, .nav, .marquee { transition:
 :root[data-cards="outline"] .card, :root[data-cards="outline"] .offer { background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; border-color: var(--border-bright); }
 :root[data-cards="elevated"] .card, :root[data-cards="elevated"] .offer { background: var(--panel-2); border-color: transparent; box-shadow: 0 24px 60px rgba(0,0,0,0.45); backdrop-filter: none; -webkit-backdrop-filter: none; }
 
+/* -- CARD IMAGE (media) -- */
+/* subtle zoom on hover for real photos (posters have overflow:hidden already) */
+.card__poster img { transition: transform 0.55s var(--ease); }
+.card:hover .card__poster img { transform: scale(1.05); }
+
+/* Full: image/poster covers the whole card, text sits over a scrim */
+:root[data-media="full"] .card { position: relative; min-height: 440px; }
+:root[data-media="full"] .card__poster { position: absolute; inset: 0; aspect-ratio: auto; }
+:root[data-media="full"] .card__poster img { width: 100%; height: 100%; object-fit: cover; }
+:root[data-media="full"] .card__body {
+  position: absolute; inset: auto 0 0 0; z-index: 2; padding: 3.5rem 1.5rem 1.5rem;
+  background: linear-gradient(to top, rgba(6,8,10,0.9), rgba(6,8,10,0.35) 55%, transparent);
+}
+/* clean magazine card — drop the long copy so the image breathes */
+:root[data-media="full"] .card__blurb,
+:root[data-media="full"] .card__tags { display: none; }
+:root[data-media="full"] .card__name,
+:root[data-media="full"] .card__tagline { color: #fff; }
+:root[data-media="full"] .card__link { color: #fff; }
+
+/* Duotone: tint the poster/image with the accent */
+:root[data-media="duotone"] .card__poster { position: relative; }
+:root[data-media="duotone"] .card__poster img { filter: grayscale(1) contrast(1.05); }
+:root[data-media="duotone"] .card__poster::after {
+  content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: var(--spectrum); opacity: 0.55; mix-blend-mode: screen;
+}
+:root[data-media="duotone"] .card__status { z-index: 3; }
+:root[data-media="duotone"] .card__glyph { z-index: 2; position: relative; }
+
+/* Minimal: no image, text-forward card */
+:root[data-media="minimal"] .card__poster { display: none; }
+:root[data-media="minimal"] .card__body { padding-top: 1.5rem; }
+
 /* -- DENSITY -- */
 :root[data-density="compact"] .section { padding-block: clamp(2.4rem, 6vw, 4.5rem); }
 :root[data-density="compact"] .grid, :root[data-density="compact"] .offer-grid { gap: 0.9rem; }

@@ -51,6 +51,10 @@ export const options: Option[] = [
     { val: 'glass', label: 'Glass' }, { val: 'solid', label: 'Solid' },
     { val: 'outline', label: 'Outline' }, { val: 'elevated', label: 'Elevated' },
   ] },
+  { key: 'media', attr: 'data-media', label: 'Card image', default: 'poster', choices: [
+    { val: 'poster', label: 'Poster' }, { val: 'full', label: 'Full' },
+    { val: 'duotone', label: 'Duotone' }, { val: 'minimal', label: 'None' },
+  ] },
   { key: 'density', attr: 'data-density', label: 'Density', default: 'cozy', choices: [
     { val: 'cozy', label: 'Cozy' }, { val: 'compact', label: 'Compact' }, { val: 'spacious', label: 'Spacious' },
   ] },
