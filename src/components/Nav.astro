@@ -12,19 +12,37 @@ const links = [
     <span class="nav__mark">bwj95</span>
     <span class="nav__dot"></span>
   </a>
+
   <nav class="nav__links" aria-label="Primary">
     {links.map((l) => <a href={l.href}>{l.label}</a>)}
   </nav>
+
   <a class="btn btn-primary nav__cta" href="/#hire">Hire me</a>
+
+  <button class="nav__burger" id="navBurger" aria-label="Open menu" aria-expanded="false" aria-controls="navMenu">
+    <span class="nav__burger-box"><span class="nav__burger-line"></span></span>
+  </button>
 </header>
+
+<!-- menu lives OUTSIDE the glass pill: a filtered/transformed ancestor would trap
+     the fullscreen (position:fixed) variant. Body-level → true viewport anchoring. -->
+<div class="nav__menu glass" id="navMenu">
+  <nav aria-label="Menu">
+    {links.map((l) => <a href={l.href}>{l.label}</a>)}
+  </nav>
+  <a class="btn btn-primary nav__menu-cta" href="/#hire">Hire me</a>
+</div>
 
 <style>
   /* floating centered pill — detached from the top edge */
   .nav {
     position: fixed;
     top: 0.9rem;
-    left: 50%;
-    transform: translateX(-50%);
+    /* centre WITHOUT a transform, so the fullscreen menu (position:fixed) can
+       escape to the viewport instead of being trapped by a transformed parent */
+    left: 0; right: 0;
+    margin-inline: auto;
+    width: max-content;
     z-index: 50;
     display: flex;
     align-items: center;
@@ -39,11 +57,9 @@ const links = [
     -webkit-backdrop-filter: blur(16px);
     box-shadow: 0 14px 44px rgba(0, 0, 0, 0.5);
     transition: transform 0.4s var(--ease), opacity 0.35s var(--ease);
-    will-change: transform;
   }
-  /* hidden state: slide up off the top */
   .nav.is-hidden {
-    transform: translate(-50%, calc(-100% - 1.2rem));
+    transform: translateY(calc(-100% - 1.2rem));
     opacity: 0;
     pointer-events: none;
   }
@@ -54,34 +70,101 @@ const links = [
   .nav__links a { font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.04em; color: var(--text-dim); transition: color 0.2s; }
   .nav__links a:hover { color: var(--text); }
   .nav__cta { padding: 0.45rem 1rem; font-size: 0.74rem; }
+
+  /* ---- hamburger (hidden until the taskbar can't fit, or in Minimal mode) ---- */
+  .nav__burger { display: none; align-items: center; justify-content: center; width: 36px; height: 36px; background: transparent; border: none; color: var(--text); flex: 0 0 auto; }
+  .nav__burger-box { position: relative; width: 18px; height: 12px; }
+  .nav__burger-line, .nav__burger-line::before, .nav__burger-line::after {
+    position: absolute; left: 0; width: 18px; height: 2px; background: currentColor; border-radius: 2px;
+    transition: transform 0.3s var(--ease), opacity 0.2s var(--ease);
+  }
+  .nav__burger-line { top: 5px; }
+  .nav__burger-line::before { content: ''; top: -5px; }
+  .nav__burger-line::after { content: ''; top: 5px; }
+  .nav__burger[aria-expanded="true"] .nav__burger-line { background: transparent; }
+  .nav__burger[aria-expanded="true"] .nav__burger-line::before { top: 0; transform: rotate(45deg); }
+  .nav__burger[aria-expanded="true"] .nav__burger-line::after { top: 0; transform: rotate(-45deg); }
+
+  /* ---- the menu (dropdown by default; inherits the active vibe via .glass + vars) ----
+     Fixed + body-level so the fullscreen variant anchors to the viewport. z-index below
+     the nav (50) so the pill's burger stays on top to close it. */
+  .nav__menu {
+    position: fixed; top: calc(0.9rem + 54px + 10px); left: 50%;
+    width: min(280px, calc(100vw - 1.6rem));
+    padding: 0.55rem;
+    display: flex; flex-direction: column; gap: 0.15rem;
+    opacity: 0; visibility: hidden; transform: translateX(-50%) translateY(-8px);
+    transition: opacity 0.25s var(--ease), transform 0.25s var(--ease), visibility 0.25s;
+    z-index: 49;
+  }
+  .nav__menu.is-open { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+  .nav__menu nav { display: flex; flex-direction: column; gap: 0.1rem; }
+  .nav__menu a { padding: 0.7rem 0.9rem; border-radius: max(6px, calc(var(--radius-sm) - 6px)); color: var(--text-dim); font-family: var(--font-mono); font-size: 0.92rem; transition: color 0.2s, background 0.2s; }
+  .nav__menu a:hover { color: var(--text); background: var(--panel-2); }
+  .nav__menu-cta { justify-content: center; margin-top: 0.35rem; }
+
+  /* show the burger when the inline links are hidden */
   @media (max-width: 720px) {
     .nav__links { display: none; }
-    .nav { padding-left: 1.1rem; }
+    .nav__burger { display: inline-flex; }
+    .nav__cta { display: none; } /* Hire me lives in the menu at this size */
+  }
+  /* Minimal taskbar mode hides the links at all widths → burger takes over */
+  :root[data-nav="mini"] .nav__links { display: none; }
+  :root[data-nav="mini"] .nav__burger { display: inline-flex; }
+
+  /* ---- Menu = Fullscreen (console option: data-menu="overlay") ---- */
+  :root[data-menu="overlay"] .nav__menu {
+    position: fixed; inset: 0; top: 0; right: 0;
+    width: 100vw; height: 100dvh; border-radius: 0;
+    padding: 2rem; transform: none;
+    display: grid; align-content: center; justify-items: center; gap: 0.4rem;
+  }
+  :root[data-menu="overlay"] .nav__menu nav { align-items: center; gap: 0.3rem; }
+  :root[data-menu="overlay"] .nav__menu a { font-size: clamp(1.6rem, 7vw, 2.6rem); font-family: var(--font-display); }
+  :root[data-menu="overlay"] .nav__menu-cta { margin-top: 1.2rem; padding: 0.9rem 2rem; font-size: 0.9rem; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nav, .nav__menu, .nav__burger-line, .nav__burger-line::before, .nav__burger-line::after { transition: none; }
   }
 </style>
 
 <script>
   const nav = document.getElementById('nav');
-  if (nav) {
-    let last = window.scrollY;
-    let ticking = false;
-    const THRESHOLD = 6; // ignore tiny jitters
+  const burger = document.getElementById('navBurger');
+  const menu = document.getElementById('navMenu');
 
-    function update() {
-      const y = window.scrollY;
-      if (y < 90) {
-        nav!.classList.remove('is-hidden');          // always visible near the top
-      } else if (y > last + THRESHOLD) {
-        nav!.classList.add('is-hidden');             // scrolling down → hide
-      } else if (y < last - THRESHOLD) {
-        nav!.classList.remove('is-hidden');          // scrolling up → reveal
-      }
-      last = y;
-      ticking = false;
-    }
-
-    window.addEventListener('scroll', () => {
-      if (!ticking) { requestAnimationFrame(update); ticking = true; }
-    }, { passive: true });
+  // hide-on-scroll-down / reveal-on-scroll-up
+  let last = window.scrollY;
+  let ticking = false;
+  const THRESHOLD = 6;
+  function update() {
+    const y = window.scrollY;
+    if (y < 90) nav?.classList.remove('is-hidden');
+    else if (y > last + THRESHOLD) { nav?.classList.add('is-hidden'); closeMenu(); }
+    else if (y < last - THRESHOLD) nav?.classList.remove('is-hidden');
+    last = y;
+    ticking = false;
   }
+  window.addEventListener('scroll', () => {
+    if (!ticking) { requestAnimationFrame(update); ticking = true; }
+  }, { passive: true });
+
+  // hamburger menu
+  function closeMenu() {
+    menu?.classList.remove('is-open');
+    burger?.setAttribute('aria-expanded', 'false');
+    burger?.setAttribute('aria-label', 'Open menu');
+  }
+  burger?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const open = menu?.classList.toggle('is-open');
+    burger.setAttribute('aria-expanded', String(!!open));
+    burger.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+  });
+  menu?.querySelectorAll('a').forEach((a) => a.addEventListener('click', closeMenu));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeMenu(); });
+  document.addEventListener('click', (e) => {
+    if (menu?.classList.contains('is-open') && !menu.contains(e.target as Node) && !burger?.contains(e.target as Node)) closeMenu();
+  });
 </script>

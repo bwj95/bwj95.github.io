@@ -26,6 +26,9 @@ export const options: Option[] = [
   { key: 'nav', attr: 'data-nav', label: 'Taskbar', default: 'float', choices: [
     { val: 'float', label: 'Floating' }, { val: 'bar', label: 'Top bar' }, { val: 'mini', label: 'Minimal' },
   ] },
+  { key: 'menu', attr: 'data-menu', label: 'Menu', default: 'dropdown', choices: [
+    { val: 'dropdown', label: 'Dropdown' }, { val: 'overlay', label: 'Fullscreen' },
+  ] },
   { key: 'banner', attr: 'data-banner', label: 'Banner', default: 'on', choices: [
     { val: 'on', label: 'On' }, { val: 'off', label: 'Off' },
   ] },
