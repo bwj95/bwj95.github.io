@@ -387,3 +387,41 @@ body, .glass, .card, .btn, .nav, .marquee { transition:
 :root[data-motion="off"] body::before { animation: none; }
 :root[data-motion="off"] .gradient-text,
 :root[data-motion="off"] .font-hero { animation: none; }
+
+/* -- BACKGROUND -- */
+:root[data-bg="aurora"] #field,
+:root[data-bg="grid"] #field,
+:root[data-bg="dots"] #field,
+:root[data-bg="none"] #field { display: none; }
+:root[data-bg="grid"] body::before {
+  background:
+    linear-gradient(var(--border) 1px, transparent 1px) 0 0 / 100% 40px,
+    linear-gradient(90deg, var(--border) 1px, transparent 1px) 0 0 / 40px 100%,
+    var(--bg);
+}
+:root[data-bg="dots"] body::before {
+  background:
+    radial-gradient(circle, var(--border-bright) 1.1px, transparent 1.3px) 0 0 / 24px 24px,
+    var(--bg);
+}
+:root[data-bg="none"] body::before { background: var(--bg); }
+
+/* -- CARDS (project + offer cards) -- */
+:root[data-cards="solid"] .card, :root[data-cards="solid"] .offer { background: var(--bg-2); backdrop-filter: none; -webkit-backdrop-filter: none; }
+:root[data-cards="outline"] .card, :root[data-cards="outline"] .offer { background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; border-color: var(--border-bright); }
+:root[data-cards="elevated"] .card, :root[data-cards="elevated"] .offer { background: var(--panel-2); border-color: transparent; box-shadow: 0 24px 60px rgba(0,0,0,0.45); backdrop-filter: none; -webkit-backdrop-filter: none; }
+
+/* -- DENSITY -- */
+:root[data-density="compact"] .section { padding-block: clamp(2.4rem, 6vw, 4.5rem); }
+:root[data-density="compact"] .grid, :root[data-density="compact"] .offer-grid { gap: 0.9rem; }
+:root[data-density="spacious"] .section { padding-block: clamp(6rem, 14vw, 11rem); }
+:root[data-density="spacious"] .grid, :root[data-density="spacious"] .offer-grid { gap: 2.2rem; }
+
+/* -- CURSOR (custom follower; element + JS live in Base) -- */
+.cursor { position: fixed; top: 0; left: 0; z-index: 9999; pointer-events: none; opacity: 0; will-change: transform; }
+@media (pointer: fine) {
+  :root[data-cursor="dot"], :root[data-cursor="ring"] { cursor: none; }
+  :root[data-cursor="dot"] .cursor, :root[data-cursor="ring"] .cursor { opacity: 1; }
+}
+:root[data-cursor="dot"] .cursor { width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+:root[data-cursor="ring"] .cursor { width: 28px; height: 28px; margin: -14px 0 0 -14px; border-radius: 50%; border: 2px solid var(--accent); }

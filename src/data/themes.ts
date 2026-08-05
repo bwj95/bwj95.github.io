@@ -39,6 +39,20 @@ export const options: Option[] = [
   { key: 'corners', attr: 'data-corners', label: 'Corners', default: 'round', choices: [
     { val: 'round', label: 'Round' }, { val: 'sharp', label: 'Sharp' },
   ] },
+  { key: 'bg', attr: 'data-bg', label: 'Background', default: 'particles', choices: [
+    { val: 'particles', label: 'Particles' }, { val: 'aurora', label: 'Aurora' },
+    { val: 'grid', label: 'Grid' }, { val: 'dots', label: 'Dots' }, { val: 'none', label: 'None' },
+  ] },
+  { key: 'cards', attr: 'data-cards', label: 'Cards', default: 'glass', choices: [
+    { val: 'glass', label: 'Glass' }, { val: 'solid', label: 'Solid' },
+    { val: 'outline', label: 'Outline' }, { val: 'elevated', label: 'Elevated' },
+  ] },
+  { key: 'density', attr: 'data-density', label: 'Density', default: 'cozy', choices: [
+    { val: 'cozy', label: 'Cozy' }, { val: 'compact', label: 'Compact' }, { val: 'spacious', label: 'Spacious' },
+  ] },
+  { key: 'cursor', attr: 'data-cursor', label: 'Cursor', default: 'default', choices: [
+    { val: 'default', label: 'Default' }, { val: 'dot', label: 'Dot' }, { val: 'ring', label: 'Ring' },
+  ] },
   { key: 'motion', attr: 'data-motion', label: 'Motion', default: 'on', choices: [
     { val: 'on', label: 'On' }, { val: 'off', label: 'Off' },
   ] },

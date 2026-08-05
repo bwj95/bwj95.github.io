@@ -55,8 +55,10 @@ import { styles, fonts, accents, options } from '../data/themes';
     <div class="console__actions">
       <button class="console__act" data-act="random">🎲 Surprise me</button>
       <button class="console__act" data-act="share">🔗 Copy link</button>
+      <button class="console__act console__act--accent" data-act="export">⤓ Export CSS</button>
       <button class="console__act console__act--ghost" data-act="reset">Reset</button>
     </div>
+    <textarea class="console__out" id="consoleOut" readonly hidden aria-label="Exported CSS tokens"></textarea>
   </div>
 </aside>
 
@@ -117,6 +119,8 @@ import { styles, fonts, accents, options } from '../data/themes';
   .console__act { flex: 1; min-width: 108px; padding: 0.55rem 0.7rem; border-radius: 10px; border: 1px solid var(--border-bright); background: var(--panel-2); color: var(--text); font-size: 0.78rem; font-family: var(--font-mono); transition: background 0.2s, border-color 0.2s; }
   .console__act:hover { background: var(--panel); border-color: var(--accent); }
   .console__act--ghost { flex: 0 0 auto; min-width: 0; color: var(--text-dim); border-color: var(--border); }
+  .console__act--accent { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+  .console__out { width: 100%; margin-top: 0.6rem; min-height: 148px; padding: 0.7rem 0.8rem; border-radius: 10px; border: 1px solid var(--border); background: rgba(0,0,0,0.32); color: var(--text-dim); font-family: var(--font-mono); font-size: 0.72rem; line-height: 1.55; resize: vertical; white-space: pre; }
 
   @media (prefers-reduced-motion: reduce) {
     .console__panel, .console__chev { transition: none; }
@@ -168,7 +172,11 @@ import { styles, fonts, accents, options } from '../data/themes';
       if (!T) return;
       const act = b.dataset.act;
       if (act === 'random') T.random();
-      else if (act === 'reset') T.reset();
+      else if (act === 'reset') {
+        T.reset();
+        const out = document.getElementById('consoleOut') as HTMLTextAreaElement | null;
+        if (out) out.hidden = true;
+      }
       else if (act === 'share') {
         try {
           await navigator.clipboard.writeText(location.href);
@@ -176,6 +184,23 @@ import { styles, fonts, accents, options } from '../data/themes';
           b.textContent = '✓ Copied!';
           setTimeout(() => (b.textContent = prev), 1400);
         } catch { /* clipboard blocked — no-op */ }
+      }
+      else if (act === 'export') {
+        const root = document.documentElement;
+        const cs = getComputedStyle(root);
+        const vars = ['--bg','--bg-2','--panel','--border','--text','--text-dim','--hue','--accent','--spectrum','--radius','--font-display','--font-body','--font-hero'];
+        const attrKeys = ['data-style','data-hero','data-nav','data-menu','data-burger','data-banner','data-corners','data-bg','data-cards','data-density','data-cursor','data-motion'];
+        const attrs = attrKeys.filter((a) => root.hasAttribute(a)).map((a) => `${a}="${root.getAttribute(a)}"`).join(' ') || '(all defaults)';
+        const bodyCss = vars.map((v) => `  ${v}: ${cs.getPropertyValue(v).trim()};`).join('\n');
+        const out = `/* bwj95 web-studio — design tokens */\n/* preset → <html ${attrs}> */\n:root {\n${bodyCss}\n}`;
+        const ta = document.getElementById('consoleOut') as HTMLTextAreaElement | null;
+        if (ta) { ta.value = out; ta.hidden = false; ta.scrollIntoView({ block: 'nearest' }); }
+        try {
+          await navigator.clipboard.writeText(out);
+          const prev = b.textContent;
+          b.textContent = '✓ Copied CSS!';
+          setTimeout(() => (b.textContent = prev), 1600);
+        } catch { /* clipboard blocked — textarea still shows it */ }
       }
     });
   });

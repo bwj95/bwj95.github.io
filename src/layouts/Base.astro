@@ -131,6 +131,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
   </head>
   <body>
     <ParticleField />
+    <div class="cursor" id="cursor" aria-hidden="true"></div>
     <Nav />
     <main id="top">
       <slot />
@@ -167,6 +168,22 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
         { threshold: 0.12, rootMargin: '0px 0px -8% 0px' }
       );
       document.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
+
+      // custom cursor follower (active only when data-cursor is dot/ring)
+      const cursorEl = document.getElementById('cursor');
+      if (cursorEl && window.matchMedia('(pointer: fine)').matches) {
+        let cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+        let x = cx, y = cy;
+        window.addEventListener('pointermove', (e) => { cx = e.clientX; cy = e.clientY; }, { passive: true });
+        const tick = () => {
+          // ring lags for a smooth trail; dot follows closely
+          const lag = document.documentElement.getAttribute('data-cursor') === 'ring' ? 0.2 : 0.5;
+          x += (cx - x) * lag; y += (cy - y) * lag;
+          cursorEl.style.transform = `translate(${x}px, ${y}px)`;
+          requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }
     </script>
   </body>
 </html>
