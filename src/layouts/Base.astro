@@ -139,6 +139,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
   <body>
     <ParticleField />
     <div class="cursor" id="cursor" aria-hidden="true"></div>
+    <div class="workprev" id="workprev" aria-hidden="true"></div>
     <Nav />
     <main id="top">
       <slot />
@@ -218,6 +219,29 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
         // react the instant the console toggles the attribute
         new MutationObserver(() => requestAnimationFrame(pxUpdate)).observe(document.documentElement, { attributes: true, attributeFilter: ['data-parallax'] });
         requestAnimationFrame(pxUpdate);
+      }
+
+      // Index layout: show a poster thumbnail that follows the cursor on row hover
+      const workprev = document.getElementById('workprev');
+      if (workprev) {
+        let active = false;
+        document.querySelectorAll<HTMLElement>('.card').forEach((card) => {
+          const poster = card.querySelector('.card__poster');
+          card.addEventListener('pointerenter', () => {
+            if (document.documentElement.getAttribute('data-layout') !== 'list' || !poster) return;
+            const clone = poster.cloneNode(true) as HTMLElement;
+            clone.querySelectorAll('.card__status').forEach((n) => n.remove());
+            workprev.replaceChildren(clone);
+            workprev.classList.add('show');
+            active = true;
+          });
+          card.addEventListener('pointermove', (e) => {
+            if (!active) return;
+            workprev.style.left = e.clientX + 'px';
+            workprev.style.top = e.clientY + 'px';
+          });
+          card.addEventListener('pointerleave', () => { workprev.classList.remove('show'); active = false; });
+        });
       }
 
       // Rail layout: translate vertical wheel into horizontal scroll while the rail
