@@ -1,0 +1,94 @@
+---
+import '../styles/global.css';
+import ParticleField from '../components/ParticleField.astro';
+import Nav from '../components/Nav.astro';
+import { site } from '../data/site';
+
+interface Props { title?: string; description?: string; }
+const {
+  title = `${site.name} — ${site.role}`,
+  description = site.tagline,
+} = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.github.io');
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical.href} />
+    <meta name="theme-color" content="#050505" />
+
+    <!-- Open Graph / social -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical.href} />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- fonts: self-hosted Satoshi (body/headings) + Array (hero), preloaded -->
+    <link rel="preload" href="/fonts/Satoshi-Variable.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/Array-Bold.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <ParticleField />
+    <Nav />
+    <main id="top">
+      <slot />
+    </main>
+
+    <footer class="foot">
+      <div class="wrap foot__inner">
+        <div>
+          <div class="foot__name display">{site.name}</div>
+          <p class="foot__tag">{site.tagline}</p>
+        </div>
+        <div class="foot__links">
+          <a href={site.links.github} target="_blank" rel="noopener">GitHub</a>
+          <a href={site.links.linkedin} target="_blank" rel="noopener">LinkedIn</a>
+          <a href={`mailto:${site.email}`}>Email</a>
+          <a href="/resume">Résumé</a>
+        </div>
+      </div>
+      <div class="wrap foot__base">
+        <span>© {new Date().getFullYear()} {site.name}</span>
+        <span class="foot__built">Built from scratch — Astro · this site is the demo.</span>
+      </div>
+    </footer>
+
+    <script>
+      // scroll reveal
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+          }
+        },
+        { threshold: 0.12, rootMargin: '0px 0px -8% 0px' }
+      );
+      document.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
+    </script>
+  </body>
+</html>
+
+<style>
+  /* floating nav is fixed (out of flow) — reserve clearance so content starts below it */
+  main { padding-top: 4.5rem; }
+  .foot { border-top: 1px solid var(--border); margin-top: 4rem; padding-block: 3.5rem 2.5rem; background: rgba(255,255,255,0.01); }
+  .foot__inner { display: flex; flex-wrap: wrap; gap: 2rem; justify-content: space-between; align-items: flex-start; }
+  .foot__name { font-size: clamp(1.6rem, 5vw, 2.4rem); }
+  .foot__tag { color: var(--text-dim); max-width: 42ch; margin-top: 0.5rem; }
+  .foot__links { display: flex; flex-wrap: wrap; gap: 1.4rem; font-family: var(--font-mono); font-size: 0.82rem; }
+  .foot__links a { color: var(--text-dim); transition: color 0.2s; }
+  .foot__links a:hover { color: var(--text); }
+  .foot__base { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; margin-top: 2.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-family: var(--font-mono); font-size: 0.74rem; color: var(--text-faint); }
+</style>

@@ -1,0 +1,189 @@
+/* =========================================================================
+   bwj95 hub — design system
+   Ported from originalbwj95.github.io (Outfit, #050505 glass, refraction hue)
+   and pushed further: a living spectrum accent + monospace signal type.
+   ========================================================================= */
+
+/* ---- self-hosted display face: Array (Fontshare, free commercial) ---- */
+@font-face {
+  font-family: 'Array';
+  src: url('/fonts/Array-Regular.woff2') format('woff2');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Array';
+  src: url('/fonts/Array-Semibold.woff2') format('woff2');
+  font-weight: 600; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Array';
+  src: url('/fonts/Array-Bold.woff2') format('woff2');
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+/* wider cut — opt in via --font-display: 'Array Wide' */
+@font-face {
+  font-family: 'Array Wide';
+  src: url('/fonts/Array-BoldWide.woff2') format('woff2');
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+
+/* ---- primary sans: Satoshi (Fontshare, variable 300–900) — body + headings ---- */
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi-Variable.woff2') format('woff2-variations');
+  font-weight: 300 900; font-style: normal; font-display: swap;
+}
+
+:root {
+  /* type */
+  --font-hero: 'Array', 'Satoshi', system-ui, sans-serif; /* dot-matrix — hero headline only */
+  --font-display: 'Satoshi', system-ui, sans-serif;
+  --font-body: 'Satoshi', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* the surface */
+  --bg: #050505;
+  --bg-2: #0a0a0c;
+  --panel: rgba(255, 255, 255, 0.028);
+  --panel-2: rgba(255, 255, 255, 0.05);
+  --border: rgba(255, 255, 255, 0.09);
+  --border-bright: rgba(255, 255, 255, 0.18);
+  --blur: 18px;
+
+  /* text */
+  --text: #f4f4f6;
+  --text-dim: #8a8a90;
+  --text-faint: #55555b;
+
+  /* the living accent — a spectrum, not a single color.
+     --hue drives per-element tints; the gradient is the signature. */
+  --hue: 265;
+  --accent: hsl(var(--hue) 90% 72%);
+  --accent-soft: hsl(var(--hue) 90% 72% / 0.14);
+  --spectrum: linear-gradient(115deg, #6ceaff 0%, #a78bfa 46%, #ff6ec7 100%);
+  --spectrum-soft: linear-gradient(115deg,
+      rgba(108, 234, 255, 0.16), rgba(167, 139, 250, 0.16), rgba(255, 110, 199, 0.16));
+
+  --radius: 18px;
+  --radius-sm: 12px;
+  --maxw: 1200px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; scroll-padding-top: 92px; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ambient mesh behind everything (the canvas sits above this) */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(60vw 60vw at 12% -8%, rgba(167, 139, 250, 0.10), transparent 60%),
+    radial-gradient(50vw 50vw at 100% 10%, rgba(108, 234, 255, 0.08), transparent 55%),
+    radial-gradient(60vw 60vw at 80% 105%, rgba(255, 110, 199, 0.07), transparent 60%),
+    var(--bg);
+}
+
+a { color: inherit; text-decoration: none; }
+img, svg, canvas { display: block; max-width: 100%; }
+button { font: inherit; cursor: pointer; }
+
+/* ---- layout helpers ---- */
+.wrap { width: 100%; max-width: var(--maxw); margin-inline: auto; padding-inline: clamp(1.1rem, 4vw, 2.5rem); }
+.section { position: relative; padding-block: clamp(4rem, 10vw, 8rem); }
+
+/* ---- type ---- */
+.display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  line-height: 0.98;
+  letter-spacing: -0.03em;
+}
+/* Array is the one big statement — hero headline only. font-synthesis:none
+   keeps it from ever fake-bolding (its heaviest web cut is 700). */
+.font-hero {
+  font-family: var(--font-hero);
+  font-weight: 700;
+  font-synthesis: none;
+  letter-spacing: 0.005em; /* dot-matrix breathes better with a hair of tracking */
+  line-height: 1.02;
+}
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.gradient-text {
+  background: var(--spectrum);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.lead { color: var(--text-dim); font-size: clamp(1.05rem, 2vw, 1.3rem); max-width: 56ch; }
+
+/* ---- glass panel ---- */
+.glass {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(var(--blur));
+  -webkit-backdrop-filter: blur(var(--blur));
+}
+
+/* ---- buttons ---- */
+.btn {
+  display: inline-flex; align-items: center; gap: 0.55rem;
+  padding: 0.85rem 1.4rem;
+  border-radius: 100px;
+  font-family: var(--font-mono);
+  font-size: 0.82rem; letter-spacing: 0.06em;
+  border: 1px solid var(--border-bright);
+  color: var(--text);
+  transition: transform 0.25s var(--ease), border-color 0.25s var(--ease), background 0.25s var(--ease);
+  position: relative; overflow: hidden;
+}
+.btn:hover { transform: translateY(-2px); border-color: transparent; }
+.btn-primary { border-color: transparent; color: #08080a; font-weight: 600; }
+.btn-primary::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--spectrum); }
+.btn-primary:hover { transform: translateY(-2px) scale(1.02); }
+.btn-ghost:hover { background: var(--panel-2); }
+
+/* ---- scroll reveal ---- */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.8s var(--ease), transform 0.8s var(--ease);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+[data-reveal].in { opacity: 1; transform: none; }
+
+/* selection + focus */
+::selection { background: rgba(167, 139, 250, 0.35); color: #fff; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+
+/* thin scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 100px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.16); }

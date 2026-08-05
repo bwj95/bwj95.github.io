@@ -1,0 +1,118 @@
+---
+// Living background: a constellation of particles that drift, link up, and
+// lean toward the cursor. Ported from the original site's canvas engine and
+// tuned lighter + spectrum-tinted. Honors prefers-reduced-motion.
+---
+<canvas id="field" aria-hidden="true"></canvas>
+
+<style>
+  #field {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+</style>
+
+<script>
+  const canvas = document.getElementById('field') as HTMLCanvasElement | null;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (canvas && !reduce) {
+    const ctx = canvas.getContext('2d')!;
+    let w = 0, h = 0, dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const COLORS = ['108,234,255', '167,139,250', '255,110,199'];
+    const mouse = { x: -9999, y: -9999 };
+
+    type P = { x: number; y: number; vx: number; vy: number; r: number; c: string };
+    let ps: P[] = [];
+
+    function count() {
+      // scale particle count to viewport, capped for perf
+      return Math.min(48, Math.round((window.innerWidth * window.innerHeight) / 42000));
+    }
+
+    function seed() {
+      ps = Array.from({ length: count() }, () => ({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        vx: (Math.random() - 0.5) * 0.25,
+        vy: (Math.random() - 0.5) * 0.25,
+        r: Math.random() * 1.6 + 0.6,
+        c: COLORS[(Math.random() * COLORS.length) | 0],
+      }));
+    }
+
+    function resize() {
+      w = window.innerWidth; h = window.innerHeight;
+      canvas!.width = w * dpr; canvas!.height = h * dpr;
+      canvas!.style.width = w + 'px'; canvas!.style.height = h + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      seed();
+    }
+
+    function frame() {
+      ctx.clearRect(0, 0, w, h);
+
+      // link nearby particles
+      for (let i = 0; i < ps.length; i++) {
+        for (let j = i + 1; j < ps.length; j++) {
+          const a = ps[i], b = ps[j];
+          const dx = a.x - b.x, dy = a.y - b.y;
+          const d = Math.hypot(dx, dy);
+          if (d < 130) {
+            ctx.strokeStyle = `rgba(${a.c}, ${(1 - d / 130) * 0.16})`;
+            ctx.lineWidth = 0.6;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+          }
+        }
+      }
+
+      for (const p of ps) {
+        // gentle pull toward cursor
+        const dx = mouse.x - p.x, dy = mouse.y - p.y;
+        const d = Math.hypot(dx, dy);
+        if (d < 220 && d > 0.01) {
+          const f = (1 - d / 220) * 0.35;
+          p.vx += (dx / d) * f * 0.05;
+          p.vy += (dy / d) * f * 0.05;
+        }
+        p.x += p.vx; p.y += p.vy;
+        p.vx *= 0.98; p.vy *= 0.98;
+
+        // wrap
+        if (p.x < -20) p.x = w + 20; if (p.x > w + 20) p.x = -20;
+        if (p.y < -20) p.y = h + 20; if (p.y > h + 20) p.y = -20;
+
+        ctx.fillStyle = `rgba(${p.c}, 0.85)`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      requestAnimationFrame(frame);
+    }
+
+    // click anywhere → shove nearby particles outward (they settle back via damping)
+    function scatter(cx: number, cy: number) {
+      const R = 280;
+      for (const p of ps) {
+        const dx = p.x - cx, dy = p.y - cy;
+        const d = Math.hypot(dx, dy) || 0.001;
+        if (d < R) {
+          const force = (1 - d / R) * 8 * (0.7 + Math.random() * 0.6);
+          p.vx += (dx / d) * force;
+          p.vy += (dy / d) * force;
+        }
+      }
+    }
+
+    window.addEventListener('resize', resize, { passive: true });
+    window.addEventListener('pointermove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; }, { passive: true });
+    window.addEventListener('pointerleave', () => { mouse.x = -9999; mouse.y = -9999; });
+    window.addEventListener('pointerdown', (e) => scatter(e.clientX, e.clientY), { passive: true });
+    resize();
+    requestAnimationFrame(frame);
+  }
+</script>

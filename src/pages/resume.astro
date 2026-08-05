@@ -1,0 +1,47 @@
+---
+import Base from '../layouts/Base.astro';
+import { site } from '../data/site';
+import { Content as Resume } from '../generated/resume.md';
+---
+<Base title={`Résumé — ${site.name}`} description={`Résumé of ${site.name}, ${site.role}.`}>
+  <section class="wrap resume">
+    <header class="resume__head" data-reveal>
+      <p class="eyebrow">Résumé</p>
+      <h1 class="display resume__name">{site.name}</h1>
+      <p class="resume__meta">{site.role} · {site.location} · <a href={`mailto:${site.email}`}>{site.email}</a></p>
+      <div class="resume__actions">
+        <a class="btn btn-primary" href={site.links.resumePdf} download>Download PDF</a>
+        <a class="btn btn-ghost" href="/#work">See the work →</a>
+      </div>
+    </header>
+
+    <article class="resume__doc glass" data-reveal>
+      <Resume />
+    </article>
+  </section>
+</Base>
+
+<style>
+  .resume { padding-top: clamp(2.5rem, 7vw, 5rem); }
+  .resume__head { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 2rem; }
+  .resume__name { font-size: clamp(2.2rem, 6vw, 3.6rem); }
+  .resume__meta { color: var(--text-dim); font-family: var(--font-mono); font-size: 0.85rem; }
+  .resume__meta a { color: var(--accent); }
+  .resume__actions { display: flex; flex-wrap: wrap; gap: 0.8rem; margin-top: 1rem; }
+
+  .resume__doc { padding: clamp(1.6rem, 4vw, 3rem); }
+  /* markdown rendering — reuse the site type scale */
+  .resume__doc :global(h2) { font-family: var(--font-display); font-weight: 800; font-size: 1.5rem; letter-spacing: -0.02em; margin: 2.2rem 0 0.4rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+  .resume__doc :global(h2:first-child) { margin-top: 0; }
+  .resume__doc :global(h3) { font-family: var(--font-display); font-weight: 600; font-size: 1.12rem; margin: 1.4rem 0 0.2rem; }
+  .resume__doc :global(h3 + p em),
+  .resume__doc :global(em) { color: var(--accent); font-style: normal; font-family: var(--font-mono); font-size: 0.82rem; }
+  .resume__doc :global(p) { color: var(--text-dim); margin: 0.4rem 0; }
+  .resume__doc :global(ul) { margin: 0.5rem 0 0.5rem 1.1rem; }
+  .resume__doc :global(li) { color: var(--text-dim); margin: 0.3rem 0; }
+  .resume__doc :global(strong) { color: var(--text); }
+  .resume__doc :global(a) { color: var(--accent); }
+  .resume__doc :global(table) { width: 100%; border-collapse: collapse; margin: 0.8rem 0; font-size: 0.9rem; }
+  .resume__doc :global(td) { padding: 0.5rem 0.7rem; border: 1px solid var(--border); vertical-align: top; color: var(--text-dim); }
+  .resume__doc :global(td:first-child) { color: var(--text); font-weight: 600; white-space: nowrap; }
+</style>

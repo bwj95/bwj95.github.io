@@ -1,0 +1,57 @@
+---
+import type { Project } from '../data/projects';
+interface Props { project: Project; }
+const { project: p } = Astro.props;
+const statusLabel = { live: 'Live', 'in-progress': 'In progress', research: 'Research' }[p.status];
+// gradient poster fallback keyed off the project hue
+const poster = `radial-gradient(120% 120% at 20% 0%, hsl(${p.poster.hue} 85% 62% / 0.55), transparent 55%), radial-gradient(120% 120% at 100% 100%, hsl(${(p.poster.hue + 60) % 360} 85% 60% / 0.45), transparent 55%), #0c0c10`;
+---
+<article class="card glass" data-reveal>
+  <div class="card__poster" style={p.image ? '' : `background:${poster}`}>
+    {p.image
+      ? <img src={p.image} alt={`${p.name} screenshot`} loading="lazy" />
+      : <span class="card__glyph" aria-hidden="true">{p.poster.glyph}</span>}
+    <span class={`card__status card__status--${p.status}`}>{statusLabel}</span>
+  </div>
+
+  <div class="card__body">
+    <h3 class="card__name display">{p.name}</h3>
+    <p class="card__tagline">{p.tagline}</p>
+    <p class="card__blurb">{p.blurb}</p>
+
+    <ul class="card__tags">
+      {p.tags.map((t) => <li>{t}</li>)}
+    </ul>
+
+    {p.links.length > 0 && (
+      <div class="card__links">
+        {p.links.map((l) => (
+          <a class="card__link" href={l.href} target="_blank" rel="noopener">
+            {l.label} <span aria-hidden="true">↗</span>
+          </a>
+        ))}
+      </div>
+    )}
+  </div>
+</article>
+
+<style>
+  .card { overflow: hidden; display: flex; flex-direction: column; transition: transform 0.35s var(--ease), border-color 0.35s var(--ease); }
+  .card:hover { transform: translateY(-4px); border-color: var(--border-bright); }
+  .card__poster { position: relative; aspect-ratio: 16 / 9; display: grid; place-items: center; overflow: hidden; }
+  .card__poster img { width: 100%; height: 100%; object-fit: cover; }
+  .card__glyph { font-size: 3.4rem; color: rgba(255,255,255,0.9); text-shadow: 0 4px 30px rgba(0,0,0,0.5); }
+  .card__status { position: absolute; top: 0.8rem; right: 0.8rem; font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.3rem 0.6rem; border-radius: 100px; background: rgba(0,0,0,0.5); border: 1px solid var(--border); backdrop-filter: blur(6px); }
+  .card__status--live { color: #7dffb0; border-color: rgba(125,255,176,0.4); }
+  .card__status--in-progress { color: #ffd27d; border-color: rgba(255,210,125,0.35); }
+  .card__status--research { color: #7cc4ff; border-color: rgba(124,196,255,0.35); }
+  .card__body { padding: 1.4rem 1.5rem 1.6rem; display: flex; flex-direction: column; gap: 0.7rem; flex: 1; }
+  .card__name { font-size: 1.3rem; }
+  .card__tagline { color: var(--text); font-weight: 600; font-size: 0.98rem; }
+  .card__blurb { color: var(--text-dim); font-size: 0.9rem; line-height: 1.55; }
+  .card__tags { list-style: none; display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.2rem; }
+  .card__tags li { font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.03em; color: var(--text-dim); border: 1px solid var(--border); border-radius: 100px; padding: 0.22rem 0.6rem; }
+  .card__links { margin-top: auto; padding-top: 0.6rem; display: flex; flex-wrap: wrap; gap: 1rem; }
+  .card__link { font-family: var(--font-mono); font-size: 0.82rem; color: var(--accent); transition: opacity 0.2s; }
+  .card__link:hover { opacity: 0.7; }
+</style>

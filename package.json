@@ -1,0 +1,22 @@
+{
+  "name": "bwj95-web-studio",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "predev": "node scripts/pull-resume.mjs",
+    "dev": "astro dev",
+    "build": "npm run sync:resume && astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "sync:resume": "node scripts/pull-resume.mjs"
+  },
+  "dependencies": {
+    "astro": "^5.13.0"
+  },
+  "allowScripts": {
+    "esbuild@0.27.7": true,
+    "esbuild@0.25.12": true,
+    "sharp@0.34.5": true
+  }
+}

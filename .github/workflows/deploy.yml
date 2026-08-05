@@ -1,0 +1,37 @@
+name: Deploy hub to GitHub Pages
+
+# bwj95.github.io is a USER site → this deploys to the domain root.
+# Pages must be set to Source = GitHub Actions (one-time, in repo settings).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: withastro/action@v3
+        # builds with `npm run build` (which runs sync:resume first) and
+        # uploads ./dist as the Pages artifact.
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,119 @@
+---
+import Base from '../layouts/Base.astro';
+import Marquee from '../components/Marquee.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import { site, offerings } from '../data/site';
+import { byKind } from '../data/projects';
+
+const flagships = [...byKind('flagship'), ...byKind('lab')];
+const hardware = byKind('hardware');
+---
+<Base>
+  <!-- ============ HERO ============ -->
+  <section class="hero wrap">
+    <p class="eyebrow" data-reveal>{site.role} · {site.location}</p>
+    <h1 class="hero__title font-hero" data-reveal style="--reveal-delay:80ms">
+      I build across <span class="gradient-text">web</span>,
+      <span class="gradient-text">embedded</span> &amp;
+      <span class="gradient-text">infra</span> —
+      <br class="hero__br" />and this site is the proof.
+    </h1>
+    <p class="lead hero__lead" data-reveal style="--reveal-delay:160ms">
+      Computer engineer shipping real things: client sites, apps, firmware, and the
+      hardware they run on. Everything below is live, buildable, or holdable — pick one.
+    </p>
+    <div class="hero__cta" data-reveal style="--reveal-delay:240ms">
+      <a class="btn btn-primary" href="#work">See the work</a>
+      <a class="btn btn-ghost" href="#hire">Hire me →</a>
+    </div>
+  </section>
+
+  <Marquee items={site.stack} />
+
+  <!-- ============ WORK ============ -->
+  <section id="work" class="section wrap">
+    <header class="sec-head" data-reveal>
+      <p class="eyebrow">01 — Selected work</p>
+      <h2 class="sec-head__title display">Things I designed, built &amp; shipped.</h2>
+      <p class="lead">Real projects with live links. Client work, personal apps, all deployed and running.</p>
+    </header>
+    <div class="grid">
+      {flagships.map((p) => <ProjectCard project={p} />)}
+    </div>
+  </section>
+
+  <!-- ============ HARDWARE ============ -->
+  <section id="hardware" class="section wrap">
+    <header class="sec-head" data-reveal>
+      <p class="eyebrow">02 — Off the screen</p>
+      <h2 class="sec-head__title display">Firmware &amp; hardware you can hold.</h2>
+      <p class="lead">ESP32 firmware, BLE/Wi-Fi devices, and custom 3D-printed enclosures — from breadboard to a real object.</p>
+    </header>
+    <div class="grid">
+      {hardware.map((p) => <ProjectCard project={p} />)}
+    </div>
+  </section>
+
+  <!-- ============ HIRE / SELL ============ -->
+  <section id="hire" class="section wrap">
+    <header class="sec-head" data-reveal>
+      <p class="eyebrow">03 — Work with me</p>
+      <h2 class="sec-head__title display">Need one of these built? Let’s go.</h2>
+      <p class="lead">I take on client builds. Straight talk, fast turnaround, and you own everything at the end.</p>
+    </header>
+
+    <div class="offer-grid">
+      {offerings.map((o) => (
+        <article class="offer glass" data-reveal>
+          <div class="offer__top">
+            <h3 class="offer__title display">{o.title}</h3>
+            <span class="offer__price">{o.price}</span>
+          </div>
+          <p class="offer__blurb">{o.blurb}</p>
+          <a class="offer__cta" href={`mailto:${site.email}?subject=${encodeURIComponent(o.cta)}`}>
+            {o.cta} <span aria-hidden="true">→</span>
+          </a>
+        </article>
+      ))}
+    </div>
+
+    <div class="contact glass" data-reveal>
+      <div>
+        <h3 class="display contact__h">Have something in mind?</h3>
+        <p class="contact__p">Tell me what you’re building. I usually reply same day.</p>
+      </div>
+      <div class="contact__actions">
+        <a class="btn btn-primary" href={`mailto:${site.email}?subject=${encodeURIComponent('Project inquiry')}`}>Email me</a>
+        <a class="btn btn-ghost" href={site.links.github} target="_blank" rel="noopener">See the code</a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .hero { padding-top: clamp(1rem, 4vw, 3rem); padding-bottom: clamp(2.5rem, 6vw, 4rem); }
+  .hero__title { font-size: clamp(2.4rem, 7.2vw, 5.4rem); margin-top: 1.2rem; max-width: 16ch; }
+  .hero__lead { margin-top: 1.6rem; }
+  .hero__cta { display: flex; flex-wrap: wrap; gap: 0.9rem; margin-top: 2.2rem; }
+  @media (max-width: 640px) { .hero__br { display: none; } }
+
+  .sec-head { max-width: 60ch; margin-bottom: clamp(2rem, 5vw, 3.2rem); display: flex; flex-direction: column; gap: 0.7rem; }
+  .sec-head__title { font-size: clamp(1.8rem, 4.6vw, 3rem); }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.4rem; }
+
+  .offer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.2rem; }
+  .offer { padding: 1.6rem; display: flex; flex-direction: column; gap: 0.9rem; transition: transform 0.3s var(--ease), border-color 0.3s var(--ease); }
+  .offer:hover { transform: translateY(-3px); border-color: var(--border-bright); }
+  .offer__top { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+  .offer__title { font-size: 1.25rem; }
+  .offer__price { font-family: var(--font-mono); font-size: 0.78rem; color: var(--accent); white-space: nowrap; }
+  .offer__blurb { color: var(--text-dim); font-size: 0.92rem; line-height: 1.55; flex: 1; }
+  .offer__cta { font-family: var(--font-mono); font-size: 0.84rem; color: var(--text); }
+  .offer__cta:hover { color: var(--accent); }
+
+  .contact { margin-top: 1.4rem; padding: clamp(1.6rem, 4vw, 2.6rem); display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: center; justify-content: space-between; background: var(--spectrum-soft); }
+  .contact__h { font-size: clamp(1.4rem, 3.5vw, 2rem); }
+  .contact__p { color: var(--text-dim); margin-top: 0.4rem; }
+  .contact__actions { display: flex; flex-wrap: wrap; gap: 0.8rem; }
+</style>

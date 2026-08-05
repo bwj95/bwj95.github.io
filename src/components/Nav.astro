@@ -1,0 +1,87 @@
+---
+import { site } from '../data/site';
+const links = [
+  { label: 'Work', href: '/#work' },
+  { label: 'Hardware', href: '/#hardware' },
+  { label: 'Hire', href: '/#hire' },
+  { label: 'Résumé', href: '/resume' },
+];
+---
+<header class="nav" id="nav">
+  <a class="nav__brand" href="/" aria-label="Home">
+    <span class="nav__mark">bwj95</span>
+    <span class="nav__dot"></span>
+  </a>
+  <nav class="nav__links" aria-label="Primary">
+    {links.map((l) => <a href={l.href}>{l.label}</a>)}
+  </nav>
+  <a class="btn btn-primary nav__cta" href="/#hire">Hire me</a>
+</header>
+
+<style>
+  /* floating centered pill — detached from the top edge */
+  .nav {
+    position: fixed;
+    top: 0.9rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    gap: clamp(0.9rem, 2.6vw, 1.9rem);
+    height: 54px;
+    padding: 0 0.55rem 0 1.25rem;
+    max-width: calc(100vw - 1.6rem);
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(14, 14, 17, 0.78), rgba(8, 8, 10, 0.66));
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 14px 44px rgba(0, 0, 0, 0.5);
+    transition: transform 0.4s var(--ease), opacity 0.35s var(--ease);
+    will-change: transform;
+  }
+  /* hidden state: slide up off the top */
+  .nav.is-hidden {
+    transform: translate(-50%, calc(-100% - 1.2rem));
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .nav__brand { display: inline-flex; align-items: baseline; gap: 4px; font-family: var(--font-mono); font-weight: 700; letter-spacing: 0.02em; }
+  .nav__dot { width: 7px; height: 7px; border-radius: 50%; background: var(--spectrum); box-shadow: 0 0 12px rgba(167,139,250,0.7); }
+  .nav__links { display: flex; gap: clamp(0.9rem, 2.6vw, 1.7rem); }
+  .nav__links a { font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.04em; color: var(--text-dim); transition: color 0.2s; }
+  .nav__links a:hover { color: var(--text); }
+  .nav__cta { padding: 0.45rem 1rem; font-size: 0.74rem; }
+  @media (max-width: 720px) {
+    .nav__links { display: none; }
+    .nav { padding-left: 1.1rem; }
+  }
+</style>
+
+<script>
+  const nav = document.getElementById('nav');
+  if (nav) {
+    let last = window.scrollY;
+    let ticking = false;
+    const THRESHOLD = 6; // ignore tiny jitters
+
+    function update() {
+      const y = window.scrollY;
+      if (y < 90) {
+        nav!.classList.remove('is-hidden');          // always visible near the top
+      } else if (y > last + THRESHOLD) {
+        nav!.classList.add('is-hidden');             // scrolling down → hide
+      } else if (y < last - THRESHOLD) {
+        nav!.classList.remove('is-hidden');          // scrolling up → reveal
+      }
+      last = y;
+      ticking = false;
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) { requestAnimationFrame(update); ticking = true; }
+    }, { passive: true });
+  }
+</script>
