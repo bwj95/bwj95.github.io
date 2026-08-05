@@ -553,17 +553,8 @@ body, .glass, .card, .btn, .nav, .marquee { transition:
 :root[data-layout="coverflow"] .grid::-webkit-scrollbar { display: none; }
 :root[data-layout="coverflow"] .card {
   flex: 0 0 min(62vw, 420px); scroll-snap-align: center;
-  transform-style: preserve-3d;
-}
-@supports (animation-timeline: view()) {
-  :root[data-layout="coverflow"] .card {
-    animation: ws-cover linear both; animation-timeline: view(inline);
-  }
-  @keyframes ws-cover {
-    0%   { transform: rotateY(-38deg) scale(0.82); opacity: 0.5; }
-    50%  { transform: rotateY(0deg) scale(1); opacity: 1; }
-    100% { transform: rotateY(38deg) scale(0.82); opacity: 0.5; }
-  }
+  transform-style: preserve-3d; will-change: transform, opacity;
+  /* transform + opacity are driven by JS (coverflow) for cross-browser support */
 }
 
 /* -- WORK LAYOUT: collage (tilted masonry moodboard) -- */

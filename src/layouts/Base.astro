@@ -257,6 +257,34 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
           e.preventDefault();
         }, { passive: false });
       });
+
+      // 3D coverflow — JS-driven (works in every browser). Each card rotates/scales
+      // by its horizontal distance from the rail's centre.
+      const cfGrids = document.querySelectorAll<HTMLElement>('.grid');
+      const applyCoverflow = (grid: HTMLElement) => {
+        const rect = grid.getBoundingClientRect();
+        const center = rect.left + rect.width / 2;
+        grid.querySelectorAll<HTMLElement>('.card').forEach((card) => {
+          const cr = card.getBoundingClientRect();
+          const d = ((cr.left + cr.width / 2) - center) / rect.width;
+          const c = Math.max(-1, Math.min(1, d * 2.2));
+          card.style.transform = `rotateY(${(-c * 40).toFixed(1)}deg) scale(${(1 - Math.abs(c) * 0.2).toFixed(3)})`;
+          card.style.opacity = String((1 - Math.abs(c) * 0.55).toFixed(3));
+          card.style.zIndex = String(100 - Math.round(Math.abs(c) * 100));
+        });
+      };
+      const clearCoverflow = (grid: HTMLElement) =>
+        grid.querySelectorAll<HTMLElement>('.card').forEach((card) => { card.style.transform = ''; card.style.opacity = ''; card.style.zIndex = ''; });
+      let cfTick = false;
+      const cfUpdate = () => {
+        const on = document.documentElement.getAttribute('data-layout') === 'coverflow';
+        cfGrids.forEach((g) => (on ? applyCoverflow(g) : clearCoverflow(g)));
+        cfTick = false;
+      };
+      cfGrids.forEach((g) => g.addEventListener('scroll', () => { if (!cfTick) { requestAnimationFrame(cfUpdate); cfTick = true; } }, { passive: true }));
+      window.addEventListener('resize', () => requestAnimationFrame(cfUpdate), { passive: true });
+      new MutationObserver(() => requestAnimationFrame(cfUpdate)).observe(document.documentElement, { attributes: true, attributeFilter: ['data-layout'] });
+      requestAnimationFrame(cfUpdate);
     </script>
   </body>
 </html>
