@@ -69,6 +69,9 @@ export const options: Option[] = [
   { key: 'parallax', attr: 'data-parallax', label: 'Parallax', default: 'off', choices: [
     { val: 'off', label: 'Off' }, { val: 'sideways', label: 'Sideways' },
   ] },
+  { key: 'crt', attr: 'data-crt', label: 'CRT screen', default: 'off', choices: [
+    { val: 'off', label: 'Off' }, { val: 'on', label: 'On' },
+  ] },
   { key: 'motion', attr: 'data-motion', label: 'Motion', default: 'on', choices: [
     { val: 'on', label: 'On' }, { val: 'off', label: 'Off' },
   ] },
@@ -115,5 +118,5 @@ export const presets: Preset[] = [
   { name: 'The Index',      blurb: 'editorial list, hover previews', style: 'aurora', font: 'Zodiak', accent: 'Mono', opts: { layout: 'list', bg: 'none', banner: 'off', density: 'spacious' } },
   { name: 'Card Deck',      blurb: 'cards stack as you scroll', style: 'aurora', font: 'Clash', accent: 'Spectrum', opts: { layout: 'stack', cards: 'solid', bg: 'dots' } },
   { name: 'Reel',           blurb: '3D coverflow carousel', style: 'neon', font: 'Alpino', accent: 'Electric', opts: { layout: 'coverflow', hero: 'glow' } },
-  { name: 'Cyberdeck',      blurb: 'terminal grid + cursor-lit dots', style: 'cyber', font: 'Array', accent: '', opts: { bg: 'dots', hero: 'glow', cards: 'outline' } },
+  { name: 'Cyberdeck',      blurb: 'terminal grid + cursor-lit dots', style: 'cyber', font: 'Array', accent: '', opts: { bg: 'dots', hero: 'glow', cards: 'outline', crt: 'on' } },
 ];

@@ -468,6 +468,21 @@ body, .glass, .card, .btn, .nav, .marquee { transition:
 :root[data-corners="sharp"] .console__act { border-radius: 2px; }
 :root[data-corners="sharp"] .swatch { border-radius: 4px; }
 
+/* -- CRT SCREEN (scanlines + flicker overlay) -- */
+.crt {
+  position: fixed; inset: 0; z-index: 55; pointer-events: none; opacity: 0;
+  transition: opacity 0.3s var(--ease);
+  background:
+    repeating-linear-gradient(to bottom, rgba(0,0,0,0.22) 0, rgba(0,0,0,0.22) 1px, transparent 1px, transparent 3px),
+    radial-gradient(120% 120% at 50% 50%, transparent 62%, rgba(0,0,0,0.28) 100%);
+}
+:root[data-crt="on"] .crt { opacity: 1; animation: crt-flicker 4s infinite steps(1); }
+@keyframes crt-flicker {
+  0%, 96% { opacity: 1; } 96.5% { opacity: 0.82; } 97% { opacity: 1; }
+  98% { opacity: 0.9; } 98.5% { opacity: 1; } 99.4% { opacity: 0.86; } 100% { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) { :root[data-crt="on"] .crt { animation: none; } }
+
 /* -- MOTION -- */
 :root[data-motion="off"] #field { display: none; }
 :root[data-motion="off"] .marquee__track { animation: none; }
