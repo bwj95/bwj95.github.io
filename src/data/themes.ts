@@ -59,6 +59,7 @@ export const options: Option[] = [
   ] },
   { key: 'layout', attr: 'data-layout', label: 'Work layout', default: 'grid', choices: [
     { val: 'grid', label: 'Grid' }, { val: 'rail', label: 'Rail →' }, { val: 'list', label: 'Index' },
+    { val: 'stack', label: 'Stack' }, { val: 'coverflow', label: '3D' }, { val: 'collage', label: 'Collage' },
   ] },
   { key: 'parallax', attr: 'data-parallax', label: 'Parallax', default: 'off', choices: [
     { val: 'off', label: 'Off' }, { val: 'sideways', label: 'Sideways' },
@@ -107,4 +108,6 @@ export const presets: Preset[] = [
   { name: 'Zodiak Press',   blurb: 'serif display, paper',    style: 'editorial', font: 'Zodiak',   accent: 'Gold',     opts: { banner: 'off', bg: 'none' } },
   { name: 'Orchard',        blurb: 'bright, open, horizontal rail', style: 'fresh', font: 'Clash', accent: 'Citrus', opts: { layout: 'rail', parallax: 'sideways', density: 'spacious', bg: 'none', banner: 'off', cards: 'elevated' } },
   { name: 'The Index',      blurb: 'editorial list, hover previews', style: 'aurora', font: 'Zodiak', accent: 'Mono', opts: { layout: 'list', bg: 'none', banner: 'off', density: 'spacious' } },
+  { name: 'Card Deck',      blurb: 'cards stack as you scroll', style: 'aurora', font: 'Clash', accent: 'Spectrum', opts: { layout: 'stack', cards: 'solid', bg: 'dots' } },
+  { name: 'Reel',           blurb: '3D coverflow carousel', style: 'neon', font: 'Alpino', accent: 'Electric', opts: { layout: 'coverflow', hero: 'glow' } },
 ];
