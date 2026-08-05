@@ -20,7 +20,10 @@ const links = [
   <a class="btn btn-primary nav__cta" href="/#hire">Hire me</a>
 
   <button class="nav__burger" id="navBurger" aria-label="Open menu" aria-expanded="false" aria-controls="navMenu">
-    <span class="nav__burger-box"><span class="nav__burger-line"></span></span>
+    <span class="nav__burger-box" aria-hidden="true"><span class="nav__burger-line"></span></span>
+    <span class="nav__burger-plus" aria-hidden="true"></span>
+    <span class="nav__burger-dots" aria-hidden="true"><span></span><span></span><span></span></span>
+    <span class="nav__burger-text" aria-hidden="true"></span>
   </button>
 </header>
 
@@ -84,6 +87,30 @@ const links = [
   .nav__burger[aria-expanded="true"] .nav__burger-line { background: transparent; }
   .nav__burger[aria-expanded="true"] .nav__burger-line::before { top: 0; transform: rotate(45deg); }
   .nav__burger[aria-expanded="true"] .nav__burger-line::after { top: 0; transform: rotate(-45deg); }
+
+  /* ---- swappable icon (console option: data-burger) ---- */
+  .nav__burger-plus, .nav__burger-dots, .nav__burger-text { display: none; }
+
+  /* PLUS: + rotates to × */
+  :root[data-burger="plus"] .nav__burger-box { display: none; }
+  :root[data-burger="plus"] .nav__burger-plus { display: block; position: relative; width: 16px; height: 16px; transition: transform 0.3s var(--ease); }
+  .nav__burger-plus::before, .nav__burger-plus::after { content: ''; position: absolute; background: currentColor; border-radius: 2px; }
+  .nav__burger-plus::before { top: 50%; left: 0; width: 16px; height: 2px; transform: translateY(-50%); }
+  .nav__burger-plus::after { left: 50%; top: 0; width: 2px; height: 16px; transform: translateX(-50%); }
+  :root[data-burger="plus"] .nav__burger[aria-expanded="true"] .nav__burger-plus { transform: rotate(45deg); }
+
+  /* DOTS: three dots, rotate on open */
+  :root[data-burger="dots"] .nav__burger-box { display: none; }
+  :root[data-burger="dots"] .nav__burger-dots { display: flex; align-items: center; gap: 3px; transition: transform 0.3s var(--ease); }
+  .nav__burger-dots > span { width: 4px; height: 4px; border-radius: 50%; background: currentColor; }
+  :root[data-burger="dots"] .nav__burger[aria-expanded="true"] .nav__burger-dots { transform: rotate(90deg); }
+
+  /* TEXT: “Menu” ⇄ “Close” */
+  :root[data-burger="text"] .nav__burger-box { display: none; }
+  :root[data-burger="text"] .nav__burger { width: auto; padding: 0 0.6rem; }
+  :root[data-burger="text"] .nav__burger-text { display: inline; font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; }
+  :root[data-burger="text"] .nav__burger-text::after { content: 'Menu'; }
+  :root[data-burger="text"] .nav__burger[aria-expanded="true"] .nav__burger-text::after { content: 'Close'; }
 
   /* ---- the menu (dropdown by default; inherits the active vibe via .glass + vars) ----
      Fixed + body-level so the fullscreen variant anchors to the viewport. z-index below

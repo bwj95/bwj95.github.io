@@ -29,6 +29,10 @@ export const options: Option[] = [
   { key: 'menu', attr: 'data-menu', label: 'Menu', default: 'dropdown', choices: [
     { val: 'dropdown', label: 'Dropdown' }, { val: 'overlay', label: 'Fullscreen' },
   ] },
+  { key: 'burger', attr: 'data-burger', label: 'Menu icon', default: 'lines', choices: [
+    { val: 'lines', label: 'Lines' }, { val: 'plus', label: 'Plus' },
+    { val: 'dots', label: 'Dots' }, { val: 'text', label: '“Menu”' },
+  ] },
   { key: 'banner', attr: 'data-banner', label: 'Banner', default: 'on', choices: [
     { val: 'on', label: 'On' }, { val: 'off', label: 'Off' },
   ] },
