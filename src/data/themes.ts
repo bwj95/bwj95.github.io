@@ -58,10 +58,13 @@ export const options: Option[] = [
   ] },
 ];
 
+// `hero` = the typeface used on the big hero headline for this pick. Each font
+// applies to its OWN hero so selecting it visibly changes the headline; Array is
+// the only dot-matrix one (that's the site's default hero identity).
 export const fonts: FontSet[] = [
-  { label: 'Satoshi',  display: "'Satoshi', sans-serif",  body: "'Satoshi', sans-serif", hero: "'Array', monospace" },
+  { label: 'Satoshi',  display: "'Satoshi', sans-serif",  body: "'Satoshi', sans-serif", hero: "'Satoshi', sans-serif" },
   { label: 'Sentient', display: "'Sentient', serif",      body: "'Author', serif",       hero: "'Sentient', serif" },
-  { label: 'Alpino',   display: "'Alpino', sans-serif",   body: "'Alpino', sans-serif",  hero: "'Array', monospace" },
+  { label: 'Alpino',   display: "'Alpino', sans-serif",   body: "'Alpino', sans-serif",  hero: "'Alpino', sans-serif" },
   { label: 'Array',    display: "'Array', monospace",     body: "'Satoshi', sans-serif", hero: "'Array Wide', monospace" },
   { label: 'Segment',  display: "'Segment', monospace",   body: "'Satoshi', sans-serif", hero: "'Segment', monospace" },
 ];
