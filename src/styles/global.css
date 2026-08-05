@@ -390,6 +390,32 @@ body, .glass, .card, .btn, .nav, .marquee { transition:
 @keyframes ws-slide { to { background-position: 300% 0; } }
 @keyframes ws-drift { from { transform: translate3d(0,0,0); } to { transform: translate3d(-3%, 2%, 0); } }
 
+/* ---------- FRESH — bright, open, vibrant (delassus-style) ---------- */
+:root[data-style="fresh"] {
+  --bg: #f4f7ee; --bg-2: #eaf0df;
+  --panel: rgba(255,255,255,0.7); --panel-2: #ffffff;
+  --border: rgba(20,40,20,0.12); --border-bright: rgba(20,40,20,0.28); --blur: 8px;
+  --text: #16261a; --text-dim: #4a5a48; --text-faint: #869184;
+  --accent: #ff7a3c; --accent-soft: rgba(255,122,60,0.16);
+  --spectrum: linear-gradient(115deg,#ff7a3c,#ffd23f,#3ec46d);
+  --spectrum-soft: linear-gradient(115deg, rgba(255,122,60,0.18), rgba(62,196,109,0.18));
+  --radius: 28px; --radius-sm: 18px;
+  --font-display: 'Clash Display', sans-serif;
+  --font-body: 'General Sans', sans-serif;
+}
+:root[data-style="fresh"] body::before {
+  background:
+    radial-gradient(46vw 46vw at 8% -2%, rgba(255,210,63,0.34), transparent 55%),
+    radial-gradient(42vw 42vw at 100% 4%, rgba(62,196,109,0.26), transparent 55%),
+    radial-gradient(52vw 52vw at 88% 104%, rgba(255,122,60,0.24), transparent 60%),
+    var(--bg);
+}
+:root[data-style="fresh"] #field { display: none; }
+:root[data-style="fresh"] .nav { background: rgba(255,255,255,0.72); }
+:root[data-style="fresh"] .section { padding-block: clamp(6rem, 14vw, 12rem); } /* open concept */
+:root[data-style="fresh"] .hero { padding-block: clamp(3rem, 8vw, 6rem) clamp(3rem, 7vw, 5rem); }
+:root[data-style="fresh"] .card:hover { box-shadow: 0 30px 70px rgba(20,40,20,0.14); }
+
 /* =========================================================================
    COMPONENT OPTIONS — data-* attributes toggled by the Design Console.
    Placed after the style modes so they compose on top of any vibe.

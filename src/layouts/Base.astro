@@ -191,6 +191,34 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
         };
         requestAnimationFrame(tick);
       }
+
+      // sideways parallax (data-parallax="sideways") — headings drift horizontally
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        const PX: [string, number][] = [
+          ['.hero .eyebrow', -46], ['.hero__title', 26], ['.hero__lead', -34],
+          ['.sec-head .eyebrow', -50], ['.sec-head__title', 34], ['.sec-head .lead', -28],
+        ];
+        const targets: [HTMLElement, number][] = [];
+        PX.forEach(([sel, sp]) => document.querySelectorAll<HTMLElement>(sel).forEach((el) => targets.push([el, sp])));
+        let pxTicking = false;
+        const pxUpdate = () => {
+          const on = document.documentElement.getAttribute('data-parallax') === 'sideways';
+          const vh = window.innerHeight;
+          for (const [el, sp] of targets) {
+            if (!on) { if (el.style.transform) { el.style.transform = ''; el.style.transition = ''; } continue; }
+            const r = el.getBoundingClientRect();
+            const prog = (r.top + r.height / 2 - vh / 2) / vh; // +below viewport centre, −above
+            el.style.transition = 'none';
+            el.style.transform = `translateX(${(prog * sp).toFixed(1)}px)`;
+          }
+          pxTicking = false;
+        };
+        window.addEventListener('scroll', () => { if (!pxTicking) { requestAnimationFrame(pxUpdate); pxTicking = true; } }, { passive: true });
+        window.addEventListener('resize', () => requestAnimationFrame(pxUpdate), { passive: true });
+        // react the instant the console toggles the attribute
+        new MutationObserver(() => requestAnimationFrame(pxUpdate)).observe(document.documentElement, { attributes: true, attributeFilter: ['data-parallax'] });
+        requestAnimationFrame(pxUpdate);
+      }
     </script>
   </body>
 </html>

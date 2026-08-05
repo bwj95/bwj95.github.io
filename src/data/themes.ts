@@ -18,6 +18,7 @@ export const styles: Style[] = [
   { id: 'neon',      label: 'Neon Noir',    note: 'dark · electric glow' },
   { id: 'bento',     label: 'Bento',        note: 'soft · rounded mosaic' },
   { id: 'kinetic',   label: 'Kinetic',      note: 'bold · in motion' },
+  { id: 'fresh',     label: 'Fresh',        note: 'bright · open · vibrant' },
 ];
 
 // Component-level design options. Each writes a data-* attribute on <html>;
@@ -56,6 +57,9 @@ export const options: Option[] = [
   { key: 'cursor', attr: 'data-cursor', label: 'Cursor', default: 'default', choices: [
     { val: 'default', label: 'Default' }, { val: 'dot', label: 'Dot' }, { val: 'ring', label: 'Ring' },
   ] },
+  { key: 'parallax', attr: 'data-parallax', label: 'Parallax', default: 'off', choices: [
+    { val: 'off', label: 'Off' }, { val: 'sideways', label: 'Sideways' },
+  ] },
   { key: 'motion', attr: 'data-motion', label: 'Motion', default: 'on', choices: [
     { val: 'on', label: 'On' }, { val: 'off', label: 'Off' },
   ] },
@@ -82,6 +86,7 @@ export const accents: Accent[] = [
   { label: 'Gold',     spectrum: 'linear-gradient(115deg,#f6d365,#fda085)',         accent: '#f4c04e' },
   { label: 'Electric', spectrum: 'linear-gradient(115deg,#4facfe,#00f2fe)',         accent: '#4facfe' },
   { label: 'Mono',     spectrum: '#e6e6ec',                                          accent: '#cfcfd6' },
+  { label: 'Citrus',   spectrum: 'linear-gradient(115deg,#ff7a3c,#ffd23f,#3ec46d)',  accent: '#ff7a3c' },
 ];
 
 // Curated one-click looks (fontpair-style). `font`/`accent` reference labels
@@ -97,4 +102,5 @@ export const presets: Preset[] = [
   { name: 'Kinetic Flux',   blurb: 'bold, animated',          style: 'kinetic',   font: 'Clash',    accent: 'Spectrum' },
   { name: 'Grotesk Studio', blurb: 'characterful + clean',    style: 'aurora',    font: 'Cabinet',  accent: 'Emerald',  opts: { cards: 'outline', density: 'spacious' } },
   { name: 'Zodiak Press',   blurb: 'serif display, paper',    style: 'editorial', font: 'Zodiak',   accent: 'Gold',     opts: { banner: 'off', bg: 'none' } },
+  { name: 'Orchard',        blurb: 'bright, open, sideways drift', style: 'fresh', font: 'Clash', accent: 'Citrus', opts: { parallax: 'sideways', density: 'spacious', bg: 'none', banner: 'off', cards: 'elevated' } },
 ];
