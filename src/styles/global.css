@@ -416,6 +416,32 @@ body, .glass, .card, .btn, .nav, .marquee { transition:
 :root[data-style="fresh"] .hero { padding-block: clamp(3rem, 8vw, 6rem) clamp(3rem, 7vw, 5rem); }
 :root[data-style="fresh"] .card:hover { box-shadow: 0 30px 70px rgba(20,40,20,0.14); }
 
+/* ---------- CYBER — terminal green, grid, glow ---------- */
+:root[data-style="cyber"] {
+  --bg: #05070a; --bg-2: #0a0e12;
+  --panel: rgba(0,255,159,0.04); --panel-2: rgba(0,255,159,0.07);
+  --border: rgba(0,255,159,0.18); --border-bright: rgba(0,255,159,0.45); --blur: 12px;
+  --text: #d6ffe9; --text-dim: #6fae90; --text-faint: #3e6b58;
+  --accent: #00ff9f; --accent-soft: rgba(0,255,159,0.14); --hue: 155;
+  --spectrum: linear-gradient(115deg,#00ff9f,#00e5ff,#8bffcf);
+  --spectrum-soft: linear-gradient(115deg, rgba(0,255,159,0.16), rgba(0,229,255,0.16));
+  --radius: 6px; --radius-sm: 4px;
+  --font-display: 'Array', monospace;
+  --font-hero: 'Array', monospace;
+}
+:root[data-style="cyber"] body::before {
+  background:
+    linear-gradient(rgba(0,255,159,0.06) 1px, transparent 1px) 0 0 / 100% 32px,
+    linear-gradient(90deg, rgba(0,255,159,0.06) 1px, transparent 1px) 0 0 / 32px 100%,
+    radial-gradient(60vw 60vw at 50% -12%, rgba(0,255,159,0.10), transparent 60%),
+    var(--bg);
+}
+:root[data-style="cyber"] #field { display: none; }
+:root[data-style="cyber"] .font-hero { text-shadow: 0 0 24px rgba(0,255,159,0.5); }
+:root[data-style="cyber"] .glass { box-shadow: inset 0 0 30px rgba(0,255,159,0.05); }
+:root[data-style="cyber"] .nav { border-color: rgba(0,255,159,0.4); box-shadow: 0 0 28px rgba(0,255,159,0.2); }
+:root[data-style="cyber"] ::selection { background: rgba(0,255,159,0.4); color: #00120a; }
+
 /* =========================================================================
    COMPONENT OPTIONS — data-* attributes toggled by the Design Console.
    Placed after the style modes so they compose on top of any vibe.
@@ -466,6 +492,19 @@ body, .glass, .card, .btn, .nav, .marquee { transition:
     var(--bg);
 }
 :root[data-bg="none"] body::before { background: var(--bg); }
+/* cursor-lit dot grid (cerebrium-style): a bright accent dot layer masked to a
+   circle at the cursor (--mx/--my set by JS). Same 24px grid as the base dots so
+   it brightens them near the pointer. Active only when Background = Dots. */
+.dotgrid-glow {
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  opacity: 0; transition: opacity 0.4s var(--ease);
+  background: radial-gradient(circle, var(--accent) 1.4px, transparent 1.7px) 0 0 / 24px 24px;
+  -webkit-mask: radial-gradient(190px circle at var(--mx, -300px) var(--my, -300px), #000 0%, rgba(0,0,0,0.55) 42%, transparent 72%);
+  mask: radial-gradient(190px circle at var(--mx, -300px) var(--my, -300px), #000 0%, rgba(0,0,0,0.55) 42%, transparent 72%);
+  filter: drop-shadow(0 0 5px var(--accent));
+}
+:root[data-bg="dots"] .dotgrid-glow { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .dotgrid-glow { display: none; } }
 
 /* -- CARDS (project + offer cards) -- */
 :root[data-cards="solid"] .card, :root[data-cards="solid"] .offer { background: var(--bg-2); backdrop-filter: none; -webkit-backdrop-filter: none; }

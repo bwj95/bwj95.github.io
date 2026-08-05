@@ -139,6 +139,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
   <body>
     <ParticleField />
     <div class="cursor" id="cursor" aria-hidden="true"></div>
+    <div class="dotgrid-glow" id="dotglow" aria-hidden="true"></div>
     <div class="workprev" id="workprev" aria-hidden="true"></div>
     <Nav />
     <main id="top">
@@ -176,6 +177,13 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
         { threshold: 0.12, rootMargin: '0px 0px -8% 0px' }
       );
       document.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
+
+      // track cursor position as CSS vars (drives the dot-grid glow mask)
+      const rootEl = document.documentElement;
+      window.addEventListener('pointermove', (e) => {
+        rootEl.style.setProperty('--mx', e.clientX + 'px');
+        rootEl.style.setProperty('--my', e.clientY + 'px');
+      }, { passive: true });
 
       // custom cursor follower (active only when data-cursor is dot/ring)
       const cursorEl = document.getElementById('cursor');

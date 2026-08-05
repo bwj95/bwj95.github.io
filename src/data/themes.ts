@@ -19,6 +19,7 @@ export const styles: Style[] = [
   { id: 'bento',     label: 'Bento',        note: 'soft · rounded mosaic' },
   { id: 'kinetic',   label: 'Kinetic',      note: 'bold · in motion' },
   { id: 'fresh',     label: 'Fresh',        note: 'bright · open · vibrant' },
+  { id: 'cyber',     label: 'Cyber',        note: 'terminal green · grid · glow' },
 ];
 
 // Component-level design options. Each writes a data-* attribute on <html>;
@@ -114,4 +115,5 @@ export const presets: Preset[] = [
   { name: 'The Index',      blurb: 'editorial list, hover previews', style: 'aurora', font: 'Zodiak', accent: 'Mono', opts: { layout: 'list', bg: 'none', banner: 'off', density: 'spacious' } },
   { name: 'Card Deck',      blurb: 'cards stack as you scroll', style: 'aurora', font: 'Clash', accent: 'Spectrum', opts: { layout: 'stack', cards: 'solid', bg: 'dots' } },
   { name: 'Reel',           blurb: '3D coverflow carousel', style: 'neon', font: 'Alpino', accent: 'Electric', opts: { layout: 'coverflow', hero: 'glow' } },
+  { name: 'Cyberdeck',      blurb: 'terminal grid + cursor-lit dots', style: 'cyber', font: 'Array', accent: '', opts: { bg: 'dots', hero: 'glow', cards: 'outline' } },
 ];

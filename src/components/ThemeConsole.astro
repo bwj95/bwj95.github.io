@@ -2,12 +2,11 @@
 import { styles, fonts, accents, options, presets } from '../data/themes';
 
 // resolve each preset to the engine's config shape (font/accent → index)
-const presetCfgs = presets.map((pr) => ({
-  s: pr.style,
-  f: fonts.findIndex((f) => f.label === pr.font),
-  a: accents.findIndex((a) => a.label === pr.accent),
-  o: pr.opts || {},
-}));
+const presetCfgs = presets.map((pr) => {
+  const fi = fonts.findIndex((f) => f.label === pr.font);
+  const ai = accents.findIndex((a) => a.label === pr.accent);
+  return { s: pr.style, f: fi < 0 ? null : fi, a: ai < 0 ? null : ai, o: pr.opts || {} };
+});
 ---
 <aside class="console glass" id="console" data-open="false" aria-label="Design this site">
   <button class="console__toggle" id="consoleToggle" aria-expanded="false">
