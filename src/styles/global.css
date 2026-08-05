@@ -486,7 +486,7 @@ body, .glass, .card, .btn, .nav, .marquee { transition:
   overflow-x: auto; overflow-y: hidden;
   scroll-snap-type: x mandatory;
   gap: 1.2rem; padding-bottom: 1.2rem;
-  scrollbar-width: thin;
+  scrollbar-width: thin; cursor: grab;
 }
 :root[data-layout="rail"] .grid > * { flex: 0 0 clamp(280px, 44vw, 560px); scroll-snap-align: center; }
 :root[data-layout="rail"] .card { position: relative; min-height: min(64vh, 560px); overflow: hidden; }
@@ -548,7 +548,7 @@ body, .glass, .card, .btn, .nav, .marquee { transition:
   display: flex; grid-template-columns: none;
   overflow-x: auto; overflow-y: visible; scroll-snap-type: x mandatory;
   gap: 1.5rem; padding: 2.5rem clamp(18%, 30vw, 34%);
-  perspective: 1500px; scrollbar-width: none;
+  perspective: 1500px; scrollbar-width: none; cursor: grab;
 }
 :root[data-layout="coverflow"] .grid::-webkit-scrollbar { display: none; }
 :root[data-layout="coverflow"] .card {
