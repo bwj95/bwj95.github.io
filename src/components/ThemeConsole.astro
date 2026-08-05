@@ -26,6 +26,8 @@ const presetCfgs = presets.map((pr) => ({
           <button class="chip chip--preset" data-cfg={JSON.stringify(presetCfgs[i])} title={pr.blurb}>{pr.name}</button>
         ))}
       </div>
+      <div class="console__row console__row--presets" id="savedRow"></div>
+      <button class="console__savebtn" data-act="save">＋ Save current look</button>
     </div>
 
     <div class="console__group">
@@ -126,6 +128,11 @@ const presetCfgs = presets.map((pr) => ({
   .console__row--presets { gap: 0.4rem; }
   .chip--preset { border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); background: var(--accent-soft); color: var(--text); }
   .chip--preset:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); transform: translateY(-1px); }
+  .chip--saved { display: inline-flex; align-items: center; gap: 0.4rem; border-style: dashed; border-color: var(--border-bright); }
+  .chip__x { display: inline-flex; width: 14px; height: 14px; align-items: center; justify-content: center; border-radius: 50%; font-size: 0.9rem; line-height: 1; color: var(--text-faint); }
+  .chip__x:hover { color: var(--text); background: var(--panel-2); }
+  .console__savebtn { margin-top: 0.5rem; width: 100%; padding: 0.5rem; border-radius: 10px; border: 1px dashed var(--border-bright); background: transparent; color: var(--text-dim); font-family: var(--font-mono); font-size: 0.76rem; transition: color 0.2s, border-color 0.2s; }
+  .console__savebtn:hover { color: var(--text); border-color: var(--accent); }
 
   .console__row--swatches { gap: 0.5rem; }
   .swatch { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--border); padding: 0; transition: transform 0.15s var(--ease), box-shadow 0.2s; }
@@ -197,7 +204,14 @@ const presetCfgs = presets.map((pr) => ({
     b.addEventListener('click', async () => {
       if (!T) return;
       const act = b.dataset.act;
-      if (act === 'random') T.random();
+      if (act === 'save') {
+        const name = (window.prompt('Name this look:') || '').trim();
+        if (!name) return;
+        const s = T.state;
+        const cfg = { s: s.s, f: s.f, a: s.a, o: Object.assign({}, s.o) };
+        const list = getSaved(); list.push({ name, cfg }); setSaved(list); renderSaved();
+      }
+      else if (act === 'random') T.random();
       else if (act === 'reset') {
         T.reset();
         const out = document.getElementById('consoleOut') as HTMLTextAreaElement | null;
@@ -230,6 +244,32 @@ const presetCfgs = presets.map((pr) => ({
       }
     });
   });
+
+  // saved presets (localStorage) — your personal look library
+  const SAVED_KEY = 'ws-saved';
+  const savedRow = document.getElementById('savedRow');
+  function getSaved(): { name: string; cfg: any }[] {
+    try { return JSON.parse(localStorage.getItem(SAVED_KEY) || '[]'); } catch { return []; }
+  }
+  function setSaved(list: any[]) { try { localStorage.setItem(SAVED_KEY, JSON.stringify(list)); } catch { /* full/blocked */ } }
+  function renderSaved() {
+    if (!savedRow) return;
+    const list = getSaved();
+    savedRow.innerHTML = '';
+    list.forEach((item, idx) => {
+      const chip = document.createElement('button');
+      chip.className = 'chip chip--saved';
+      chip.textContent = item.name;
+      chip.title = 'Apply saved look';
+      chip.addEventListener('click', () => T && T.apply(item.cfg));
+      const del = document.createElement('span');
+      del.className = 'chip__x'; del.textContent = '×'; del.title = 'Delete';
+      del.addEventListener('click', (e) => { e.stopPropagation(); const l = getSaved(); l.splice(idx, 1); setSaved(l); renderSaved(); });
+      chip.appendChild(del);
+      savedRow.appendChild(chip);
+    });
+  }
+  renderSaved();
 
   // reflect current state onto the buttons (called by the engine after every change)
   (window as any).__wsSync = () => {

@@ -69,6 +69,26 @@
   src: url('/fonts/GeneralSans-600.woff2') format('woff2');
   font-weight: 451 800; font-style: normal; font-display: swap;
 }
+@font-face { /* characterful grotesk display */
+  font-family: 'Cabinet Grotesk';
+  src: url('/fonts/CabinetGrotesk-700.woff2') format('woff2');
+  font-weight: 300 700; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Cabinet Grotesk';
+  src: url('/fonts/CabinetGrotesk-800.woff2') format('woff2');
+  font-weight: 701 900; font-style: normal; font-display: swap;
+}
+@font-face { /* elegant display serif */
+  font-family: 'Zodiak';
+  src: url('/fonts/Zodiak-400.woff2') format('woff2');
+  font-weight: 200 500; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'Zodiak';
+  src: url('/fonts/Zodiak-700.woff2') format('woff2');
+  font-weight: 501 900; font-style: normal; font-display: swap;
+}
 
 :root {
   /* type */

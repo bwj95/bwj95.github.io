@@ -71,6 +71,8 @@ export const fonts: FontSet[] = [
   { label: 'Array',    display: "'Array', monospace",     body: "'Satoshi', sans-serif", hero: "'Array Wide', monospace" },
   { label: 'Segment',  display: "'Segment', monospace",   body: "'Satoshi', sans-serif", hero: "'Segment', monospace" },
   { label: 'Clash',    display: "'Clash Display', sans-serif", body: "'General Sans', sans-serif", hero: "'Clash Display', sans-serif" },
+  { label: 'Cabinet',  display: "'Cabinet Grotesk', sans-serif", body: "'General Sans', sans-serif", hero: "'Cabinet Grotesk', sans-serif" },
+  { label: 'Zodiak',   display: "'Zodiak', serif",         body: "'General Sans', sans-serif", hero: "'Zodiak', serif" },
 ];
 
 export const accents: Accent[] = [
@@ -93,4 +95,6 @@ export const presets: Preset[] = [
   { name: 'Neon Arcade',    blurb: 'LED glow, ring cursor',   style: 'neon',      font: 'Segment',  accent: 'Spectrum', opts: { hero: 'glow', cursor: 'ring' } },
   { name: 'Soft Bento',     blurb: 'rounded mosaic, sunset',  style: 'bento',     font: 'Alpino',   accent: 'Sunset',   opts: { cards: 'elevated' } },
   { name: 'Kinetic Flux',   blurb: 'bold, animated',          style: 'kinetic',   font: 'Clash',    accent: 'Spectrum' },
+  { name: 'Grotesk Studio', blurb: 'characterful + clean',    style: 'aurora',    font: 'Cabinet',  accent: 'Emerald',  opts: { cards: 'outline', density: 'spacious' } },
+  { name: 'Zodiak Press',   blurb: 'serif display, paper',    style: 'editorial', font: 'Zodiak',   accent: 'Gold',     opts: { banner: 'off', bg: 'none' } },
 ];
