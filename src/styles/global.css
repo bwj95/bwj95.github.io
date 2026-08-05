@@ -33,6 +33,27 @@
   src: url('/fonts/Satoshi-Variable.woff2') format('woff2-variations');
   font-weight: 300 900; font-style: normal; font-display: swap;
 }
+/* ---- selectable faces for the Design Console (all Fontshare, self-hosted) ---- */
+@font-face { /* editorial serif */
+  font-family: 'Sentient';
+  src: url('/fonts/Sentient-Variable.woff2') format('woff2-variations');
+  font-weight: 200 700; font-style: normal; font-display: swap;
+}
+@font-face { /* classic book serif */
+  font-family: 'Author';
+  src: url('/fonts/Author-Variable.woff2') format('woff2-variations');
+  font-weight: 200 700; font-style: normal; font-display: swap;
+}
+@font-face { /* geometric grotesk */
+  font-family: 'Alpino';
+  src: url('/fonts/Alpino-Variable.woff2') format('woff2-variations');
+  font-weight: 100 900; font-style: normal; font-display: swap;
+}
+@font-face { /* segmented LED display */
+  font-family: 'Segment';
+  src: url('/fonts/Segment-Regular.woff2') format('woff2');
+  font-weight: 400; font-style: normal; font-display: swap;
+}
 
 :root {
   /* type */
@@ -187,3 +208,94 @@ button { font: inherit; cursor: pointer; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 100px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.16); }
+
+/* =========================================================================
+   STYLE MODES — the Design Console flips [data-style] on <html>.
+   Default (no attribute / "aurora") = Aurora Glass. Because nearly everything
+   reads CSS variables, overriding the token set re-skins the whole site live;
+   a few body[data-style] rules add the bigger structural treatment shifts.
+   Everything transitions for a smooth morph.
+   ========================================================================= */
+:root { --mode-ease: 0.5s var(--ease); }
+body, .glass, .card, .btn, .nav, .marquee { transition:
+  background-color var(--mode-ease), color var(--mode-ease),
+  border-color var(--mode-ease), box-shadow var(--mode-ease); }
+
+/* ---------- BRUTALIST — stark concrete, hard borders, no blur ---------- */
+:root[data-style="brutalist"] {
+  --bg: #e7e4da; --bg-2: #dcd8cc;
+  --panel: #f5f3ec; --panel-2: #ffffff;
+  --border: #111111; --border-bright: #111111; --blur: 0px;
+  --text: #0b0b0b; --text-dim: #45433a; --text-faint: #6f6c5f;
+  --accent: #1f1fff; --accent-soft: rgba(31,31,255,0.12);
+  --spectrum: #1f1fff; --spectrum-soft: rgba(31,31,255,0.1);
+  --radius: 0px; --radius-sm: 0px;
+  --font-hero: 'Array', monospace;
+  --font-display: 'Alpino', system-ui, sans-serif;
+  --font-body: 'Satoshi', system-ui, sans-serif;
+}
+:root[data-style="brutalist"] body::before {
+  background:
+    linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px) 0 0 / 100% 36px,
+    linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px) 0 0 / 36px 100%,
+    var(--bg);
+}
+:root[data-style="brutalist"] #field { display: none; }
+:root[data-style="brutalist"] .glass { border-width: 2px; box-shadow: 6px 6px 0 #111; }
+:root[data-style="brutalist"] .btn { border-width: 2px; border-radius: 0; box-shadow: 4px 4px 0 #111; }
+:root[data-style="brutalist"] .btn:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 #111; }
+:root[data-style="brutalist"] .nav { border-width: 2px; border-radius: 3px; box-shadow: 5px 5px 0 #111; background: var(--panel); }
+:root[data-style="brutalist"] .card:hover { transform: translate(-3px,-3px); box-shadow: 11px 11px 0 #111; }
+:root[data-style="brutalist"] .display, :root[data-style="brutalist"] .sec-head__title { text-transform: uppercase; letter-spacing: -0.02em; }
+
+/* ---------- EDITORIAL — warm paper, serif, generous air ---------- */
+:root[data-style="editorial"] {
+  --bg: #f7f4ee; --bg-2: #efece4;
+  --panel: rgba(255,255,255,0.55); --panel-2: rgba(255,255,255,0.85);
+  --border: rgba(26,23,18,0.14); --border-bright: rgba(26,23,18,0.32); --blur: 6px;
+  --text: #1c1712; --text-dim: #5c5348; --text-faint: #8a8073;
+  --accent: #b2542f; --accent-soft: rgba(178,84,47,0.12);
+  --spectrum: linear-gradient(90deg, #b2542f, #7a3f6d); --spectrum-soft: rgba(178,84,47,0.1);
+  --radius: 6px; --radius-sm: 4px;
+  --font-hero: 'Sentient', Georgia, serif;
+  --font-display: 'Sentient', Georgia, serif;
+  --font-body: 'Author', Georgia, serif;
+}
+:root[data-style="editorial"] body::before {
+  background:
+    radial-gradient(60vw 60vw at 12% -8%, rgba(178,84,47,0.06), transparent 60%),
+    radial-gradient(50vw 50vw at 100% 10%, rgba(122,63,109,0.05), transparent 55%),
+    var(--bg);
+}
+:root[data-style="editorial"] #field { display: none; }
+:root[data-style="editorial"] .glass { box-shadow: none; }
+:root[data-style="editorial"] .nav { background: rgba(255, 255, 255, 0.62); }
+:root[data-style="editorial"] .display, :root[data-style="editorial"] .sec-head__title { font-weight: 600; letter-spacing: -0.01em; }
+:root[data-style="editorial"] .eyebrow, :root[data-style="editorial"] .marquee__item { font-family: var(--font-mono); }
+
+/* ---------- NEON NOIR — deep dark, electric glow, LED display ---------- */
+:root[data-style="neon"] {
+  --bg: #04040a; --bg-2: #080810;
+  --panel: rgba(0,245,255,0.035); --panel-2: rgba(0,245,255,0.07);
+  --border: rgba(0,245,255,0.22); --border-bright: rgba(0,245,255,0.5); --blur: 14px;
+  --text: #eafeff; --text-dim: #82bcc4; --text-faint: #4a7a80;
+  --accent: #00f5ff; --accent-soft: rgba(0,245,255,0.14); --hue: 185;
+  --spectrum: linear-gradient(115deg, #00f5ff 0%, #a06bff 50%, #ff00e5 100%);
+  --spectrum-soft: linear-gradient(115deg, rgba(0,245,255,0.16), rgba(255,0,229,0.16));
+  --radius: 10px;
+  --font-hero: 'Array', monospace;
+  --font-display: 'Alpino', system-ui, sans-serif;
+  --font-body: 'Satoshi', system-ui, sans-serif;
+}
+:root[data-style="neon"] body::before {
+  background:
+    radial-gradient(52vw 52vw at 15% -5%, rgba(0,245,255,0.14), transparent 55%),
+    radial-gradient(50vw 50vw at 100% 8%, rgba(255,0,229,0.11), transparent 55%),
+    radial-gradient(60vw 60vw at 82% 106%, rgba(120,0,255,0.12), transparent 60%),
+    var(--bg);
+}
+:root[data-style="neon"] .font-hero { text-shadow: 0 0 26px rgba(0,245,255,0.55); }
+:root[data-style="neon"] .glass { box-shadow: inset 0 0 40px rgba(0,245,255,0.05), 0 0 0 1px rgba(0,245,255,0.1); }
+:root[data-style="neon"] .nav { border-color: rgba(0,245,255,0.4); box-shadow: 0 0 32px rgba(0,245,255,0.22); }
+:root[data-style="neon"] .card:hover { box-shadow: 0 0 42px rgba(0,245,255,0.28); }
+:root[data-style="neon"] ::selection { background: rgba(0,245,255,0.4); color: #000; }

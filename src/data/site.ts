@@ -5,9 +5,9 @@
 export const site = {
   name: 'Brayden Jones',
   handle: 'bwj95',
-  role: 'Computer Engineer',
-  // one-liner: the site is the proof
-  tagline: 'I build across web, embedded & infrastructure — and this site is the proof.',
+  role: 'Web Design & Development',
+  // one-liner: the site restyles under the visitor's hands — that's the pitch
+  tagline: 'I build websites in any style — and you can restyle this one live.',
   location: 'Markham, ON',
   email: 'bwj9515@gmail.com',
   links: {

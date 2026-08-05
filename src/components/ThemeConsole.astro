@@ -1,0 +1,176 @@
+---
+import { styles, fonts, accents } from '../data/themes';
+---
+<aside class="console glass" id="console" data-open="false" aria-label="Design this site">
+  <button class="console__toggle" id="consoleToggle" aria-expanded="false">
+    <span class="console__spark" aria-hidden="true">✦</span>
+    <span class="console__toggle-label">Design this site</span>
+    <span class="console__chev" aria-hidden="true">▸</span>
+  </button>
+
+  <div class="console__panel" id="consolePanel">
+    <p class="console__hint">You're the designer. Flip anything — the whole site restyles live.</p>
+
+    <div class="console__group">
+      <span class="console__label">Vibe</span>
+      <div class="console__row" data-ctl="style">
+        {styles.map((s) => (
+          <button class="chip" data-val={s.id} title={s.note}>{s.label}</button>
+        ))}
+      </div>
+    </div>
+
+    <div class="console__group">
+      <span class="console__label">Type</span>
+      <div class="console__row" data-ctl="font">
+        {fonts.map((f, i) => (
+          <button class="chip" data-val={i} style={`font-family:${f.display}`}>{f.label}</button>
+        ))}
+      </div>
+    </div>
+
+    <div class="console__group">
+      <span class="console__label">Accent</span>
+      <div class="console__row console__row--swatches" data-ctl="accent">
+        {accents.map((a, i) => (
+          <button class="swatch" data-val={i} title={a.label} aria-label={a.label} style={`background:${a.spectrum}`}></button>
+        ))}
+      </div>
+    </div>
+
+    <div class="console__actions">
+      <button class="console__act" data-act="random">🎲 Surprise me</button>
+      <button class="console__act" data-act="share">🔗 Copy link</button>
+      <button class="console__act console__act--ghost" data-act="reset">Reset</button>
+    </div>
+  </div>
+</aside>
+
+<style>
+  .console {
+    position: fixed;
+    left: 50%;
+    bottom: 1.1rem;
+    transform: translateX(-50%);
+    z-index: 60;
+    width: min(560px, calc(100vw - 1.4rem));
+    padding: 0;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+  }
+  .console__toggle {
+    display: flex; align-items: center; gap: 0.6rem;
+    width: 100%; padding: 0.75rem 1.1rem;
+    background: transparent; border: none; color: var(--text);
+    font-family: var(--font-mono); font-size: 0.82rem; letter-spacing: 0.04em;
+  }
+  .console__spark { background: var(--spectrum); -webkit-background-clip: text; background-clip: text; color: transparent; font-size: 1rem; }
+  .console__toggle-label { flex: 1; text-align: left; }
+  .console__chev { color: var(--text-dim); transition: transform 0.3s var(--ease); }
+  .console[data-open="true"] .console__chev { transform: rotate(90deg); }
+
+  .console__panel {
+    max-height: 0; opacity: 0; overflow: hidden;
+    transition: max-height 0.4s var(--ease), opacity 0.3s var(--ease);
+    padding: 0 1.1rem;
+  }
+  .console[data-open="true"] .console__panel { max-height: 60vh; opacity: 1; padding: 0 1.1rem 1rem; overflow-y: auto; }
+
+  .console__hint { font-size: 0.78rem; color: var(--text-dim); margin: 0.2rem 0 0.9rem; line-height: 1.5; }
+  .console__group { margin-bottom: 0.85rem; }
+  .console__label { display: block; font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 0.45rem; }
+  .console__row { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+
+  .chip {
+    padding: 0.4rem 0.75rem; border-radius: 100px;
+    border: 1px solid var(--border); background: var(--panel-2);
+    color: var(--text-dim); font-size: 0.78rem; line-height: 1;
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
+  }
+  .chip:hover { color: var(--text); border-color: var(--border-bright); }
+  .chip.is-active { color: var(--text); border-color: transparent; background: var(--accent-soft); box-shadow: inset 0 0 0 1.5px var(--accent); }
+
+  .console__row--swatches { gap: 0.5rem; }
+  .swatch { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--border); padding: 0; transition: transform 0.15s var(--ease), box-shadow 0.2s; }
+  .swatch:hover { transform: scale(1.12); }
+  .swatch.is-active { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--text); }
+
+  .console__actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.4rem; padding-top: 0.8rem; border-top: 1px solid var(--border); }
+  .console__act { flex: 1; min-width: 108px; padding: 0.55rem 0.7rem; border-radius: 10px; border: 1px solid var(--border-bright); background: var(--panel-2); color: var(--text); font-size: 0.78rem; font-family: var(--font-mono); transition: background 0.2s, border-color 0.2s; }
+  .console__act:hover { background: var(--panel); border-color: var(--accent); }
+  .console__act--ghost { flex: 0 0 auto; min-width: 0; color: var(--text-dim); border-color: var(--border); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .console__panel, .console__chev { transition: none; }
+  }
+</style>
+
+<script>
+  const T = (window as any).__wsTheme;
+  const console_ = document.getElementById('console');
+  const toggle = document.getElementById('consoleToggle');
+  const panel = document.getElementById('consolePanel');
+
+  // open / close
+  toggle?.addEventListener('click', () => {
+    const open = console_?.getAttribute('data-open') === 'true';
+    console_?.setAttribute('data-open', String(!open));
+    toggle.setAttribute('aria-expanded', String(!open));
+  });
+
+  // external openers (e.g. the hero "Design this page live" button)
+  document.querySelectorAll('[data-open-console]').forEach((b) => {
+    b.addEventListener('click', () => {
+      console_?.setAttribute('data-open', 'true');
+      toggle?.setAttribute('aria-expanded', 'true');
+      console_?.animate(
+        [{ transform: 'translateX(-50%) scale(1.03)' }, { transform: 'translateX(-50%) scale(1)' }],
+        { duration: 320, easing: 'ease-out' }
+      );
+    });
+  });
+
+  // control clicks (event-delegated)
+  document.querySelectorAll<HTMLElement>('.console__row').forEach((row) => {
+    const ctl = row.dataset.ctl;
+    row.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-val]');
+      if (!btn || !T) return;
+      const val = btn.dataset.val!;
+      if (ctl === 'style') T.setStyle(val);
+      else if (ctl === 'font') T.setFont(parseInt(val));
+      else if (ctl === 'accent') T.setAccent(parseInt(val));
+    });
+  });
+
+  // actions
+  document.querySelectorAll<HTMLElement>('[data-act]').forEach((b) => {
+    b.addEventListener('click', async () => {
+      if (!T) return;
+      const act = b.dataset.act;
+      if (act === 'random') T.random();
+      else if (act === 'reset') T.reset();
+      else if (act === 'share') {
+        try {
+          await navigator.clipboard.writeText(location.href);
+          const prev = b.textContent;
+          b.textContent = '✓ Copied!';
+          setTimeout(() => (b.textContent = prev), 1400);
+        } catch { /* clipboard blocked — no-op */ }
+      }
+    });
+  });
+
+  // reflect current state onto the buttons (called by the engine after every change)
+  (window as any).__wsSync = () => {
+    if (!T) return;
+    const s = T.state;
+    document.querySelectorAll<HTMLElement>('[data-ctl="style"] [data-val]').forEach((el) =>
+      el.classList.toggle('is-active', el.dataset.val === s.s));
+    document.querySelectorAll<HTMLElement>('[data-ctl="font"] [data-val]').forEach((el) =>
+      el.classList.toggle('is-active', s.f != null && +el.dataset.val! === s.f));
+    document.querySelectorAll<HTMLElement>('[data-ctl="accent"] [data-val]').forEach((el) =>
+      el.classList.toggle('is-active', s.a != null && +el.dataset.val! === s.a));
+  };
+  (window as any).__wsSync();
+</script>

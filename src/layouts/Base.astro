@@ -2,7 +2,9 @@
 import '../styles/global.css';
 import ParticleField from '../components/ParticleField.astro';
 import Nav from '../components/Nav.astro';
+import ThemeConsole from '../components/ThemeConsole.astro';
 import { site } from '../data/site';
+import { fonts, accents } from '../data/themes';
 
 interface Props { title?: string; description?: string; }
 const {
@@ -20,6 +22,80 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical.href} />
     <meta name="theme-color" content="#050505" />
+
+    <!-- Design Console theme engine — runs pre-paint to apply the saved / shared
+         look before first render (no flash). Data comes from src/data/themes.ts. -->
+    <script define:vars={{ FONTS: fonts, ACCENTS: accents }}>
+      (function () {
+        var root = document.documentElement;
+        var state = { s: 'aurora', f: null, a: null };
+        function applyStyle(v) {
+          state.s = v || 'aurora';
+          if (state.s === 'aurora') root.removeAttribute('data-style');
+          else root.setAttribute('data-style', state.s);
+        }
+        function applyFont(i) {
+          state.f = (i == null || i === '') ? null : +i;
+          if (state.f == null) {
+            root.style.removeProperty('--font-display');
+            root.style.removeProperty('--font-body');
+            root.style.removeProperty('--font-hero');
+          } else if (FONTS[state.f]) {
+            root.style.setProperty('--font-display', FONTS[state.f].display);
+            root.style.setProperty('--font-body', FONTS[state.f].body);
+            root.style.setProperty('--font-hero', FONTS[state.f].hero);
+          }
+        }
+        function applyAccent(i) {
+          state.a = (i == null || i === '') ? null : +i;
+          if (state.a == null) {
+            root.style.removeProperty('--spectrum');
+            root.style.removeProperty('--accent');
+          } else if (ACCENTS[state.a]) {
+            root.style.setProperty('--spectrum', ACCENTS[state.a].spectrum);
+            root.style.setProperty('--accent', ACCENTS[state.a].accent);
+          }
+        }
+        function persist() {
+          var p = [];
+          if (state.s !== 'aurora') p.push('s=' + state.s);
+          if (state.f != null) p.push('f=' + state.f);
+          if (state.a != null) p.push('a=' + state.a);
+          var h = p.join('&');
+          try { history.replaceState(null, '', h ? '#' + h : location.pathname + location.search); } catch (e) {}
+          try { localStorage.setItem('ws-theme', h); } catch (e) {}
+          if (window.__wsSync) window.__wsSync();
+        }
+        function parse(str) {
+          var o = {};
+          (str || '').split('&').forEach(function (kv) { var q = kv.split('='); if (q[0]) o[q[0]] = q[1]; });
+          return o;
+        }
+        function load() {
+          var h = (location.hash || '').slice(1);
+          if (!h) { try { h = localStorage.getItem('ws-theme') || ''; } catch (e) {} }
+          var o = parse(h);
+          if (o.s) applyStyle(o.s);
+          if (o.f != null) applyFont(o.f);
+          if (o.a != null) applyAccent(o.a);
+        }
+        window.__wsTheme = {
+          state: state,
+          setStyle: function (v) { applyStyle(v); applyFont(null); applyAccent(null); persist(); },
+          setFont: function (i) { applyFont(i); persist(); },
+          setAccent: function (i) { applyAccent(i); persist(); },
+          reset: function () { applyStyle('aurora'); applyFont(null); applyAccent(null); persist(); },
+          random: function () {
+            var modes = ['aurora', 'brutalist', 'editorial', 'neon'];
+            applyStyle(modes[(Math.random() * modes.length) | 0]);
+            applyFont((Math.random() * FONTS.length) | 0);
+            applyAccent((Math.random() * ACCENTS.length) | 0);
+            persist();
+          }
+        };
+        load();
+      })();
+    </script>
 
     <!-- Open Graph / social -->
     <meta property="og:type" content="website" />
@@ -45,6 +121,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
     <main id="top">
       <slot />
     </main>
+    <ThemeConsole />
 
     <footer class="foot">
       <div class="wrap foot__inner">
