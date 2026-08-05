@@ -1,7 +1,12 @@
-# bwj95.github.io — the hub
+# web-studio — the WORKBENCH
 
-Personal hub + portfolio + storefront. The site *is* the demo: dark, alive,
-unconventional. Built with **Astro**. Deploys to the root of `bwj95.github.io`.
+**This is Brayden's private design workbench / reference tool** — the full playground
+with all the vibes, layouts, fonts, effects, presets and the Export console, kept with
+his own content (projects, résumé) for testing and as a reference for future sites.
+
+The impersonal, customer-facing **customization / sale site** was forked from here into
+`../customizer/` (personal info stripped, sections reframed to show off customization).
+Keep experimenting here; port what's good into `customizer/`. Built with **Astro**.
 
 ## Run it
 
