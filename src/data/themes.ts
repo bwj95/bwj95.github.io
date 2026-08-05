@@ -7,6 +7,9 @@ export interface FontSet { label: string; display: string; body: string; hero: s
 export interface Accent { label: string; spectrum: string; accent: string; }
 export interface OptionChoice { val: string; label: string; }
 export interface Option { key: string; attr: string; label: string; default: string; choices: OptionChoice[]; }
+// A curated one-click look: pairs a vibe with a font, an accent, and a few
+// component tweaks that are known to look good together (the fontpair idea).
+export interface Preset { name: string; blurb: string; style: string; font: string; accent: string; opts?: Record<string, string>; }
 
 export const styles: Style[] = [
   { id: 'aurora',    label: 'Aurora Glass', note: 'dark · glass · spectrum' },
@@ -67,6 +70,7 @@ export const fonts: FontSet[] = [
   { label: 'Alpino',   display: "'Alpino', sans-serif",   body: "'Alpino', sans-serif",  hero: "'Alpino', sans-serif" },
   { label: 'Array',    display: "'Array', monospace",     body: "'Satoshi', sans-serif", hero: "'Array Wide', monospace" },
   { label: 'Segment',  display: "'Segment', monospace",   body: "'Satoshi', sans-serif", hero: "'Segment', monospace" },
+  { label: 'Clash',    display: "'Clash Display', sans-serif", body: "'General Sans', sans-serif", hero: "'Clash Display', sans-serif" },
 ];
 
 export const accents: Accent[] = [
@@ -76,4 +80,17 @@ export const accents: Accent[] = [
   { label: 'Gold',     spectrum: 'linear-gradient(115deg,#f6d365,#fda085)',         accent: '#f4c04e' },
   { label: 'Electric', spectrum: 'linear-gradient(115deg,#4facfe,#00f2fe)',         accent: '#4facfe' },
   { label: 'Mono',     spectrum: '#e6e6ec',                                          accent: '#cfcfd6' },
+];
+
+// Curated one-click looks (fontpair-style). `font`/`accent` reference labels
+// above; `opts` sets component options, everything else resets to default.
+export const presets: Preset[] = [
+  { name: 'Aurora Pop',     blurb: 'the house look',          style: 'aurora',    font: 'Satoshi',  accent: 'Spectrum' },
+  { name: 'Clean Studio',   blurb: 'minimal, dotted, airy',   style: 'aurora',    font: 'Clash',    accent: 'Mono',     opts: { cards: 'outline', bg: 'dots', density: 'spacious' } },
+  { name: 'Dark Serif',     blurb: 'editorial on black',      style: 'aurora',    font: 'Sentient', accent: 'Emerald',  opts: { cards: 'solid', bg: 'grid' } },
+  { name: 'Editorial Warm', blurb: 'paper, serif, calm',      style: 'editorial', font: 'Sentient', accent: 'Gold',     opts: { banner: 'off', bg: 'none' } },
+  { name: 'Brutalist Pop',  blurb: 'concrete + electric',     style: 'brutalist', font: 'Array',    accent: 'Electric', opts: { corners: 'sharp' } },
+  { name: 'Neon Arcade',    blurb: 'LED glow, ring cursor',   style: 'neon',      font: 'Segment',  accent: 'Spectrum', opts: { hero: 'glow', cursor: 'ring' } },
+  { name: 'Soft Bento',     blurb: 'rounded mosaic, sunset',  style: 'bento',     font: 'Alpino',   accent: 'Sunset',   opts: { cards: 'elevated' } },
+  { name: 'Kinetic Flux',   blurb: 'bold, animated',          style: 'kinetic',   font: 'Clash',    accent: 'Spectrum' },
 ];

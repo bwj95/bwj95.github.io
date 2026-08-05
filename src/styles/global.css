@@ -54,6 +54,21 @@
   src: url('/fonts/Segment-Regular.woff2') format('woff2');
   font-weight: 400; font-style: normal; font-display: swap;
 }
+@font-face { /* bold expressive display (Fontshare, fetched via CDN) */
+  font-family: 'Clash Display';
+  src: url('/fonts/ClashDisplay-600.woff2') format('woff2');
+  font-weight: 500 800; font-style: normal; font-display: swap;
+}
+@font-face { /* clean neutral body/UI */
+  font-family: 'General Sans';
+  src: url('/fonts/GeneralSans-400.woff2') format('woff2');
+  font-weight: 300 450; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: 'General Sans';
+  src: url('/fonts/GeneralSans-600.woff2') format('woff2');
+  font-weight: 451 800; font-style: normal; font-display: swap;
+}
 
 :root {
   /* type */

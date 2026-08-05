@@ -93,6 +93,13 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
           setFont: function (i) { applyFont(i); persist(); },
           setAccent: function (i) { applyAccent(i); persist(); },
           setOpt: function (k, v) { applyOpt(k, v); persist(); },
+          apply: function (cfg) {
+            applyStyle(cfg.s || 'aurora');
+            applyFont(cfg.f == null ? null : cfg.f);
+            applyAccent(cfg.a == null ? null : cfg.a);
+            OPTIONS.forEach(function (op) { applyOpt(op.key, (cfg.o && cfg.o[op.key] != null) ? cfg.o[op.key] : op.default); });
+            persist();
+          },
           reset: function () {
             applyStyle('aurora'); applyFont(null); applyAccent(null);
             OPTIONS.forEach(function (op) { root.removeAttribute(op.attr); }); state.o = {};
