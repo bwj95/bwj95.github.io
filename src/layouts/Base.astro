@@ -219,6 +219,20 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
         new MutationObserver(() => requestAnimationFrame(pxUpdate)).observe(document.documentElement, { attributes: true, attributeFilter: ['data-parallax'] });
         requestAnimationFrame(pxUpdate);
       }
+
+      // Rail layout: translate vertical wheel into horizontal scroll while the rail
+      // has room; release at the edges so the page keeps scrolling. Only fires when
+      // the .grid is actually horizontally scrollable (i.e. rail mode).
+      document.querySelectorAll<HTMLElement>('.grid').forEach((rail) => {
+        rail.addEventListener('wheel', (e) => {
+          if (rail.scrollWidth <= rail.clientWidth) return;
+          const atStart = rail.scrollLeft <= 0;
+          const atEnd = rail.scrollLeft + rail.clientWidth >= rail.scrollWidth - 1;
+          if ((e.deltaY < 0 && atStart) || (e.deltaY > 0 && atEnd)) return;
+          rail.scrollLeft += e.deltaY;
+          e.preventDefault();
+        }, { passive: false });
+      });
     </script>
   </body>
 </html>

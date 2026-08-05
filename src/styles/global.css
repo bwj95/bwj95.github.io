@@ -478,6 +478,34 @@ body, .glass, .card, .btn, .nav, .marquee { transition:
 :root[data-density="spacious"] .section { padding-block: clamp(6rem, 14vw, 11rem); }
 :root[data-density="spacious"] .grid, :root[data-density="spacious"] .offer-grid { gap: 2.2rem; }
 
+/* -- WORK LAYOUT: rail (delassus-style horizontal scroll gallery) --
+   Cards become full-bleed panels; the poster/image fills each panel and the
+   text sits over a dark scrim so it's legible on any vibe or photo. */
+:root[data-layout="rail"] .grid {
+  display: flex; grid-template-columns: none;
+  overflow-x: auto; overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  gap: 1.2rem; padding-bottom: 1.2rem;
+  scrollbar-width: thin;
+}
+:root[data-layout="rail"] .grid > * { flex: 0 0 clamp(280px, 44vw, 560px); scroll-snap-align: center; }
+:root[data-layout="rail"] .card { position: relative; min-height: min(64vh, 560px); overflow: hidden; }
+:root[data-layout="rail"] .card__poster { position: absolute; inset: 0; aspect-ratio: auto; }
+:root[data-layout="rail"] .card__poster img { width: 100%; height: 100%; object-fit: cover; }
+:root[data-layout="rail"] .card__glyph { font-size: 5rem; opacity: 0.85; }
+:root[data-layout="rail"] .card__body {
+  position: absolute; inset: auto 0 0 0; z-index: 2;
+  padding: 4.5rem 1.6rem 1.6rem;
+  background: linear-gradient(to top, rgba(6,8,10,0.92), rgba(6,8,10,0.5) 55%, transparent);
+}
+:root[data-layout="rail"] .card__name,
+:root[data-layout="rail"] .card__tagline { color: #fff; }
+:root[data-layout="rail"] .card__blurb { color: rgba(255,255,255,0.82); }
+:root[data-layout="rail"] .card__tags li { color: rgba(255,255,255,0.82); border-color: rgba(255,255,255,0.28); }
+:root[data-layout="rail"] .card__link { color: #fff; }
+:root[data-layout="rail"] .grid::-webkit-scrollbar { height: 8px; }
+:root[data-layout="rail"] .grid::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 100px; }
+
 /* -- CURSOR (custom follower; element + JS live in Base) -- */
 .cursor { position: fixed; top: 0; left: 0; z-index: 9999; pointer-events: none; opacity: 0; will-change: transform; }
 @media (pointer: fine) {

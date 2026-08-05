@@ -57,6 +57,9 @@ export const options: Option[] = [
   { key: 'cursor', attr: 'data-cursor', label: 'Cursor', default: 'default', choices: [
     { val: 'default', label: 'Default' }, { val: 'dot', label: 'Dot' }, { val: 'ring', label: 'Ring' },
   ] },
+  { key: 'layout', attr: 'data-layout', label: 'Work layout', default: 'grid', choices: [
+    { val: 'grid', label: 'Grid' }, { val: 'rail', label: 'Rail →' },
+  ] },
   { key: 'parallax', attr: 'data-parallax', label: 'Parallax', default: 'off', choices: [
     { val: 'off', label: 'Off' }, { val: 'sideways', label: 'Sideways' },
   ] },
@@ -102,5 +105,5 @@ export const presets: Preset[] = [
   { name: 'Kinetic Flux',   blurb: 'bold, animated',          style: 'kinetic',   font: 'Clash',    accent: 'Spectrum' },
   { name: 'Grotesk Studio', blurb: 'characterful + clean',    style: 'aurora',    font: 'Cabinet',  accent: 'Emerald',  opts: { cards: 'outline', density: 'spacious' } },
   { name: 'Zodiak Press',   blurb: 'serif display, paper',    style: 'editorial', font: 'Zodiak',   accent: 'Gold',     opts: { banner: 'off', bg: 'none' } },
-  { name: 'Orchard',        blurb: 'bright, open, sideways drift', style: 'fresh', font: 'Clash', accent: 'Citrus', opts: { parallax: 'sideways', density: 'spacious', bg: 'none', banner: 'off', cards: 'elevated' } },
+  { name: 'Orchard',        blurb: 'bright, open, horizontal rail', style: 'fresh', font: 'Clash', accent: 'Citrus', opts: { layout: 'rail', parallax: 'sideways', density: 'spacious', bg: 'none', banner: 'off', cards: 'elevated' } },
 ];
