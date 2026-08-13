@@ -19,8 +19,8 @@ const hardware = byKind('hardware');
       <p class="eyebrow hero__eyebrow hero__fade">
         <span class="hero__spark" aria-hidden="true">✦</span> A gallery of made things
       </p>
-      <h1 class="hero__title font-hero hero__fade" style="--fade-delay:90ms">
-        Made to <span class="gradient-text">reach through</span> the&nbsp;glass.
+      <h1 class="hero__title hero__fade" style="--fade-delay:90ms">
+        <span class="hero__title-face font-hero">Made to <span class="gradient-text">reach through</span> the&nbsp;glass.</span>
       </h1>
       <p class="lead hero__lead hero__fade" style="--fade-delay:220ms">
         An artist, I hold, is simply a person who contrives to reach through and make you
@@ -128,6 +128,9 @@ const hardware = byKind('hardware');
   .hero__eyebrow { display: inline-flex; align-items: center; gap: 0.5rem; }
   .hero__spark { background: var(--spectrum); -webkit-background-clip: text; background-clip: text; color: transparent; }
   .hero__title { font-size: clamp(2.6rem, 8.2vw, 6.6rem); margin-top: 1.3rem; max-width: 14ch; }
+  /* the dot-matrix face is its own element so its kinetic gradient animation
+     never collides with the h1's load-fade animation (block = gradient spans all lines) */
+  .hero__title-face { display: block; }
   .hero__lead { margin-top: 1.7rem; max-width: 48ch; font-size: clamp(1.08rem, 1.7vw, 1.32rem); }
   .hero__lead em { font-style: italic; color: var(--text); }
   .hero__cta { display: flex; flex-wrap: wrap; gap: 0.9rem; margin-top: 2.4rem; }
