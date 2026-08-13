@@ -11,12 +11,12 @@ const presetCfgs = presets.map((pr) => {
 <aside class="console glass" id="console" data-open="false" aria-label="Design this site">
   <button class="console__toggle" id="consoleToggle" aria-expanded="false">
     <span class="console__spark" aria-hidden="true">✦</span>
-    <span class="console__toggle-label">Design this site</span>
+    <span class="console__toggle-label">Take the controls</span>
     <span class="console__chev" aria-hidden="true">▸</span>
   </button>
 
   <div class="console__panel" id="consolePanel">
-    <p class="console__hint">You're the designer. Start from a preset, then flip anything — the whole site restyles live.</p>
+    <p class="console__hint">You're the designer now; I've stepped out for a drink. Start from a preset, then maul anything you like — the whole site obeys, live and without complaint.</p>
 
     <div class="console__group">
       <span class="console__label">Presets ✦</span>
@@ -26,7 +26,7 @@ const presetCfgs = presets.map((pr) => {
         ))}
       </div>
       <div class="console__row console__row--presets" id="savedRow"></div>
-      <button class="console__savebtn" data-act="save">＋ Save current look</button>
+      <button class="console__savebtn" data-act="save">＋ Keep this look</button>
     </div>
 
     <div class="console__group">
@@ -71,10 +71,10 @@ const presetCfgs = presets.map((pr) => {
     </div>
 
     <div class="console__actions">
-      <button class="console__act" data-act="random">🎲 Surprise me</button>
+      <button class="console__act" data-act="random">🎲 Astonish me</button>
       <button class="console__act" data-act="share">🔗 Copy link</button>
       <button class="console__act console__act--accent" data-act="export">⤓ Export CSS</button>
-      <button class="console__act console__act--ghost" data-act="reset">Reset</button>
+      <button class="console__act console__act--ghost" data-act="reset">Put it back</button>
     </div>
     <textarea class="console__out" id="consoleOut" readonly hidden aria-label="Exported CSS tokens"></textarea>
   </div>
@@ -204,7 +204,7 @@ const presetCfgs = presets.map((pr) => {
       if (!T) return;
       const act = b.dataset.act;
       if (act === 'save') {
-        const name = (window.prompt('Name this look:') || '').trim();
+        const name = (window.prompt('Give this look a name:') || '').trim();
         if (!name) return;
         const s = T.state;
         const cfg = { s: s.s, f: s.f, a: s.a, o: Object.assign({}, s.o) };

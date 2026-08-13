@@ -3,12 +3,13 @@ import '../styles/global.css';
 import ParticleField from '../components/ParticleField.astro';
 import Nav from '../components/Nav.astro';
 import ThemeConsole from '../components/ThemeConsole.astro';
+import Grasshopper from '../components/Grasshopper.astro';
 import { site } from '../data/site';
 import { fonts, accents, options } from '../data/themes';
 
 interface Props { title?: string; description?: string; }
 const {
-  title = `${site.name} — ${site.role}`,
+  title = site.title,
   description = site.tagline,
 } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.github.io');
@@ -151,19 +152,19 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
     <footer class="foot">
       <div class="wrap foot__inner">
         <div>
-          <div class="foot__name display">{site.name}</div>
+          <a class="foot__mark" href="/" aria-label="Home">
+            <Grasshopper class="foot__gh" />
+          </a>
           <p class="foot__tag">{site.tagline}</p>
         </div>
         <div class="foot__links">
+          <a href="#top">Back to top ↑</a>
           <a href={site.links.github} target="_blank" rel="noopener">GitHub</a>
-          <a href={site.links.linkedin} target="_blank" rel="noopener">LinkedIn</a>
-          <a href={`mailto:${site.email}`}>Email</a>
-          <a href="/resume">Résumé</a>
         </div>
       </div>
       <div class="wrap foot__base">
-        <span>© {new Date().getFullYear()} {site.name}</span>
-        <span class="foot__built">Built from scratch — Astro · this site is the demo.</span>
+        <span>© {new Date().getFullYear()}</span>
+        <span class="foot__built">Built by hand — Astro. The site is its own argument.</span>
       </div>
     </footer>
 
@@ -340,7 +341,8 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
   main { padding-top: 4.5rem; }
   .foot { border-top: 1px solid var(--border); margin-top: 4rem; padding-block: 3.5rem 2.5rem; background: rgba(255,255,255,0.01); }
   .foot__inner { display: flex; flex-wrap: wrap; gap: 2rem; justify-content: space-between; align-items: flex-start; }
-  .foot__name { font-size: clamp(1.6rem, 5vw, 2.4rem); }
+  .foot__mark { --gh-size: clamp(40px, 7vw, 52px); display: inline-block; color: var(--text-dim); transition: color 0.2s var(--ease); }
+  .foot__mark:hover { color: var(--accent); }
   .foot__tag { color: var(--text-dim); max-width: 42ch; margin-top: 0.5rem; }
   .foot__links { display: flex; flex-wrap: wrap; gap: 1.4rem; font-family: var(--font-mono); font-size: 0.82rem; }
   .foot__links a { color: var(--text-dim); transition: color 0.2s; }

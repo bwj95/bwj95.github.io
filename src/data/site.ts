@@ -1,49 +1,18 @@
-// Central site identity + offerings. Single source of truth for copy that
-// appears in more than one place. Résumé content is pulled separately from
-// resume.md (see scripts/pull-resume.mjs) so it can never drift.
+// Central identity + shared copy for the gallery. No personal name, no sales —
+// the work is the point; a piece can be acquired via the hub if it moves someone.
 
 export const site = {
-  name: 'Brayden Jones',
-  handle: 'bwj95',
-  role: 'Web Design & Development',
-  // one-liner: the site restyles under the visitor's hands — that's the pitch
-  tagline: 'I build websites in any style — and you can restyle this one live.',
-  location: 'Markham, ON',
-  email: 'bwj9515@gmail.com',
+  // nameless: a quiet phrase for the browser tab / meta, not a wordmark
+  title: 'A gallery of made things',
+  // one-liner: shown in meta + footer
+  tagline: 'Made things, hung where the light can reach them — and, if one seizes you, taken home.',
   links: {
     github: 'https://github.com/bwj95',
-    linkedin: 'https://linkedin.com/in/bwj95',
-    resumePdf: '/Brayden-Jones-Resume.pdf',
   },
-  // marquee band — the stack, said fast
+  // marquee band — the materials, said fast
   stack: [
     'React', 'Astro', 'TypeScript', 'C / C++', 'C#', 'Python',
     'ESP32 firmware', 'BLE + Wi-Fi', 'Cloudflare Workers', 'OpenSCAD',
     '3D printing', 'Linux', 'MCP / agentic AI',
   ],
 };
-
-// What can actually be bought / hired. This is the sales surface.
-export const offerings = [
-  {
-    title: 'Websites that ship',
-    price: 'from $600',
-    blurb:
-      'Design, build, deploy. Fast, accessible, SEO-ready. React or Astro, live on your domain with a real contact pipeline — not a template you fight with.',
-    cta: 'Start a build',
-  },
-  {
-    title: 'Custom apps & tools',
-    price: 'project-based',
-    blurb:
-      'Dashboards, data tools, PWAs, small SaaS. If it runs in a browser or on the edge, I can make it exist — including the AI-powered parts.',
-    cta: 'Scope an app',
-  },
-  {
-    title: 'Embedded & hardware',
-    price: 'let’s talk',
-    blurb:
-      'ESP32 firmware, BLE/Wi-Fi devices, custom 3D-printed enclosures. From breadboard to a thing you can hold, wired to a host app.',
-    cta: 'Talk hardware',
-  },
-];
