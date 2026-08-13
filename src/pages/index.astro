@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import Marquee from '../components/Marquee.astro';
 import ProjectCard from '../components/ProjectCard.astro';
+import Grasshopper from '../components/Grasshopper.astro';
 import { site } from '../data/site';
 import { byKind } from '../data/projects';
 
@@ -9,23 +10,34 @@ const flagships = [...byKind('flagship'), ...byKind('lab')];
 const hardware = byKind('hardware');
 ---
 <Base>
-  <!-- ============ HERO ============ -->
-  <section class="hero wrap">
-    <p class="eyebrow" data-reveal>A gallery of made things</p>
-    <h1 class="hero__title font-hero" data-reveal style="--reveal-delay:80ms">
-      Made to <span class="gradient-text">reach through</span>
-      <br class="hero__br" />the glass.
-    </h1>
-    <p class="lead hero__lead" data-reveal style="--reveal-delay:160ms">
-      An artist, I hold, is simply a person who contrives to reach through and make you
-      <em>feel</em> a thing you'd not have felt otherwise — and most who claim the title are
-      frauds. Here are things made in that spirit. Look your fill. And if the mood takes you,
-      open the console and repaint the whole room while you look — the art won't mind.
-    </p>
-    <div class="hero__cta" data-reveal style="--reveal-delay:240ms">
-      <button class="btn btn-primary" data-open-console>✦ Repaint the room</button>
-      <a class="btn btn-ghost" href="#work">Into the gallery ↓</a>
+  <!-- ============ HERO — the landing ============ -->
+  <section class="hero">
+    <div class="hero__aura" aria-hidden="true"></div>
+    <div class="hero__ghost" aria-hidden="true"><Grasshopper /></div>
+
+    <div class="hero__inner">
+      <p class="eyebrow hero__eyebrow hero__fade">
+        <span class="hero__spark" aria-hidden="true">✦</span> A gallery of made things
+      </p>
+      <h1 class="hero__title font-hero hero__fade" style="--fade-delay:90ms">
+        Made to <span class="gradient-text">reach through</span> the&nbsp;glass.
+      </h1>
+      <p class="lead hero__lead hero__fade" style="--fade-delay:220ms">
+        An artist, I hold, is simply a person who contrives to reach through and make you
+        <em>feel</em> a thing you'd not have felt otherwise — and most who claim the title are
+        frauds. Here are things made in that spirit. Look your fill. And if the mood takes you,
+        open the console and repaint the whole room while you look — the art won't mind.
+      </p>
+      <div class="hero__cta hero__fade" style="--fade-delay:320ms">
+        <button class="btn btn-primary" data-open-console>✦ Repaint the room</button>
+        <a class="btn btn-ghost" href="#work">Into the gallery ↓</a>
+      </div>
     </div>
+
+    <a class="hero__scroll hero__fade" href="#work" aria-label="Scroll to the work" style="--fade-delay:520ms">
+      <span class="hero__scroll-label">Scroll to enter</span>
+      <span class="hero__scroll-cue" aria-hidden="true"></span>
+    </a>
   </section>
 
   <Marquee items={site.stack} />
@@ -69,11 +81,96 @@ const hardware = byKind('hardware');
 </Base>
 
 <style>
-  .hero { padding-top: clamp(1rem, 4vw, 3rem); padding-bottom: clamp(2.5rem, 6vw, 4rem); }
-  .hero__title { font-size: clamp(2.4rem, 7.2vw, 5.4rem); margin-top: 1.2rem; max-width: 16ch; }
-  .hero__lead { margin-top: 1.6rem; }
-  .hero__cta { display: flex; flex-wrap: wrap; gap: 0.9rem; margin-top: 2.2rem; }
-  @media (max-width: 640px) { .hero__br { display: none; } }
+  /* ---- HERO / landing: full-height, cinematic ---- */
+  .hero {
+    position: relative;
+    min-height: calc(100svh - 4.5rem);
+    display: flex; flex-direction: column; justify-content: center;
+    /* extra bottom room so the centered CTAs always clear the floating console pill */
+    padding-block: clamp(2.5rem, 7vh, 5.5rem) clamp(4.5rem, 9vh, 6.5rem);
+    overflow: clip;
+  }
+  .hero__inner {
+    position: relative; z-index: 1;
+    width: 100%; max-width: var(--maxw);
+    margin-inline: auto; padding-inline: clamp(1.1rem, 4vw, 2.5rem);
+  }
+
+  /* animated aurora wash — layers over the base mesh; particles show through */
+  .hero__aura {
+    position: absolute; inset: -12% -8% -4%; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(38vw 38vw at 16% 24%, rgba(167,139,250,0.24), transparent 60%),
+      radial-gradient(34vw 32vw at 84% 26%, rgba(108,234,255,0.20), transparent 60%),
+      radial-gradient(44vw 40vw at 62% 96%, rgba(255,110,199,0.16), transparent 62%);
+    filter: blur(14px);
+    animation: hero-aura 18s var(--ease) infinite alternate;
+  }
+  @keyframes hero-aura {
+    from { transform: translate3d(0,0,0) scale(1); }
+    to   { transform: translate3d(-2.5%, -2%, 0) scale(1.07); }
+  }
+
+  /* giant faint grasshopper watermark, bleeding off the right */
+  .hero__ghost {
+    --gh-size: clamp(340px, 56vmin, 720px);
+    position: absolute; z-index: 0;
+    top: 50%; right: clamp(-7rem, -3vw, -1rem);
+    transform: translateY(-48%) rotate(-8deg);
+    color: var(--accent); opacity: 0.07; pointer-events: none;
+  }
+
+  /* hero content animates in on load (self-contained — not tied to the scroll
+     observer, so the above-the-fold landing never depends on IO timing) */
+  .hero__fade { opacity: 0; animation: hero-fade 0.85s var(--ease) forwards; animation-delay: var(--fade-delay, 0ms); }
+  @keyframes hero-fade { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+
+  .hero__eyebrow { display: inline-flex; align-items: center; gap: 0.5rem; }
+  .hero__spark { background: var(--spectrum); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero__title { font-size: clamp(2.6rem, 8.2vw, 6.6rem); margin-top: 1.3rem; max-width: 14ch; }
+  .hero__lead { margin-top: 1.7rem; max-width: 48ch; font-size: clamp(1.08rem, 1.7vw, 1.32rem); }
+  .hero__lead em { font-style: italic; color: var(--text); }
+  .hero__cta { display: flex; flex-wrap: wrap; gap: 0.9rem; margin-top: 2.4rem; }
+
+  /* scroll cue — bottom-left corner, clear of the centered console pill */
+  .hero__scroll {
+    position: absolute; z-index: 1;
+    left: clamp(1.1rem, 4vw, 2.5rem); bottom: clamp(1rem, 3vh, 1.6rem);
+    display: inline-flex; align-items: center; gap: 0.75rem;
+    font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.3em;
+    text-transform: uppercase; color: var(--text-faint);
+    transition: color 0.25s var(--ease);
+  }
+  .hero__scroll:hover { color: var(--text-dim); }
+  .hero__scroll-cue { position: relative; width: 22px; height: 34px; border: 1px solid var(--border-bright); border-radius: 100px; }
+  .hero__scroll-cue::after {
+    content: ''; position: absolute; top: 6px; left: 50%;
+    width: 3px; height: 7px; border-radius: 2px; background: var(--accent);
+    transform: translateX(-50%); animation: hero-scroll 1.7s var(--ease) infinite;
+  }
+  @keyframes hero-scroll {
+    0% { opacity: 0; transform: translate(-50%, 0); }
+    30%, 65% { opacity: 1; }
+    100% { opacity: 0; transform: translate(-50%, 12px); }
+  }
+
+  /* paper / light vibes: the coloured wash clashes — drop it, keep the ghost */
+  :root[data-style="editorial"] .hero__aura,
+  :root[data-style="fresh"] .hero__aura,
+  :root[data-style="brutalist"] .hero__aura { display: none; }
+
+  @media (max-width: 900px) {
+    .hero__ghost { opacity: 0.05; --gh-size: 78vw; right: -18vw; top: 42%; }
+  }
+  @media (max-width: 560px) {
+    .hero { min-height: calc(100svh - 3.5rem); justify-content: flex-start; padding-block: clamp(1.5rem, 5vh, 3rem) 6.5rem; }
+    .hero__title { font-size: clamp(2.4rem, 12vw, 3.6rem); max-width: 100%; }
+    .hero__scroll { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero__aura, .hero__scroll-cue::after { animation: none; }
+    .hero__fade { animation: none; opacity: 1; }
+  }
 
   .sec-head { max-width: 60ch; margin-bottom: clamp(2rem, 5vw, 3.2rem); display: flex; flex-direction: column; gap: 0.7rem; }
   .sec-head__title { font-size: clamp(1.8rem, 4.6vw, 3rem); }
