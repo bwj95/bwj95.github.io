@@ -147,7 +147,10 @@ const first = items[0];
     let idx = 0;
 
     const isOpen = () => trigger.getAttribute('aria-expanded') === 'true';
-    const openList = () => { list.classList.add('open'); trigger.setAttribute('aria-expanded', 'true'); };
+    const closeInfo = () => { desc.setAttribute('hidden', ''); infoBtn.setAttribute('aria-expanded', 'false'); };
+    const openInfo = () => { closeList(); desc.removeAttribute('hidden'); infoBtn.setAttribute('aria-expanded', 'true'); };
+    // dropdown and info are mutually exclusive — opening the list closes the info panel
+    const openList = () => { closeInfo(); list.classList.add('open'); trigger.setAttribute('aria-expanded', 'true'); };
     const closeList = () => { list.classList.remove('open'); trigger.setAttribute('aria-expanded', 'false'); };
 
     const select = (i: number) => {
@@ -167,11 +170,9 @@ const first = items[0];
       o.addEventListener('click', () => { select(i); closeList(); trigger.focus(); })
     );
 
-    // info button toggles the description of the current selection
+    // info button toggles the description; opening it closes the dropdown
     infoBtn.addEventListener('click', () => {
-      const show = desc.hasAttribute('hidden');
-      desc.toggleAttribute('hidden', !show);
-      infoBtn.setAttribute('aria-expanded', String(show));
+      desc.hasAttribute('hidden') ? openInfo() : closeInfo();
     });
 
     // keyboard: arrows move selection, Escape closes
