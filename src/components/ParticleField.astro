@@ -1,7 +1,7 @@
 ---
-// Living background: a constellation of particles that drift, link up, and
-// lean toward the cursor. Ported from the original site's canvas engine and
-// tuned lighter + spectrum-tinted. Honors prefers-reduced-motion.
+// Living background: a constellation of particles that gently drift and link up.
+// No cursor attraction — a click scatters nearby particles, which then settle
+// back into their drift. Tuned lighter + spectrum-tinted. Honors prefers-reduced-motion.
 ---
 <canvas id="field" aria-hidden="true"></canvas>
 
@@ -23,9 +23,9 @@
     const ctx = canvas.getContext('2d')!;
     let w = 0, h = 0, dpr = Math.min(window.devicePixelRatio || 1, 2);
     const COLORS = ['108,234,255', '167,139,250', '255,110,199'];
-    const mouse = { x: -9999, y: -9999 };
 
-    type P = { x: number; y: number; vx: number; vy: number; r: number; c: string };
+    // bvx/bvy = persistent gentle drift (never damped); vx/vy = click impulse (damped → settles back)
+    type P = { x: number; y: number; bvx: number; bvy: number; vx: number; vy: number; r: number; c: string };
     let ps: P[] = [];
 
     function count() {
@@ -37,8 +37,10 @@
       ps = Array.from({ length: count() }, () => ({
         x: Math.random() * w,
         y: Math.random() * h,
-        vx: (Math.random() - 0.5) * 0.25,
-        vy: (Math.random() - 0.5) * 0.25,
+        bvx: (Math.random() - 0.5) * 0.25,
+        bvy: (Math.random() - 0.5) * 0.25,
+        vx: 0,
+        vy: 0,
         r: Math.random() * 1.6 + 0.6,
         c: COLORS[(Math.random() * COLORS.length) | 0],
       }));
@@ -71,16 +73,9 @@
       }
 
       for (const p of ps) {
-        // gentle pull toward cursor
-        const dx = mouse.x - p.x, dy = mouse.y - p.y;
-        const d = Math.hypot(dx, dy);
-        if (d < 220 && d > 0.01) {
-          const f = (1 - d / 220) * 0.35;
-          p.vx += (dx / d) * f * 0.05;
-          p.vy += (dy / d) * f * 0.05;
-        }
-        p.x += p.vx; p.y += p.vy;
-        p.vx *= 0.98; p.vy *= 0.98;
+        // constant gentle drift + any decaying click impulse
+        p.x += p.bvx + p.vx; p.y += p.bvy + p.vy;
+        p.vx *= 0.96; p.vy *= 0.96;
 
         // wrap
         if (p.x < -20) p.x = w + 20; if (p.x > w + 20) p.x = -20;
@@ -109,8 +104,6 @@
     }
 
     window.addEventListener('resize', resize, { passive: true });
-    window.addEventListener('pointermove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; }, { passive: true });
-    window.addEventListener('pointerleave', () => { mouse.x = -9999; mouse.y = -9999; });
     window.addEventListener('pointerdown', (e) => scatter(e.clientX, e.clientY), { passive: true });
     resize();
     requestAnimationFrame(frame);

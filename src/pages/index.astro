@@ -1,7 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import Marquee from '../components/Marquee.astro';
-import ProjectCard from '../components/ProjectCard.astro';
+import ProjectSelector from '../components/ProjectSelector.astro';
 import Grasshopper from '../components/Grasshopper.astro';
 import { site } from '../data/site';
 import { byKind } from '../data/projects';
@@ -43,33 +43,33 @@ const hardware = byKind('hardware');
   <Marquee items={site.stack} />
 
   <!-- ============ WORK ============ -->
-  <section id="work" class="section wrap">
-    <header class="sec-head" data-reveal>
-      <p class="eyebrow">01 — On the screen</p>
-      <h2 class="sec-head__title display">Things made to be looked at.</h2>
-      <p class="lead">Each one real and alive — click, and see for yourself. Made because the making was worth doing; shown because someone might catch a spark off it.</p>
-    </header>
-    <div class="grid">
-      {flagships.map((p) => <ProjectCard project={p} />)}
+  <section id="work" class="section wrap section--stage">
+    <div class="focus-zone" data-focus>
+      <header class="sec-head">
+        <p class="eyebrow">On the screen</p>
+        <h2 class="sec-head__title display">Things made to be looked at.</h2>
+        <p class="lead">Each one real and alive — click, and see for yourself. Made because the making was worth doing; shown because someone might catch a spark off it.</p>
+      </header>
+      <ProjectSelector items={flagships} id="screen" />
     </div>
   </section>
 
   <!-- ============ HARDWARE ============ -->
-  <section id="hardware" class="section wrap">
-    <header class="sec-head" data-reveal>
-      <p class="eyebrow">02 — Off the glass</p>
-      <h2 class="sec-head__title display">Firmware and hardware, with weight to them.</h2>
-      <p class="lead">ESP32 firmware, Bluetooth and Wi-Fi devices, enclosures printed to fit — from a breadboard tangle to an object you can drop on a table and hear it land.</p>
-    </header>
-    <div class="grid">
-      {hardware.map((p) => <ProjectCard project={p} />)}
+  <section id="hardware" class="section wrap section--stage">
+    <div class="focus-zone" data-focus>
+      <header class="sec-head">
+        <p class="eyebrow">Off the glass</p>
+        <h2 class="sec-head__title display">Firmware and hardware, with weight to them.</h2>
+        <p class="lead">ESP32 firmware, Bluetooth and Wi-Fi devices, enclosures printed to fit — from a breadboard tangle to an object you can drop on a table and hear it land.</p>
+      </header>
+      <ProjectSelector items={hardware} id="glass" />
     </div>
   </section>
 
   <!-- ============ CODA (closing statement, loops back into the room) ============ -->
   <section id="end" class="section wrap">
     <div class="coda glass" data-reveal>
-      <p class="eyebrow">03 — Before you go</p>
+      <p class="eyebrow">Before you go</p>
       <h2 class="coda__h display">You’ve reached the end of the room.</h2>
       <p class="coda__p">That’s the lot — for now. Every piece here was made because the making was worth the trouble, and most of it is open to the daylight if you care to see how it’s put together. Poke at the code, or open the console and leave the place a different color than you found it. Either way — thanks for looking.</p>
       <div class="coda__actions">
@@ -94,6 +94,12 @@ const hardware = byKind('hardware');
     position: relative; z-index: 1;
     width: 100%; max-width: var(--maxw);
     margin-inline: auto; padding-inline: clamp(1.1rem, 4vw, 2.5rem);
+    /* "through the glass": recede + blur + fade as the hero scrolls out of view.
+       --hero-exit (0→1) is set on .hero by JS (index.astro <script>), so this is
+       cross-browser — no Chromium-only animation-timeline. Defaults to 0 = at rest. */
+    transform: translateY(calc(var(--hero-exit, 0) * -46px)) scale(calc(1 - var(--hero-exit, 0) * 0.07));
+    opacity: clamp(0, calc(1 - var(--hero-exit, 0) * 1.15), 1);
+    will-change: transform, opacity;
   }
 
   /* animated aurora wash — layers over the base mesh; particles show through */
@@ -104,6 +110,7 @@ const hardware = byKind('hardware');
       radial-gradient(34vw 32vw at 84% 26%, rgba(108,234,255,0.20), transparent 60%),
       radial-gradient(44vw 40vw at 62% 96%, rgba(255,110,199,0.16), transparent 62%);
     filter: blur(14px);
+    opacity: calc(1 - var(--hero-exit, 0) * 0.85);
     animation: hero-aura 18s var(--ease) infinite alternate;
   }
   @keyframes hero-aura {
@@ -116,7 +123,8 @@ const hardware = byKind('hardware');
     --gh-size: clamp(340px, 56vmin, 720px);
     position: absolute; z-index: 0;
     top: 50%; right: clamp(-7rem, -3vw, -1rem);
-    transform: translateY(-48%) rotate(-8deg);
+    /* drifts down + swells slightly as the hero recedes — depth parallax */
+    transform: translateY(calc(-48% + var(--hero-exit, 0) * 44px)) rotate(-8deg) scale(calc(1 + var(--hero-exit, 0) * 0.06));
     color: var(--accent); opacity: 0.07; pointer-events: none;
   }
 
@@ -175,6 +183,29 @@ const hardware = byKind('hardware');
     .hero__fade { animation: none; opacity: 1; }
   }
 
+  /* staged sections get a full viewport of room so their content can rack
+     focus in and out on scroll, the way the hero recedes */
+  .section--stage {
+    min-height: 100svh;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+
+  /* scroll-linked focus: --focus (0 = far from viewport centre, 1 = centred)
+     is set by JS. Bidirectional blur/fade/scale so the block racks INTO focus
+     as it nears centre and OUT as it leaves. --fdir signs the drift so content
+     rises up into place and sinks away toward whichever edge it's exiting. */
+  .focus-zone {
+    --focus: 1; --fdir: 0;
+    opacity: calc(0.12 + var(--focus) * 0.88);
+    transform:
+      translateY(calc(var(--fdir) * (1 - var(--focus)) * 30px))
+      scale(calc(0.965 + var(--focus) * 0.035));
+    will-change: opacity, transform;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .focus-zone { opacity: 1; transform: none; }
+  }
+
   .sec-head { max-width: 60ch; margin-bottom: clamp(2rem, 5vw, 3.2rem); display: flex; flex-direction: column; gap: 0.7rem; }
   .sec-head__title { font-size: clamp(1.8rem, 4.6vw, 3rem); }
 
@@ -186,3 +217,41 @@ const hardware = byKind('hardware');
   .coda__p { color: var(--text-dim); line-height: 1.6; }
   .coda__actions { display: flex; flex-wrap: wrap; gap: 0.8rem; margin-top: 0.6rem; }
 </style>
+
+<script>
+  // Scroll-linked focus, all in one rAF loop, JS (not CSS scroll-timeline) for
+  // cross-browser support:
+  //  • hero: --hero-exit (0→1) recedes/blurs/parallaxes the landing as it leaves.
+  //  • .focus-zone: --focus (0=far, 1=centred) racks each staged section in and
+  //    out of focus; --fdir signs the exit drift direction.
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const hero = document.querySelector<HTMLElement>('.hero');
+  const zones = [...document.querySelectorAll<HTMLElement>('.focus-zone')];
+
+  if (!reduced && (hero || zones.length)) {
+    let ticking = false;
+    const apply = () => {
+      const vh = window.innerHeight;
+      if (hero) {
+        const span = (hero.offsetHeight || vh) * 0.9;
+        const p = Math.min(Math.max(window.scrollY / span, 0), 1);
+        hero.style.setProperty('--hero-exit', p.toFixed(3));
+      }
+      const center = vh / 2;
+      const range = vh * 0.62; // distance from centre at which a zone is fully out of focus
+      for (const z of zones) {
+        const r = z.getBoundingClientRect();
+        const dist = (r.top + r.height / 2) - center;
+        const focus = Math.max(0, Math.min(1, 1 - Math.abs(dist) / range));
+        z.style.setProperty('--focus', focus.toFixed(3));
+        z.style.setProperty('--fdir', String(Math.sign(dist)));
+      }
+      ticking = false;
+    };
+    apply();
+    window.addEventListener('scroll', () => {
+      if (!ticking) { requestAnimationFrame(apply); ticking = true; }
+    }, { passive: true });
+    window.addEventListener('resize', apply, { passive: true });
+  }
+</script>

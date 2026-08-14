@@ -1,12 +1,14 @@
 ---
 import type { Project } from '../data/projects';
-interface Props { project: Project; }
-const { project: p } = Astro.props;
+interface Props { project: Project; index?: number; }
+const { project: p, index = 0 } = Astro.props;
+// diagonal cascade: reveal delay steps L→R across a (max) 3-col grid, then repeats per row
+const revealDelay = (index % 3) * 90;
 const statusLabel = { live: 'Live', 'in-progress': 'In progress', research: 'Research' }[p.status];
 // gradient poster fallback keyed off the project hue
 const poster = `radial-gradient(120% 120% at 20% 0%, hsl(${p.poster.hue} 85% 62% / 0.55), transparent 55%), radial-gradient(120% 120% at 100% 100%, hsl(${(p.poster.hue + 60) % 360} 85% 60% / 0.45), transparent 55%), #0c0c10`;
 ---
-<article class="card glass" data-reveal>
+<article class="card glass" data-reveal style={`--reveal-delay:${revealDelay}ms`}>
   <div class="card__poster" style={p.image ? '' : `background:${poster}`}>
     {p.image
       ? <img src={p.image} alt={`${p.name} screenshot`} loading="lazy" />

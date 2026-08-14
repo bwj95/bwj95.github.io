@@ -225,14 +225,25 @@ button { font: inherit; cursor: pointer; }
 .btn-primary:hover { transform: translateY(-2px) scale(1.02); }
 .btn-ghost:hover { background: var(--panel-2); }
 
-/* ---- scroll reveal ---- */
-[data-reveal] {
-  opacity: 0;
-  transform: translateY(26px);
-  transition: opacity 0.8s var(--ease), transform 0.8s var(--ease);
-  transition-delay: var(--reveal-delay, 0ms);
+/* ---- scroll reveal (staggered rise) ----
+   Driven by a keyframe animation on `translate` + `opacity`, NOT a `transition`
+   on `transform`: a child's scoped `.card { transition: transform … }` rule has
+   higher specificity and would clobber a reveal transition (dropping the opacity
+   fade AND the --reveal-delay stagger). Using `translate` also keeps the reveal
+   independent of the hover `transform` lift, so both compose cleanly. */
+[data-reveal] { opacity: 0; }
+[data-reveal].in {
+  animation: reveal-rise 0.7s var(--ease) both;
+  animation-delay: var(--reveal-delay, 0ms);
 }
-[data-reveal].in { opacity: 1; transform: none; }
+@keyframes reveal-rise {
+  from { opacity: 0; translate: 0 26px; }
+  to   { opacity: 1; translate: 0 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] { opacity: 1; }
+  [data-reveal].in { animation: none; }
+}
 
 /* selection + focus */
 ::selection { background: rgba(167, 139, 250, 0.35); color: #fff; }
