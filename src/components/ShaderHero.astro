@@ -1,12 +1,19 @@
 ---
-// WebGL fragment-shader background for the hero — flowing, silk-like folds of
-// the site's spectrum (cyan → violet → pink) over near-black. Raw WebGL1, no
-// three.js: one full-screen quad, one fragment shader. Cheap, broadly supported.
+// WebGL fragment-shader background for the launcher band — flowing, silk-like
+// folds of the site's spectrum (cyan → violet → pink) over near-black. Raw
+// WebGL1, no three.js: one full-screen triangle, one fragment shader.
+//
+// The pointer does NOT drag the field around. It WADES through it: the current
+// parts around the cursor, curls into vortices behind the motion, and holds a
+// wake that fades. Depth is what sells it — the field is three slices (far haze
+// / mid current / near wisps) plus two star layers, and each one answers the
+// pointer with a different authority. The near wisps shear hard, the deep haze
+// barely notices. That differential IS the 3D.
 //
 // Behaviour:
-//   • DPR capped (perf) and paused while the hero is off-screen / tab hidden.
-//   • prefers-reduced-motion → renders ONE static frame, no animation loop.
-//   • No WebGL / context lost → canvas stays transparent; the CSS aurina layer
+//   • DPR capped (perf) and paused while the band is off-screen / tab hidden.
+//   • prefers-reduced-motion → ONE static frame, no loop, no pointer response.
+//   • No WebGL / context lost → canvas stays transparent; the CSS aura layer
 //     underneath (in index.astro) carries the look. Progressive enhancement.
 ---
 <canvas class="shaderhero" data-shaderhero aria-hidden="true"></canvas>
@@ -23,11 +30,19 @@
 </style>
 
 <script>
+  const TRAIL = 6;
+
   const FRAG = `
     precision highp float;
+    #define TRAIL ${TRAIL}
+
     uniform vec2  u_res;
     uniform float u_time;
-    uniform vec2  u_mouse;   // 0..1, eased
+    uniform vec2  u_ptr;          // eased pointer, in field space (same as p)
+    uniform vec2  u_vel;          // eased pointer velocity, clamped
+    uniform float u_present;      // 0..1 — pointer in the band
+    uniform vec3  u_trail[TRAIL]; // xy = position, z = strength (decays)
+    uniform vec3  u_click;        // xy = position, z = age in s (<0 = none)
 
     // -- value noise + fbm --
     vec2 hash(vec2 p){
@@ -42,10 +57,61 @@
                  mix(dot(hash(i + vec2(0.0,1.0)), f - vec2(0.0,1.0)),
                      dot(hash(i + vec2(1.0,1.0)), f - vec2(1.0,1.0)), u.x), u.y);
     }
-    float fbm(vec2 p){
+    // Octave count is fixed per function (GLSL ES 1.0 wants constant loop
+    // bounds) — and it doubles as a depth cue: distant slices get fewer
+    // octaves, so they read as softer/further without any extra cost.
+    float fbm3(vec2 p){
       float v = 0.0, a = 0.5;
-      for (int i = 0; i < 5; i++){ v += a * noise(p); p *= 2.02; a *= 0.5; }
+      for (int i = 0; i < 3; i++){ v += a * noise(p); p *= 2.02; a *= 0.5; }
       return v;
+    }
+    float fbm4(vec2 p){
+      float v = 0.0, a = 0.5;
+      for (int i = 0; i < 4; i++){ v += a * noise(p); p *= 2.02; a *= 0.5; }
+      return v;
+    }
+
+    // How the medium answers a body moving through it at c with velocity v:
+    // it parts radially, curls into vortices (only while moving), and gets
+    // dragged along. Gaussian falloff — a hand in water, not a cursor glow.
+    vec2 wade(vec2 q, vec2 c, vec2 v, float strength, float radius){
+      vec2 d = q - c;
+      float r2 = dot(d, d);
+      float fall = exp(-r2 / (radius * radius));
+      float dist = sqrt(max(r2, 1e-8));
+      vec2 dir = d / dist;
+      vec2 part = dir * fall;                    // shoulder the current aside
+      vec2 curl = vec2(-dir.y, dir.x) * fall;    // vortices behind the motion
+      vec2 drag = v * fall;                      // medium pulled along
+      float speed = length(v);
+      return strength * (part * 0.70 + curl * speed * 0.50 + drag * 0.45);
+    }
+
+    // The hand plus the wake it left behind. Older trail points are weaker and
+    // wider — a wake spreads as it dissipates.
+    vec2 current(vec2 q){
+      vec2 d = wade(q, u_ptr, u_vel, 0.065 * u_present, 0.28);
+      for (int i = 0; i < TRAIL; i++){
+        vec3 tp = u_trail[i];
+        d += wade(q, tp.xy, u_vel * 0.35,
+                  0.022 * tp.z * u_present, 0.20 + 0.28 * (1.0 - tp.z));
+      }
+      return d;
+    }
+
+    // A click drops a stone in: one expanding shell that displaces the medium.
+    // Displacement ONLY — no glow, no added light. The ripple is visible purely
+    // because it moves the folds it passes through. Gone inside ~2s.
+    vec2 ripple(vec2 q){
+      float age = u_click.z;
+      if (age < 0.0) return vec2(0.0);
+      vec2 d = q - u_click.xy;
+      float dist = length(d);
+      float x = (dist - age * 0.90) * 5.0;
+      float shell = exp(-x * x);            // thin expanding ring
+      float decay = exp(-age * 1.70);
+      vec2 dir = dist > 1e-4 ? d / dist : vec2(0.0);
+      return dir * shell * decay * 0.095;
     }
 
     void main(){
@@ -54,14 +120,8 @@
       vec2 p = (gl_FragCoord.xy - 0.5 * u_res.xy) / u_res.y;
 
       float t = u_time * 0.045;
-      // pointer nudges the field a touch — alive, not gimmicky
-      p += (u_mouse - 0.5) * 0.14;
 
-      // domain-warp twice → silky, cloth-like folds
-      vec2 q = vec2(fbm(p * 1.35 + t), fbm(p * 1.35 + vec2(3.2, 1.7) - t));
-      vec2 r = vec2(fbm(p * 1.35 + 1.8 * q + vec2(1.7, 9.2) + 0.12 * t),
-                    fbm(p * 1.35 + 1.8 * q + vec2(8.3, 2.8) - 0.10 * t));
-      float f = fbm(p * 1.5 + 2.2 * r);
+      vec2 push = current(p) + ripple(p);
 
       // spectrum palette
       vec3 base   = vec3(0.020, 0.020, 0.030);
@@ -70,6 +130,20 @@
       vec3 pink   = vec3(1.000, 0.431, 0.780);
 
       vec3 col = base;
+
+      // ---- FAR: deep haze. Big, slow, and almost untouched — distance is
+      // what lets it ignore you.
+      vec2 fp = p * 1.95 + vec2(t * 0.22, -t * 0.06) + push * 0.06;
+      float far = fbm3(fp);
+      col = mix(col, violet * 0.34, smoothstep(-0.08, 0.60, far));
+
+      // ---- MID: the current itself — silk folds, domain-warped twice.
+      vec2 mp = p * 1.35 + push * 0.38;
+      vec2 q = vec2(fbm4(mp + t), fbm4(mp + vec2(3.2, 1.7) - t));
+      vec2 r = vec2(fbm4(mp + 1.8 * q + vec2(1.7, 9.2) + 0.12 * t),
+                    fbm4(mp + 1.8 * q + vec2(8.3, 2.8) - 0.10 * t));
+      float f = fbm4(mp * 1.11 + 2.2 * r);
+
       col = mix(col, violet, smoothstep(-0.10, 0.55, f));
       col = mix(col, cyan,  0.72 * smoothstep(0.15, 0.80, length(q)));
       col = mix(col, pink,  0.66 * smoothstep(0.30, 0.95, r.x + 0.55));
@@ -78,8 +152,44 @@
       float crease = smoothstep(0.52, 0.92, f + 0.35 * r.y);
       col += crease * 0.55 * vec3(0.95, 0.90, 1.0);
 
-      // keep the left reading column calmer (headline lives there) — a gentle
-      // lateral falloff only, so the right side can stay rich and visible.
+      // ---- NEAR: thin wisps right against the glass. These take the full
+      // force of the hand — they shear while the haze behind them holds still,
+      // and that mismatch is what reads as depth.
+      vec2 np = p * 0.92 + vec2(-t * 0.50, t * 0.12) + push * 0.80;
+      float wisp = smoothstep(0.34, 0.80, fbm3(np + 1.2 * fbm3(np * 1.7)));
+      col += wisp * 0.09 * mix(cyan, pink, 0.5 + 0.5 * sin(p.x * 1.5 + t));
+
+      // ---- STARS: two depths drifting at different rates — that differential
+      // IS the parallax. Their positions are deliberately NOT displaced by
+      // push: these are hash-on-a-grid points, and a per-pixel warp makes
+      // them hop grid cells, which aliases into speckle. Only smooth fields
+      // can be domain-warped. The stars answer the current with BRIGHTNESS
+      // instead, which costs nothing and can't alias.
+      float stir = min(length(push) * 5.0, 1.0);
+
+      vec2 s1p = p * 7.0 + vec2(t * 0.10, 0.0);
+      vec2 s1g = floor(s1p);
+      float s1on = step(0.88, fract(sin(dot(s1g, vec2(41.7, 289.3))) * 21753.1));
+      float s1d = length(fract(s1p) - 0.5 - hash(s1g) * 0.30);
+      col += s1on * exp(-s1d * s1d * 90.0) * 0.26 * vec3(0.75, 0.85, 1.0);
+
+      vec2 s2p = p * 4.2 + vec2(t * 0.26, 31.7);
+      vec2 s2g = floor(s2p);
+      float s2on = step(0.90, fract(sin(dot(s2g, vec2(13.9, 71.3))) * 9137.7));
+      float s2d = length(fract(s2p) - 0.5 - hash(s2g) * 0.30);
+      float tw = 0.65 + 0.35 * sin(u_time * 1.6 + s2g.x * 3.1 + s2g.y);
+      col += s2on * exp(-s2d * s2d * 55.0) * 0.36 * tw * (1.0 + stir * 0.35)
+             * vec3(1.0, 0.92, 0.98);
+
+      // Disturbed medium catches a little light, like foam. Kept small and
+      // un-saturating on purpose: the band sits under a mix-blend-mode:overlay
+      // grain layer, which is invisible over dark pixels but turns to visible
+      // noise over bright mid-tones. Brightening this field is what makes the
+      // grain shout, so the glint stays a hint at the hand, never a veil.
+      col += min(length(push), 0.30) * 0.09 * vec3(0.80, 0.90, 1.0);
+
+      // keep the left reading column calmer (the controls live there) — a
+      // gentle lateral falloff only, so the right side stays rich and visible.
       float calm = smoothstep(0.02, 0.70, uv.x);
       col *= mix(0.58, 1.0, calm);
 
@@ -119,9 +229,13 @@
         gl.enableVertexAttribArray(loc);
         gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
 
-        const uRes = gl.getUniformLocation(prog, 'u_res');
-        const uTime = gl.getUniformLocation(prog, 'u_time');
-        const uMouse = gl.getUniformLocation(prog, 'u_mouse');
+        const uRes     = gl.getUniformLocation(prog, 'u_res');
+        const uTime    = gl.getUniformLocation(prog, 'u_time');
+        const uPtr     = gl.getUniformLocation(prog, 'u_ptr');
+        const uVel     = gl.getUniformLocation(prog, 'u_vel');
+        const uPresent = gl.getUniformLocation(prog, 'u_present');
+        const uTrail   = gl.getUniformLocation(prog, 'u_trail[0]');
+        const uClick   = gl.getUniformLocation(prog, 'u_click');
 
         const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
         const resize = () => {
@@ -134,27 +248,110 @@
           gl.uniform2f(uRes, canvas.width, canvas.height);
         };
 
-        // eased pointer, normalized to the hero rect
-        const mouse = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5 };
-        window.addEventListener('pointermove', (e) => {
+        /* ---- pointer state, in the shader's field space ----------------
+           Field space matches `p` in the shader: origin at the band's centre,
+           normalized by HEIGHT (so it stays isotropic), y pointing up like
+           gl_FragCoord — hence the negation. Doing the conversion here means
+           the shader never has to know about pixels or aspect ratio. */
+        const toField = (cx: number, cy: number) => {
           const r = canvas.getBoundingClientRect();
-          mouse.tx = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
-          mouse.ty = 1 - Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
+          return {
+            x: (cx - r.left - r.width / 2) / r.height,
+            y: -(cy - r.top - r.height / 2) / r.height,
+            inside: cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom,
+          };
+        };
+
+        const ptr = { x: 0, y: 0, tx: 0, ty: 0, vx: 0, vy: 0 };
+        let present = 0, presentTarget = 0;
+
+        // Ring buffer of past positions = the wake. Sampled on a timer rather
+        // than per-frame so the trail length is frame-rate independent.
+        const trail = new Float32Array(TRAIL * 3);
+        let trailHead = 0, lastDrop = 0, lastDropX = 0, lastDropY = 0;
+
+        let click = new Float32Array([0, 0, -1]);
+        let clickAt = -1;
+
+        window.addEventListener('pointermove', (e) => {
+          const f = toField(e.clientX, e.clientY);
+          ptr.tx = f.x; ptr.ty = f.y;
+          presentTarget = f.inside ? 1 : 0;
+        }, { passive: true });
+
+        // Leaving the window or blurring lets the current settle back down.
+        window.addEventListener('pointerleave', () => { presentTarget = 0; }, { passive: true });
+        window.addEventListener('blur', () => { presentTarget = 0; });
+
+        // The canvas is pointer-events:none (it sits behind the controls), so
+        // the click has to be caught on the window and rect-tested.
+        window.addEventListener('pointerdown', (e) => {
+          const f = toField(e.clientX, e.clientY);
+          if (!f.inside) return;
+          click[0] = f.x; click[1] = f.y;
+          clickAt = performance.now();
         }, { passive: true });
 
         const start = performance.now();
+        let last = start;
+
         const render = (nowMs: number) => {
           const t = reduced ? 6.0 : (nowMs - start) / 1000;
-          mouse.x += (mouse.tx - mouse.x) * 0.06;
-          mouse.y += (mouse.ty - mouse.y) * 0.06;
+          const dt = Math.min((nowMs - last) / 1000, 0.05); // clamp tab-return spikes
+          last = nowMs;
+
+          // ease the pointer, then read velocity off the eased position so a
+          // flick doesn't spike the field
+          const px = ptr.x, py = ptr.y;
+          ptr.x += (ptr.tx - ptr.x) * 0.12;
+          ptr.y += (ptr.ty - ptr.y) * 0.12;
+          if (dt > 0) {
+            ptr.vx += (((ptr.x - px) / dt) - ptr.vx) * 0.25;
+            ptr.vy += (((ptr.y - py) / dt) - ptr.vy) * 0.25;
+          }
+          // clamp so a fast fling shears the field hard but never tears it
+          const sp = Math.hypot(ptr.vx, ptr.vy);
+          if (sp > 2.5) { ptr.vx *= 2.5 / sp; ptr.vy *= 2.5 / sp; }
+
+          present += (presentTarget - present) * 0.08;
+
+          // Decay the wake, then drop a fresh point — but ONLY once the pointer
+          // has actually travelled. Dropping on a timer alone stacks all six
+          // points on the same spot whenever the pointer is parked, which piles
+          // six disturbances on top of the hand and smears the field into a
+          // flat wash. A hand held still leaves no wake; this makes the wake
+          // proportional to movement, which is both correct and self-limiting.
+          const decay = Math.exp(-dt * 1.6);
+          for (let i = 2; i < trail.length; i += 3) trail[i] *= decay;
+          if (nowMs - lastDrop > 55 && Math.hypot(ptr.x - lastDropX, ptr.y - lastDropY) > 0.05) {
+            lastDrop = nowMs;
+            lastDropX = ptr.x; lastDropY = ptr.y;
+            const o = trailHead * 3;
+            trail[o] = ptr.x; trail[o + 1] = ptr.y; trail[o + 2] = 1;
+            trailHead = (trailHead + 1) % TRAIL;
+          }
+
+          click[2] = clickAt < 0 ? -1 : (nowMs - clickAt) / 1000;
+          if (click[2] > 2.2) { clickAt = -1; click[2] = -1; }
+
           gl.uniform1f(uTime, t);
-          gl.uniform2f(uMouse, mouse.x, mouse.y);
+          gl.uniform2f(uPtr, ptr.x, ptr.y);
+          gl.uniform2f(uVel, ptr.vx, ptr.vy);
+          gl.uniform1f(uPresent, present);
+          gl.uniform3fv(uTrail, trail);
+          gl.uniform3fv(uClick, click);
           gl.drawArrays(gl.TRIANGLES, 0, 3);
         };
 
         let raf = 0, running = false;
         const loop = (t: number) => { render(t); raf = requestAnimationFrame(loop); };
-        const play = () => { if (!running && !reduced) { running = true; raf = requestAnimationFrame(loop); } };
+        const play = () => {
+          if (!running && !reduced) {
+            running = true;
+            last = performance.now(); // don't bill the paused time as one frame
+            raf = requestAnimationFrame(loop);
+          }
+        };
         const stop = () => { running = false; cancelAnimationFrame(raf); };
 
         const boot = () => { resize(); render(performance.now()); canvas.classList.add('ready'); };
