@@ -71,9 +71,14 @@ import { bookmarks } from '../data/bookmarks';
     padding: 0.62rem 0.55rem;
     margin-inline: -0.55rem;
     border-radius: var(--radius-sm);
-    transition: background 0.18s var(--ease), transform 0.18s var(--ease);
+    transition: background 0.18s var(--ease);
   }
-  .bm__item:hover { background: var(--panel-2); transform: translateX(3px); }
+  .bm__item:hover { background: var(--panel-2); }
+  /* the row's CONTENT slides, not the row itself — translating the anchor moves
+     its hit box, so near an edge the cursor falls outside and the hover flickers */
+  .bm__name, .bm__note { transition: translate 0.18s var(--ease); }
+  .bm__item:hover .bm__name,
+  .bm__item:hover .bm__note { translate: 3px 0; }
 
   .bm__name {
     display: flex; align-items: center; gap: 0.4rem;
@@ -89,8 +94,8 @@ import { bookmarks } from '../data/bookmarks';
   .bm__note { color: var(--text-faint); font-size: 0.82rem; line-height: 1.45; }
 
   @media (prefers-reduced-motion: reduce) {
-    .bm__item, .bm__arrow, .bm__chev { transition: none; }
-    .bm__item:hover { transform: none; }
+    .bm__item, .bm__arrow, .bm__chev, .bm__name, .bm__note { transition: none; }
+    .bm__item:hover .bm__name, .bm__item:hover .bm__note { translate: none; }
     .bm__arrow { opacity: 1; transform: none; }
     .bm__group[open] .bm__list { animation: none; }
   }

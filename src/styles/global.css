@@ -165,23 +165,11 @@ button { font: inherit; cursor: pointer; }
   -webkit-backdrop-filter: blur(var(--blur));
 }
 
-/* ---- buttons ---- */
-.btn {
-  display: inline-flex; align-items: center; gap: 0.55rem;
-  padding: 0.85rem 1.4rem;
-  border-radius: 100px;
-  font-family: var(--font-mono);
-  font-size: 0.82rem; letter-spacing: 0.06em;
-  border: 1px solid var(--border-bright);
-  color: var(--text);
-  transition: transform 0.25s var(--ease), border-color 0.25s var(--ease), background 0.25s var(--ease);
-  position: relative; overflow: hidden;
-}
-.btn:hover { transform: translateY(-2px); border-color: transparent; }
-.btn-primary { border-color: transparent; color: #08080a; font-weight: 600; }
-.btn-primary::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--spectrum); }
-.btn-primary:hover { transform: translateY(-2px) scale(1.02); }
-.btn-ghost:hover { background: var(--panel-2); }
+/* The generic .btn/.btn-primary pills were removed: the only button left is the
+   launcher's Open control, which owns its own extruded treatment in
+   ProjectSelector.astro (.openbtn). Nothing here should re-introduce a global
+   hover `transform` — moving an element's own box under the cursor is what made
+   hovers flicker. */
 
 /* ---- scroll reveal (staggered rise) ----
    Keyframe animation on `translate` (not a `transition` on `transform`) so a

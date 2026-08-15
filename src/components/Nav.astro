@@ -82,8 +82,9 @@ const links = [
     pointer-events: none;
   }
 
-  .nav__brand { --gh-size: 34px; display: inline-flex; align-items: center; color: var(--accent); transition: color 0.2s var(--ease), transform 0.2s var(--ease); }
-  .nav__brand:hover { color: var(--text); transform: translateY(-1px); }
+  /* colour only — no transform, so the mark never shifts out from under the cursor */
+  .nav__brand { --gh-size: 34px; display: inline-flex; align-items: center; color: var(--accent); transition: color 0.2s var(--ease); }
+  .nav__brand:hover { color: var(--text); }
   .nav__links { display: flex; gap: clamp(0.9rem, 2.6vw, 1.7rem); }
   .nav__links a { font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.04em; color: var(--text-dim); transition: color 0.2s; }
   .nav__links a:hover { color: var(--text); }
