@@ -3,7 +3,6 @@ import Base from '../layouts/Base.astro';
 import ProjectSelector from '../components/ProjectSelector.astro';
 import Bookmarks from '../components/Bookmarks.astro';
 import ShaderHero from '../components/ShaderHero.astro';
-import Grasshopper from '../components/Grasshopper.astro';
 import { projects } from '../data/projects';
 import { bookmarkCount } from '../data/bookmarks';
 ---
@@ -16,10 +15,9 @@ import { bookmarkCount } from '../data/bookmarks';
 
     <div class="launch__inner wrap">
       <div class="launch__mark">
-        <Grasshopper class="launch__gh" />
         <span class="pill">
           <span class="pill__dot" aria-hidden="true"></span>
-          {projects.length} built · {bookmarkCount} bookmarked · all free
+          {projects.length} built · {bookmarkCount} bookmarked
         </span>
       </div>
 
@@ -30,7 +28,7 @@ import { bookmarkCount } from '../data/bookmarks';
 
   <!-- ============ BOOKMARKS ============ -->
   <section class="section wrap bookmarks" id="bookmarks">
-    <p class="eyebrow bookmarks__label">Bookmarks — other people's, worth keeping</p>
+    <p class="eyebrow bookmarks__label">Bookmarks</p>
     <Bookmarks />
   </section>
 </Base>
@@ -63,11 +61,7 @@ import { bookmarkCount } from '../data/bookmarks';
     mix-blend-mode: overlay;
   }
 
-  .launch__mark {
-    display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
-    margin-bottom: clamp(1.6rem, 4vw, 2.6rem);
-  }
-  .launch__gh { --gh-size: clamp(38px, 6vw, 50px); color: var(--accent); }
+  .launch__mark { margin-bottom: clamp(1.6rem, 4vw, 2.6rem); }
 
   .launch__label { margin-bottom: 0.85rem; }
 
