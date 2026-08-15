@@ -1,6 +1,6 @@
 ---
-import { site } from '../data/site';
 import Grasshopper from './Grasshopper.astro';
+import Search from './Search.astro';
 const links = [
   { label: 'Built', href: '/#built' },
   { label: 'Bookmarks', href: '/#bookmarks' },
@@ -15,10 +15,33 @@ const links = [
     {links.map((l) => <a href={l.href}>{l.label}</a>)}
   </nav>
 
+  <div class="nav__search">
+    <svg class="nav__search-icon" viewBox="0 0 16 16" aria-hidden="true">
+      <circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.6" />
+      <line x1="10.4" y1="10.4" x2="14" y2="14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+    </svg>
+    <input
+      type="search"
+      id="navSearch"
+      class="nav__search-input"
+      placeholder="Search"
+      aria-label="Search everything built and bookmarked"
+      autocomplete="off"
+      spellcheck="false"
+      role="combobox"
+      aria-expanded="false"
+      aria-controls="searchPanel"
+      aria-autocomplete="list"
+    />
+    <kbd class="nav__search-kbd" aria-hidden="true">/</kbd>
+  </div>
+
   <button class="nav__burger" id="navBurger" aria-label="Open menu" aria-expanded="false" aria-controls="navMenu">
     <span class="nav__burger-box" aria-hidden="true"><span class="nav__burger-line"></span></span>
   </button>
 </header>
+
+<Search />
 
 <!-- menu lives OUTSIDE the glass pill: a filtered/transformed ancestor would trap
      the fullscreen (position:fixed) variant. Body-level → true viewport anchoring. -->
@@ -64,7 +87,39 @@ const links = [
   .nav__links { display: flex; gap: clamp(0.9rem, 2.6vw, 1.7rem); }
   .nav__links a { font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.04em; color: var(--text-dim); transition: color 0.2s; }
   .nav__links a:hover { color: var(--text); }
-  .nav__cta { padding: 0.45rem 1rem; font-size: 0.74rem; }
+  /* ---- search field, in the bar ---- */
+  .nav__search {
+    position: relative;
+    display: flex; align-items: center; gap: 0.45rem;
+    height: 34px; padding: 0 0.5rem 0 0.6rem;
+    border: 1px solid var(--border); border-radius: 100px;
+    background: rgba(255,255,255,0.035);
+    transition: border-color 0.2s var(--ease), background 0.2s var(--ease);
+  }
+  .nav__search:focus-within { border-color: var(--border-bright); background: rgba(255,255,255,0.06); }
+  .nav__search-icon { width: 13px; height: 13px; flex: 0 0 auto; color: var(--text-faint); }
+  .nav__search:focus-within .nav__search-icon { color: var(--accent); }
+
+  .nav__search-input {
+    width: clamp(96px, 17vw, 190px);
+    min-width: 0;
+    border: 0; background: none; outline: none;
+    color: var(--text);
+    font-family: var(--font-mono); font-size: 0.76rem; letter-spacing: 0.02em;
+  }
+  .nav__search-input::placeholder { color: var(--text-faint); }
+  /* the field carries its own affordance — drop the UA clear button */
+  .nav__search-input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+
+  .nav__search-kbd {
+    flex: 0 0 auto;
+    font-family: var(--font-mono); font-size: 0.62rem; line-height: 1;
+    padding: 0.22rem 0.36rem;
+    border: 1px solid var(--border); border-radius: 5px;
+    color: var(--text-faint);
+  }
+  .nav__search:focus-within .nav__search-kbd { opacity: 0; }
+  @media (max-width: 900px) { .nav__search-kbd { display: none; } }
 
   /* ---- hamburger (hidden until the taskbar can't fit, or in Minimal mode) ---- */
   .nav__burger { display: none; align-items: center; justify-content: center; width: 36px; height: 36px; background: transparent; border: none; color: var(--text); flex: 0 0 auto; }

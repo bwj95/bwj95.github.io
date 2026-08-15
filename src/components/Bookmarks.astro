@@ -3,8 +3,12 @@ import { bookmarks } from '../data/bookmarks';
 ---
 <div class="bm">
   {bookmarks.map((g) => (
-    <section class="bm__group">
-      <h3 class="bm__group-title">{g.group}</h3>
+    <details class="bm__group" data-bm-group={g.group} open>
+      <summary class="bm__summary">
+        <span class="bm__group-title">{g.group}</span>
+        <span class="bm__count">{g.items.length}</span>
+        <span class="bm__chev" aria-hidden="true"></span>
+      </summary>
       <ul class="bm__list">
         {g.items.map((b) => (
           <li>
@@ -15,7 +19,7 @@ import { bookmarks } from '../data/bookmarks';
           </li>
         ))}
       </ul>
-    </section>
+    </details>
   ))}
 </div>
 
@@ -24,19 +28,47 @@ import { bookmarks } from '../data/bookmarks';
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: clamp(1.4rem, 3vw, 2.4rem);
+    align-items: start;
   }
   .bm__group { min-width: 0; }
+
+  /* native <details> — collapsing works with JS off and is keyboard-accessible */
+  .bm__summary {
+    display: flex; align-items: center; gap: 0.55rem;
+    padding-bottom: 0.6rem; margin-bottom: 0.2rem;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer; list-style: none;
+    transition: border-color 0.2s var(--ease);
+  }
+  .bm__summary::-webkit-details-marker { display: none; }
+  .bm__summary:hover { border-color: var(--border-bright); }
+  .bm__summary:hover .bm__group-title { color: var(--text-dim); }
+
   .bm__group-title {
     font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.28em;
     text-transform: uppercase; color: var(--text-faint); font-weight: 400;
-    padding-bottom: 0.6rem; margin-bottom: 0.2rem;
-    border-bottom: 1px solid var(--border);
+    transition: color 0.2s var(--ease);
   }
+  .bm__count {
+    font-family: var(--font-mono); font-size: 0.58rem; color: var(--text-faint);
+    margin-left: auto;
+  }
+  .bm__chev {
+    flex: 0 0 auto; width: 7px; height: 7px;
+    border-right: 1.5px solid var(--text-faint); border-bottom: 1.5px solid var(--text-faint);
+    transform: rotate(45deg) translate(-1px, -1px);
+    transition: transform 0.25s var(--ease), border-color 0.2s var(--ease);
+  }
+  .bm__group[open] .bm__chev { transform: rotate(-135deg) translate(-1px, -1px); }
+  .bm__summary:hover .bm__chev { border-color: var(--text-dim); }
+
   .bm__list { list-style: none; }
+  .bm__group[open] .bm__list { animation: bm-open 0.28s var(--ease) both; }
+  @keyframes bm-open { from { opacity: 0; translate: 0 -6px; } to { opacity: 1; translate: 0 0; } }
 
   .bm__item {
     display: flex; flex-direction: column; gap: 0.12rem;
-    padding: 0.62rem 0.55rem 0.62rem 0.55rem;
+    padding: 0.62rem 0.55rem;
     margin-inline: -0.55rem;
     border-radius: var(--radius-sm);
     transition: background 0.18s var(--ease), transform 0.18s var(--ease);
@@ -57,8 +89,29 @@ import { bookmarks } from '../data/bookmarks';
   .bm__note { color: var(--text-faint); font-size: 0.82rem; line-height: 1.45; }
 
   @media (prefers-reduced-motion: reduce) {
-    .bm__item, .bm__arrow { transition: none; }
+    .bm__item, .bm__arrow, .bm__chev { transition: none; }
     .bm__item:hover { transform: none; }
     .bm__arrow { opacity: 1; transform: none; }
+    .bm__group[open] .bm__list { animation: none; }
   }
 </style>
+
+<script>
+  // remember which groups are collapsed, so a launcher you revisit stays how
+  // you left it. Only the CLOSED ones are stored — new groups default to open.
+  const KEY = 'bm-closed';
+  const groups = [...document.querySelectorAll<HTMLDetailsElement>('[data-bm-group]')];
+
+  if (groups.length) {
+    let closed: string[] = [];
+    try { closed = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch {}
+
+    for (const g of groups) {
+      if (closed.includes(g.dataset.bmGroup || '')) g.open = false;
+      g.addEventListener('toggle', () => {
+        const now = groups.filter((x) => !x.open).map((x) => x.dataset.bmGroup || '');
+        try { localStorage.setItem(KEY, JSON.stringify(now)); } catch {}
+      });
+    }
+  }
+</script>
