@@ -1,100 +1,59 @@
 ---
-import type { Project } from '../data/projects';
-import Grasshopper from './Grasshopper.astro';
+import { KIND_LABEL, type Project } from '../data/projects';
 interface Props { items: Project[]; id: string; }
 const { items, id } = Astro.props;
 const first = items[0];
 ---
 <div class="sel" data-selector>
-  <div class="sel__controls">
-    <div class="sel__bar">
-      <!-- dropdown of project names -->
-      <div class="sel__dd">
-        <button
-          type="button"
-          class="sel__trigger glass"
-          id={`${id}-trigger`}
-          aria-haspopup="listbox"
-          aria-expanded="false"
-          aria-controls={`${id}-list`}
-        >
-          <span class="sel__name" data-sel-name>{first?.name}</span>
-          <span class="sel__caret" aria-hidden="true"></span>
-        </button>
+  <div class="sel__bar">
+    <div class="sel__dd">
+      <button
+        type="button"
+        class="sel__trigger glass"
+        id={`${id}-trigger`}
+        aria-haspopup="listbox"
+        aria-expanded="false"
+        aria-controls={`${id}-list`}
+      >
+        <span class="sel__name" data-sel-name>{first?.name}</span>
+        <span class="sel__caret" aria-hidden="true"></span>
+      </button>
 
-        <ul class="sel__list glass" id={`${id}-list`} role="listbox" aria-label="Projects">
-          {items.map((p, i) => (
-            <li
-              class="sel__opt"
-              role="option"
-              data-value={i}
-              data-desc={p.blurb}
-              data-url={p.url ?? ''}
-              data-external={p.external ? '1' : ''}
-              aria-selected={i === 0 ? 'true' : 'false'}
-            >{p.name}{p.url && <span class="sel__opt-live" aria-label="live" title="Live — free to use">●</span>}</li>
-          ))}
-        </ul>
-      </div>
-
-      <!-- open button → launches the selected piece (only when it has a live url) -->
-      <a
-        class="sel__open btn btn-primary"
-        data-sel-open
-        href={first?.url ?? '#'}
-        target={first?.external ? '_blank' : undefined}
-        rel={first?.external ? 'noopener' : undefined}
-        hidden={!first?.url}
-      >Open <span aria-hidden="true">▸</span></a>
+      <ul class="sel__list glass" id={`${id}-list`} role="listbox" aria-label="Everything built">
+        {items.map((p, i) => (
+          <li
+            class="sel__opt"
+            role="option"
+            data-value={i}
+            data-desc={p.blurb}
+            data-url={p.url}
+            data-external={p.external ? '1' : ''}
+            aria-selected={i === 0 ? 'true' : 'false'}
+          >
+            <span class="sel__opt-name">{p.name}</span>
+            <span class="sel__opt-kind">{KIND_LABEL[p.kind]}</span>
+          </li>
+        ))}
+      </ul>
     </div>
 
-    <p class="sel__desc" data-sel-desc-text>{first?.blurb}</p>
+    <a
+      class="sel__open btn btn-primary"
+      data-sel-open
+      href={first?.url}
+      target={first?.external ? '_blank' : undefined}
+      rel={first?.external ? 'noopener' : undefined}
+    >Open <span aria-hidden="true">▸</span></a>
   </div>
 
-  <!-- ---- live preview stage: the selected piece, actually running ---- -->
-  <figure class="stage glass" data-stage>
-    <div class="stage__chrome" aria-hidden="true">
-      <span class="stage__dots"><span></span><span></span><span></span></span>
-      <span class="stage__url" data-stage-url>—</span>
-    </div>
-
-    <div class="stage__screen">
-      <!-- placeholder shown until a live piece is selected / previewed -->
-      <div class="stage__empty" data-stage-empty>
-        <Grasshopper class="stage__gh" />
-        <p class="stage__empty-t" data-stage-empty-text>Not yet hung</p>
-      </div>
-
-      <!-- the running piece. src is set on demand so only ONE preview ever loads. -->
-      <iframe
-        class="stage__frame"
-        data-stage-frame
-        title="Live preview"
-        loading="lazy"
-        sandbox="allow-scripts allow-same-origin"
-        hidden
-      ></iframe>
-
-      <!-- click-through veil: keeps scroll/gestures on the page, not in the frame -->
-      <a class="stage__veil" data-stage-veil href="#" hidden aria-label="Open this piece">
-        <span class="stage__veil-cta">Open full ▸</span>
-      </a>
-    </div>
-  </figure>
+  <p class="sel__desc" data-sel-desc-text>{first?.blurb}</p>
 </div>
 
 <style>
-  .sel {
-    display: grid;
-    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
-    align-items: start;
-    gap: clamp(1.6rem, 4vw, 3.2rem);
-  }
-  .sel__controls { min-width: 0; max-width: 560px; }
+  .sel { width: 100%; max-width: 620px; }
 
   .sel__bar { display: flex; gap: 0.7rem; align-items: stretch; }
 
-  /* ---- dropdown ---- */
   .sel__dd { position: relative; flex: 1 1 auto; min-width: 0; }
 
   .sel__trigger {
@@ -120,7 +79,7 @@ const first = items[0];
     position: absolute; top: calc(100% + 0.5rem); left: 0; right: 0; z-index: 20;
     list-style: none; padding: 0.4rem; margin: 0;
     display: flex; flex-direction: column; gap: 0.1rem;
-    max-height: 320px; overflow-y: auto;
+    max-height: min(58vh, 420px); overflow-y: auto;
     opacity: 0; visibility: hidden; transform: translateY(-8px);
     transition: opacity 0.2s var(--ease), transform 0.2s var(--ease), visibility 0.2s;
     box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
@@ -128,110 +87,39 @@ const first = items[0];
   .sel__list.open { opacity: 1; visibility: visible; transform: translateY(0); }
 
   .sel__opt {
-    padding: 0.7rem 0.9rem; border-radius: max(6px, calc(var(--radius-sm) - 6px));
-    color: var(--text-dim); font-size: 0.96rem; cursor: pointer;
+    display: flex; align-items: baseline; justify-content: space-between; gap: 1rem;
+    padding: 0.62rem 0.9rem; border-radius: max(6px, calc(var(--radius-sm) - 6px));
+    color: var(--text-dim); font-size: 0.95rem; cursor: pointer;
     transition: color 0.15s, background 0.15s;
   }
   .sel__opt:hover { color: var(--text); background: var(--panel-2); }
   .sel__opt[aria-selected="true"] { color: var(--text); background: var(--panel-2); }
-  .sel__opt[aria-selected="true"]::after { content: '✦'; float: right; color: var(--accent); }
+  .sel__opt-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sel__opt-kind {
+    flex: 0 0 auto;
+    font-family: var(--font-mono); font-size: 0.58rem; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--text-faint);
+  }
+  .sel__opt[aria-selected="true"] .sel__opt-kind { color: var(--accent); }
 
-  /* ---- open (launch) button — only shown when the piece is live ---- */
   .sel__open {
     flex: 0 0 auto;
     display: inline-flex; align-items: center; gap: 0.4rem;
-    padding: 0 1.15rem;
+    padding: 0 1.2rem;
     font-size: 0.9rem; white-space: nowrap;
   }
-  .sel__open[hidden] { display: none; }
 
-  /* small live dot next to launchable options in the list */
-  .sel__opt-live { float: right; margin-left: 0.5rem; color: var(--accent); font-size: 0.7em; line-height: 1.9; }
-  .sel__opt[aria-selected="true"] .sel__opt-live { display: none; } /* ✦ marker takes over */
-
-  /* ---- description (always visible now — the Info toggle is gone) ---- */
   .sel__desc {
-    margin-top: 1.1rem;
-    color: var(--text-dim); line-height: 1.65; font-size: 1rem;
-    min-height: 3.3em;
+    margin-top: 0.9rem;
+    color: var(--text-dim); line-height: 1.6; font-size: 0.95rem;
+    min-height: 2.6em;
   }
 
-  /* ---- the live preview stage ---- */
-  .stage {
-    margin: 0; overflow: hidden;
-    box-shadow: 0 40px 90px rgba(0,0,0,0.55);
-    transform: perspective(1400px) rotateY(-4deg) rotateX(1.5deg);
-    transition: transform 0.6s var(--ease), box-shadow 0.6s var(--ease);
-  }
-  .stage:hover { transform: perspective(1400px) rotateY(0deg) rotateX(0deg); }
-
-  .stage__chrome {
-    display: flex; align-items: center; gap: 0.7rem;
-    padding: 0.6rem 0.9rem;
-    border-bottom: 1px solid var(--border);
-    background: rgba(255,255,255,0.02);
-  }
-  .stage__dots { display: inline-flex; gap: 5px; }
-  .stage__dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--border-bright); }
-  .stage__url {
-    font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.06em;
-    color: var(--text-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
-
-  .stage__screen { position: relative; aspect-ratio: 16 / 10; background: #08080b; }
-
-  .stage__frame {
-    position: absolute; top: 0; left: 0;
-    border: 0;
-    /* render the piece at desktop width, then scale it down like a real
-       thumbnail — a 100%-width iframe would show the piece's mobile layout */
-    width: 1280px; height: 800px;
-    transform: scale(var(--stage-scale, 0.42));
-    transform-origin: 0 0;
-  }
-  .stage__frame[hidden] { display: none; }
-
-  .stage__empty {
-    position: absolute; inset: 0; z-index: 2;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.9rem;
-    background: radial-gradient(70% 70% at 50% 40%, rgba(167,139,250,0.10), transparent 70%), #08080b;
-  }
-  .stage__empty[hidden] { display: none; }
-  .stage__gh { --gh-size: clamp(56px, 12vw, 86px); color: var(--accent); opacity: 0.35; }
-  .stage__empty-t {
-    font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.28em;
-    text-transform: uppercase; color: var(--text-faint); text-align: center; padding-inline: 1rem;
-  }
-
-  /* veil sits over the iframe: the preview is a picture you click, not a trap
-     for your scroll — pointer events go here, never into the framed page */
-  .stage__veil {
-    position: absolute; inset: 0; z-index: 3;
-    display: flex; align-items: flex-end; justify-content: center;
-    padding-bottom: 1.1rem;
-    background: linear-gradient(to top, rgba(5,5,7,0.75), transparent 42%);
-    opacity: 0; transition: opacity 0.3s var(--ease);
-  }
-  .stage__veil[hidden] { display: none; }
-  .stage:hover .stage__veil, .stage__veil:focus-visible { opacity: 1; }
-  .stage__veil-cta {
-    font-family: var(--font-mono); font-size: 0.74rem; letter-spacing: 0.08em;
-    padding: 0.6rem 1.1rem; border-radius: 100px;
-    background: var(--spectrum); color: #08080a; font-weight: 600;
-  }
-
-  @media (max-width: 900px) {
-    .sel { grid-template-columns: 1fr; }
-    .sel__controls { max-width: none; }
-    .stage { transform: none; }
-    .stage:hover { transform: none; }
-  }
   @media (max-width: 520px) {
     .sel__desc { min-height: 0; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .sel__caret, .sel__list, .stage, .stage__veil { transition: none; }
-    .stage, .stage:hover { transform: none; }
+    .sel__caret, .sel__list { transition: none; }
   }
 </style>
 
@@ -243,75 +131,24 @@ const first = items[0];
     const descText = root.querySelector<HTMLElement>('[data-sel-desc-text]')!;
     const openBtn = root.querySelector<HTMLAnchorElement>('[data-sel-open]')!;
     const opts = [...root.querySelectorAll<HTMLElement>('.sel__opt')];
-
-    // preview stage
-    const stage = root.querySelector<HTMLElement>('[data-stage]')!;
-    const frame = root.querySelector<HTMLIFrameElement>('[data-stage-frame]')!;
-    const empty = root.querySelector<HTMLElement>('[data-stage-empty]')!;
-    const emptyText = root.querySelector<HTMLElement>('[data-stage-empty-text]')!;
-    const veil = root.querySelector<HTMLAnchorElement>('[data-stage-veil]')!;
-    const urlLabel = root.querySelector<HTMLElement>('[data-stage-url]')!;
-
     let idx = 0;
-    let visible = false;   // is this section on screen?
-    let wanted = '';       // url the stage should be showing
 
     const isOpen = () => trigger.getAttribute('aria-expanded') === 'true';
     const openList = () => { list.classList.add('open'); trigger.setAttribute('aria-expanded', 'true'); };
     const closeList = () => { list.classList.remove('open'); trigger.setAttribute('aria-expanded', 'false'); };
 
-    // the iframe renders at a fixed 1280px width and is scaled to fit the stage,
-    // so the preview looks like a desktop screenshot rather than a squeezed page
-    const fit = () => {
-      const w = stage.querySelector<HTMLElement>('.stage__screen')!.clientWidth;
-      if (w) frame.style.setProperty('--stage-scale', String(w / 1280));
-    };
-
-    // only load the frame while the section is actually on screen — one running
-    // preview at a time, and nothing burning cycles off-screen
-    const syncFrame = () => {
-      if (wanted && visible) {
-        if (frame.getAttribute('src') !== wanted) frame.setAttribute('src', wanted);
-        frame.hidden = false; empty.hidden = true; veil.hidden = false;
-        fit();
-      } else {
-        if (!visible && frame.getAttribute('src')) frame.removeAttribute('src');
-        frame.hidden = true; veil.hidden = true;
-        empty.hidden = !!wanted && visible;
-        if (!wanted) empty.hidden = false;
-      }
-    };
-
     const select = (i: number) => {
       idx = Math.max(0, Math.min(i, opts.length - 1));
       opts.forEach((o, k) => o.setAttribute('aria-selected', String(k === idx)));
-      nameEl.textContent = (opts[idx].firstChild?.textContent || opts[idx].textContent || '').trim();
+      nameEl.textContent = opts[idx].querySelector('.sel__opt-name')?.textContent || '';
       descText.textContent = opts[idx].getAttribute('data-desc') || '';
 
-      const url = opts[idx].getAttribute('data-url') || '';
-      const ext = opts[idx].getAttribute('data-external') === '1';
-
-      if (url) {
-        openBtn.href = url;
-        if (ext) { openBtn.target = '_blank'; openBtn.rel = 'noopener'; }
-        else { openBtn.removeAttribute('target'); openBtn.removeAttribute('rel'); }
-        openBtn.hidden = false;
-        veil.href = url;
-        if (ext) { veil.target = '_blank'; veil.rel = 'noopener'; }
-        else { veil.removeAttribute('target'); veil.removeAttribute('rel'); }
-        urlLabel.textContent = ext ? url.replace(/^https?:\/\//, '') : url;
+      openBtn.href = opts[idx].getAttribute('data-url') || '#';
+      if (opts[idx].getAttribute('data-external') === '1') {
+        openBtn.target = '_blank'; openBtn.rel = 'noopener';
       } else {
-        openBtn.hidden = true;
-        urlLabel.textContent = '—';
-        emptyText.textContent = 'Not yet hung';
+        openBtn.removeAttribute('target'); openBtn.removeAttribute('rel');
       }
-
-      // external sites usually refuse to be framed (X-Frame-Options), so don't
-      // try — show the piece's name on the stage and let Open ▸ do the work.
-      wanted = url && !ext ? url : '';
-      if (url && ext) emptyText.textContent = 'Opens in its own window';
-      if (frame.getAttribute('src') && frame.getAttribute('src') !== wanted) frame.removeAttribute('src');
-      syncFrame();
       opts[idx].scrollIntoView({ block: 'nearest' });
     };
 
@@ -324,24 +161,15 @@ const first = items[0];
       o.addEventListener('click', () => { select(i); closeList(); trigger.focus(); })
     );
 
-    // keyboard: arrows move selection, Escape closes
+    // keyboard: arrows move selection, Enter opens the selected piece, Escape closes
     trigger.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowDown') { e.preventDefault(); isOpen() ? select(idx + 1) : openList(); }
       else if (e.key === 'ArrowUp') { e.preventDefault(); isOpen() ? select(idx - 1) : openList(); }
       else if (e.key === 'Escape') closeList();
     });
 
-    // close on outside click
     document.addEventListener('click', (e) => {
       if (isOpen() && !root.contains(e.target as Node)) closeList();
     });
-
-    new IntersectionObserver((ents) => {
-      visible = ents[0].isIntersecting;
-      syncFrame();
-    }, { rootMargin: '120px' }).observe(stage);
-
-    window.addEventListener('resize', fit, { passive: true });
-    select(0);
   });
 </script>

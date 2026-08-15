@@ -1,0 +1,64 @@
+---
+import { bookmarks } from '../data/bookmarks';
+---
+<div class="bm">
+  {bookmarks.map((g) => (
+    <section class="bm__group">
+      <h3 class="bm__group-title">{g.group}</h3>
+      <ul class="bm__list">
+        {g.items.map((b) => (
+          <li>
+            <a class="bm__item" href={b.url} target="_blank" rel="noopener noreferrer">
+              <span class="bm__name">{b.name}<span class="bm__arrow" aria-hidden="true">↗</span></span>
+              <span class="bm__note">{b.note}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))}
+</div>
+
+<style>
+  .bm {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: clamp(1.4rem, 3vw, 2.4rem);
+  }
+  .bm__group { min-width: 0; }
+  .bm__group-title {
+    font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.28em;
+    text-transform: uppercase; color: var(--text-faint); font-weight: 400;
+    padding-bottom: 0.6rem; margin-bottom: 0.2rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .bm__list { list-style: none; }
+
+  .bm__item {
+    display: flex; flex-direction: column; gap: 0.12rem;
+    padding: 0.62rem 0.55rem 0.62rem 0.55rem;
+    margin-inline: -0.55rem;
+    border-radius: var(--radius-sm);
+    transition: background 0.18s var(--ease), transform 0.18s var(--ease);
+  }
+  .bm__item:hover { background: var(--panel-2); transform: translateX(3px); }
+
+  .bm__name {
+    display: flex; align-items: center; gap: 0.4rem;
+    color: var(--text); font-size: 0.95rem; line-height: 1.35;
+  }
+  .bm__arrow {
+    font-size: 0.72em; color: var(--text-faint);
+    opacity: 0; transform: translate(-3px, 2px);
+    transition: opacity 0.18s var(--ease), transform 0.18s var(--ease), color 0.18s;
+  }
+  .bm__item:hover .bm__arrow { opacity: 1; transform: none; color: var(--accent); }
+
+  .bm__note { color: var(--text-faint); font-size: 0.82rem; line-height: 1.45; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bm__item, .bm__arrow { transition: none; }
+    .bm__item:hover { transform: none; }
+    .bm__arrow { opacity: 1; transform: none; }
+  }
+</style>
