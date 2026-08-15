@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Speedy Bubbles — Premium Car Detailing</title>
+    <!-- Use Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@400;600;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+
+    <!-- Dependencies for Advanced Animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
+</head>
+
+<body data-theme="light">
+    <!-- Particle System Canvas -->
+    <canvas id="particleCanvas" class="bg-canvas"></canvas>
+    <!-- Navigation -->
+    <nav id="mainNav" class="glass-nav">
+        <a href="#home" class="logo" aria-label="Home">
+            <svg class="nav-logo-svg" width="48" height="44" viewBox="0 0 70 48" fill="none"
+                xmlns="http://www.w3.org/2000/svg">
+                <!-- Mercedes-Benz Sedan Silhouette -->
+                <g>
+                    <!-- Main Body -->
+                    <path d="M 5 38 L 4 33 Q 5 28 12 27 L 24 25 L 29 18 Q 34 16 39 17 L 45 22 Q 52 26 53 31 L 53 38 Z" stroke="url(#logoGrad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                    
+                    <!-- Grille -->
+                    <path d="M 4 31 C 4 29, 7 28, 9 28 L 9 34 C 7 34, 4 33, 4 31 Z" stroke="url(#logoGrad)" stroke-width="1.2" fill="none" opacity="0.6"/>
+                    <line x1="4" y1="30" x2="9" y2="30" stroke="url(#logoGrad)" stroke-width="1" opacity="0.5"/>
+                    <line x1="4" y1="32" x2="9" y2="32" stroke="url(#logoGrad)" stroke-width="1" opacity="0.5"/>
+                    
+                    <!-- Hood Star -->
+                    <path d="M 10 27 L 10 23 M 9 24 L 11 24 M 10 23 L 9 25 L 11 25 Z" stroke="url(#logoGrad)" stroke-width="0.8" fill="none" />
+                    
+                    <!-- Windshield & Windows -->
+                    <path d="M 25 25 L 29 19 Q 34 17 38 18 L 44 24" stroke="url(#logoGrad)" stroke-width="1" stroke-linecap="round" fill="none" opacity="0.5"/>
+                    <line x1="36" y1="18" x2="35" y2="25" stroke="url(#logoGrad)" stroke-width="1" opacity="0.4"/>
+                    
+                    <!-- Shoulder Line -->
+                    <path d="M 12 29 Q 30 27 50 28" stroke="url(#logoGrad)" stroke-width="0.8" stroke-linecap="round" opacity="0.4" fill="none" />
+                    
+                    <!-- Wheels -->
+                    <circle cx="15" cy="38" r="4.5" stroke="url(#logoGrad)" stroke-width="1.8" fill="none" />
+                    <circle cx="15" cy="38" r="1.5" fill="url(#logoGrad)" opacity="0.3" />
+                    <circle cx="43" cy="38" r="4.5" stroke="url(#logoGrad)" stroke-width="1.8" fill="none" />
+                    <circle cx="43" cy="38" r="1.5" fill="url(#logoGrad)" opacity="0.3" />
+
+                    <!-- Animations -->
+                    <animateTransform attributeName="transform" type="translate" values="-1 0; 1 0; -1 0" dur="0.8s" repeatCount="indefinite" />
+                    <animateTransform attributeName="transform" type="translate" values="0 0; 0 -2; 0 2; 0 0" dur="5s" repeatCount="indefinite" additive="sum" />
+                </g>
+                <!-- Speed lines (trailing behind with gap) -->
+                <line x1="57" y1="26" x2="64" y2="26" stroke="url(#logoGrad)" stroke-width="1.5" stroke-linecap="round"
+                    opacity="0.5">
+                    <animate attributeName="x1" values="57;61;57" dur="2s" repeatCount="indefinite" />
+                    <animate attributeName="x2" values="64;68;64" dur="2s" repeatCount="indefinite" />
+                </line>
+                <line x1="56" y1="30" x2="66" y2="30" stroke="url(#logoGrad)" stroke-width="1.5" stroke-linecap="round"
+                    opacity="0.6">
+                    <animate attributeName="x1" values="56;60;56" dur="1.8s" repeatCount="indefinite" />
+                    <animate attributeName="x2" values="66;70;66" dur="1.8s" repeatCount="indefinite" />
+                </line>
+                <line x1="59" y1="34" x2="69" y2="34" stroke="url(#logoGrad)" stroke-width="1.5" stroke-linecap="round"
+                    opacity="0.35">
+                    <animate attributeName="x1" values="59;63;59" dur="2.5s" repeatCount="indefinite" />
+                    <animate attributeName="x2" values="69;73;69" dur="2.5s" repeatCount="indefinite" />
+                </line>
+                <!-- Bubbles (trailing behind from speed) -->
+                <circle cx="56" cy="12" r="3" stroke="url(#logoGrad)" stroke-width="1.2" fill="none" opacity="0.7">
+                    <animate attributeName="cx" values="56;59;56" dur="3s" repeatCount="indefinite" />
+                    <animate attributeName="cy" values="12;9;12" dur="3s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.7;1;0.7" dur="3s" repeatCount="indefinite" />
+                </circle>
+                <circle cx="50" cy="16" r="2" stroke="url(#logoGrad)" stroke-width="1" fill="none" opacity="0.5">
+                    <animate attributeName="cx" values="50;53;50" dur="2.5s" repeatCount="indefinite" />
+                    <animate attributeName="cy" values="16;13;16" dur="2.5s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.5;0.8;0.5" dur="2.5s" repeatCount="indefinite" />
+                </circle>
+                <circle cx="52" cy="9" r="1.5" stroke="url(#logoGrad)" stroke-width="0.8" fill="none" opacity="0.4">
+                    <animate attributeName="cx" values="52;55;52" dur="2s" repeatCount="indefinite" />
+                    <animate attributeName="cy" values="9;6;9" dur="2s" repeatCount="indefinite" />
+                </circle>
+                <defs>
+                    <linearGradient id="logoGrad" x1="0" y1="0" x2="70" y2="44" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#00d4ff" />
+                        <stop offset="60%" stop-color="#0055ff" />
+                        <stop offset="85%" stop-color="#a200ff" />
+                        <stop offset="100%" stop-color="#ff00d4" />
+                    </linearGradient>
+                </defs>
+            </svg>
+        </a>
+        <button id="menuToggle" aria-label="Toggle Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+    </nav>
+
+    <!-- Marquee Banner -->
+    <div class="marquee-container">
+        <div class="marquee-content">
+            <span class="banner-item">Premium Car Detailing</span>
+            <span class="banner-item">Ceramic Coating Specialists</span>
+            <span class="banner-item">Paint Correction Experts</span>
+            <span class="banner-item">Interior Deep Clean</span>
+            <span class="banner-item">Showroom Shine Guaranteed</span>
+            <span class="banner-item">Speedy Bubbles Quality</span>
+            <span class="banner-item">Eco-Friendly Products</span>
+            <span class="banner-item">Hand Wash Only</span>
+            <span class="banner-item">Mobile Detailing Available</span>
+            <span class="banner-item">Protect Your Investment</span>
+            <!-- Repeat for loop -->
+            <span class="banner-item">Premium Car Detailing</span>
+            <span class="banner-item">Ceramic Coating Specialists</span>
+            <span class="banner-item">Paint Correction Experts</span>
+            <span class="banner-item">Interior Deep Clean</span>
+            <span class="banner-item">Showroom Shine Guaranteed</span>
+            <span class="banner-item">Speedy Bubbles Quality</span>
+            <span class="banner-item">Eco-Friendly Products</span>
+            <span class="banner-item">Hand Wash Only</span>
+            <span class="banner-item">Mobile Detailing Available</span>
+            <span class="banner-item">Protect Your Investment</span>
+        </div>
+    </div>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenu" class="mobile-menu hidden">
+        <ul>
+            <li><a href="#home">Home</a></li>
+            <li><a href="#services">Services</a></li>
+            <li><a href="#contact">Contact</a></li>
+            <li><a href="#learn">Resources</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <main style="position: relative;">
+
+        <!-- Hero Section -->
+        <section id="home" class="hero fade-in">
+            <div class="hero-content">
+                <div class="hero-logo-text">SPEEDY BUBBLES</div>
+                <h1 class="hero-title">Premium Car Detailing</h1>
+                <p class="hero-subtitle">Showroom finish. Ceramic protection. Meticulous craftsmanship.</p>
+                <button class="hero-cta" onclick="window.location.href='#services'">
+                    <span class="hero-cta-text">Discover More</span>
+                    <span class="hero-cta-arrow">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </span>
+                </button>
+            </div>
+        </section>
+
+        <section id="services" class="services-intro-section fade-in">
+            <div class="services-heading-block">
+                <h2 class="section-heading services-title">Services</h2>
+            </div>
+        </section>
+
+        <section id="services-list" class="services-section fade-in">
+            <div class="services-stack">
+                <!-- Basic Package -->
+                <div class="service-row service-card" id="cardBasic">
+                    <div class="service-info card-header">
+                        <h3>Basic Package</h3>
+                        <p class="service-desc">A complete refresh to restore your vehicle's essential shine and cleanliness. Perfect for regular maintenance.</p>
+                        <ul class="service-features">
+                            <li>Basic Wash and Towel Dry</li>
+                            <li>Vacuum & Interior Wipe Down</li>
+                            <li>A/C Vents Cleaned</li>
+                            <li>Wheel and Tire Cleaning</li>
+                            <li>Window + Floor Mat Cleaning</li>
+                            <li>Air Freshener (Tree/Spray)</li>
+                        </ul>
+                    </div>
+                    <div class="service-media price-display">
+                        <div class="price-tag glass-card">
+                            <span class="price-label">FROM</span>
+                            <span class="price-value">$105</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Super Package -->
+                <div class="service-row reverse service-card" id="cardSuper">
+                    <div class="service-info card-header">
+                        <h3><span>Super Package</span></h3>
+                        <p class="service-desc">A thorough deep clean designed to meticulously target stubborn dirt and revitalize all interior and exterior surfaces.</p>
+                        <ul class="service-features">
+                            <li>Deep Exterior Wash and Towel Dry</li>
+                            <li>Thorough Wheel and Tire Cleaning</li>
+                            <li>Tire Shine + Wheel Polish</li>
+                            <li>Vacuum and Dusting</li>
+                            <li>Thorough Interior Cleaning & Floor Mats</li>
+                            <li>Windows Cleaned and Waxed</li>
+                            <li>Steam Cleaning & A/C Vents Cleaned</li>
+                        </ul>
+                    </div>
+                    <div class="service-media price-display">
+                        <div class="price-tag glass-card">
+                            <span class="price-label">FROM</span>
+                            <span class="price-value">$150</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Luxury Package -->
+                <div class="service-row service-card" id="cardLuxury">
+                    <div class="service-info card-header">
+                        <h3><span>Luxury Package</span></h3>
+                        <p class="service-desc">The ultimate detailing experience. We transform your vehicle inside and out for a flawless, showroom finish.</p>
+                        <ul class="service-features">
+                            <li>Deep Exterior Hand Wash + Wax + Towel Dry</li>
+                            <li>Wheel and Tire Cleaning + Tire Shine & Polish</li>
+                            <li>Deep Vacuum + Dust & Deep Interior Cleaning</li>
+                            <li>Steam Cleaning + Small Stain Removal</li>
+                            <li>Mats/Windows Cleaned + Waxed</li>
+                            <li>Spray Shine + Wax Included</li>
+                            <li>Air Freshener (Customer Choice)</li>
+                        </ul>
+                    </div>
+                    <div class="service-media price-display">
+                        <div class="price-tag glass-card">
+                            <span class="price-label">FROM</span>
+                            <span class="price-value">$210</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Services -->
+                <div class="service-row reverse service-card" id="cardAdditional">
+                    <div class="service-info card-header">
+                        <h3>Additional Services</h3>
+                        <p class="service-desc">Targeted treatments to handle specific detailing needs and maintenance plans to keep your car perfect.</p>
+                        <ul class="service-features">
+                            <li>Engine Bay Cleaning: <strong>$35</strong></li>
+                            <li>Leather Shampoo + Conditioning: <strong>$25</strong></li>
+                            <li>Headlight Restoration: <strong>$45</strong></li>
+                            <li>Pet Hair Removal: <strong>FROM $15</strong></li>
+                            <li>Clay Bar Treatment: <strong>$90</strong></li>
+                            <li>Plastic/Rubber/Trim Restoration: <strong>FROM $25</strong></li>
+                            <li>Spray On Shine + Wax: <strong>$15</strong></li>
+                        </ul>
+                    </div>
+                    <div class="service-media promo-display">
+                        <div class="promo-tag glass-card">
+                            <h4>Special Offers</h4>
+                            <p>First time customers get <span class="highlight">$15 OFF</span> and a discount with any maintenance plan!</p>
+                            <br>
+                            <h4>Maintenance Plans</h4>
+                            <p>Available weekly, monthly, or every 3 months.</p>
+                            <ul class="promo-list">
+                                <li>Weekly: <strong>10% Discount</strong></li>
+                                <li>1 & 3 Month: <strong>5% Discount</strong></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- CTA / Contact Footer -->
+        <section id="contact" class="contact-cta fade-in">
+            <div class="cta-terminal">
+                <h2 class="cta-heading">CONTACT</h2>
+                <p class="cta-subtext">
+                    < 24hr response time</p>
+                        <a href="mailto:SpeedBubbles@clean.ca" class="email-cta" id="ctaEmailLink">
+                            <span class="email-cta-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path
+                                        d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z">
+                                    </path>
+                                    <polyline points="22,6 12,13 2,6"></polyline>
+                                </svg>
+                            </span>
+                            <span class="email-cta-text">SpeedBubbles@clean.ca</span>
+                            <span class="email-cta-arrow">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                </svg>
+                            </span>
+                        </a>
+
+                        <!-- Lottie Integration -->
+                        <div id="lottieContainer" class="lottie-container"></div>
+            </div>
+        </section>
+
+        <!-- Learn More -->
+        <section id="learn" class="learn-more-section fade-in">
+            <div class="learn-card">
+                <h3 class="learn-heading">Resources &amp; Links</h3>
+                <ul class="learn-links">
+                    <li>
+                        <a href="https://www.chemicalguys.com" target="_blank" rel="noopener noreferrer">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <circle cx="12" cy="12" r="4" />
+                                <line x1="21.17" y1="8" x2="12" y2="8" />
+                                <line x1="3.95" y1="6.06" x2="8.54" y2="14" />
+                                <line x1="10.88" y1="21.94" x2="15.46" y2="14" />
+                            </svg>
+                            Chemical Guys
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.meguiars.com" target="_blank" rel="noopener noreferrer">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                                <path d="M2 17l10 5 10-5" />
+                                <path d="M2 12l10 5 10-5" />
+                            </svg>
+                            Meguiar's
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://adamspolishes.com" target="_blank" rel="noopener noreferrer">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                            </svg>
+                            Adam's Polishes
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.autogeek.net" target="_blank" rel="noopener noreferrer">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                                <line x1="8" y1="21" x2="16" y2="21" />
+                                <line x1="12" y1="17" x2="12" y2="21" />
+                            </svg>
+                            AutoGeek
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="learn-divider"></div>
+
+                <blockquote class="knowledge-quote">
+                    <span class="quote-mark">"</span>
+                    <span id="quoteText">The only true wisdom is in knowing you know nothing.</span>
+                    <cite id="quoteAuthor">— Socrates</cite>
+                </blockquote>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+
+        <div class="footer-logo">
+            <svg class="footer-logo-img" width="48" height="44" viewBox="0 0 70 48" fill="none"
+                xmlns="http://www.w3.org/2000/svg">
+                <g>
+                    <path d="M 5 38 L 4 33 Q 5 28 12 27 L 24 25 L 29 18 Q 34 16 39 17 L 45 22 Q 52 26 53 31 L 53 38 Z" stroke="url(#logoGradFooter)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                    <path d="M 4 31 C 4 29, 7 28, 9 28 L 9 34 C 7 34, 4 33, 4 31 Z" stroke="url(#logoGradFooter)" stroke-width="1.2" fill="none" opacity="0.6"/>
+                    <line x1="4" y1="30" x2="9" y2="30" stroke="url(#logoGradFooter)" stroke-width="1" opacity="0.5"/>
+                    <line x1="4" y1="32" x2="9" y2="32" stroke="url(#logoGradFooter)" stroke-width="1" opacity="0.5"/>
+                    <path d="M 10 27 L 10 23 M 9 24 L 11 24 M 10 23 L 9 25 L 11 25 Z" stroke="url(#logoGradFooter)" stroke-width="0.8" fill="none" />
+                    <path d="M 25 25 L 29 19 Q 34 17 38 18 L 44 24" stroke="url(#logoGradFooter)" stroke-width="1" stroke-linecap="round" fill="none" opacity="0.5"/>
+                    <line x1="36" y1="18" x2="35" y2="25" stroke="url(#logoGradFooter)" stroke-width="1" opacity="0.4"/>
+                    <path d="M 12 29 Q 30 27 50 28" stroke="url(#logoGradFooter)" stroke-width="0.8" stroke-linecap="round" opacity="0.4" fill="none" />
+                    <circle cx="15" cy="38" r="4.5" stroke="url(#logoGradFooter)" stroke-width="1.8" fill="none" />
+                    <circle cx="15" cy="38" r="1.5" fill="url(#logoGradFooter)" opacity="0.3" />
+                    <circle cx="43" cy="38" r="4.5" stroke="url(#logoGradFooter)" stroke-width="1.8" fill="none" />
+                    <circle cx="43" cy="38" r="1.5" fill="url(#logoGradFooter)" opacity="0.3" />
+                    <animateTransform attributeName="transform" type="translate" values="-1 0; 1 0; -1 0" dur="0.8s" repeatCount="indefinite" />
+                    <animateTransform attributeName="transform" type="translate" values="0 0; 0 -2; 0 2; 0 0" dur="5s" repeatCount="indefinite" additive="sum" />
+                </g>
+                <line x1="57" y1="26" x2="64" y2="26" stroke="url(#logoGradFooter)" stroke-width="1.5" stroke-linecap="round" opacity="0.5">
+                    <animate attributeName="x1" values="57;61;57" dur="2s" repeatCount="indefinite" />
+                    <animate attributeName="x2" values="64;68;64" dur="2s" repeatCount="indefinite" />
+                </line>
+                <line x1="56" y1="30" x2="66" y2="30" stroke="url(#logoGradFooter)" stroke-width="1.5" stroke-linecap="round" opacity="0.6">
+                    <animate attributeName="x1" values="56;60;56" dur="1.8s" repeatCount="indefinite" />
+                    <animate attributeName="x2" values="66;70;66" dur="1.8s" repeatCount="indefinite" />
+                </line>
+                <line x1="59" y1="34" x2="69" y2="34" stroke="url(#logoGradFooter)" stroke-width="1.5" stroke-linecap="round" opacity="0.35">
+                    <animate attributeName="x1" values="59;63;59" dur="2.5s" repeatCount="indefinite" />
+                    <animate attributeName="x2" values="69;73;69" dur="2.5s" repeatCount="indefinite" />
+                </line>
+                <circle cx="56" cy="12" r="3" stroke="url(#logoGradFooter)" stroke-width="1.2" fill="none" opacity="0.7">
+                    <animate attributeName="cx" values="56;59;56" dur="3s" repeatCount="indefinite" />
+                    <animate attributeName="cy" values="12;9;12" dur="3s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.7;1;0.7" dur="3s" repeatCount="indefinite" />
+                </circle>
+                <circle cx="50" cy="16" r="2" stroke="url(#logoGradFooter)" stroke-width="1" fill="none" opacity="0.5">
+                    <animate attributeName="cx" values="50;53;50" dur="2.5s" repeatCount="indefinite" />
+                    <animate attributeName="cy" values="16;13;16" dur="2.5s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.5;0.8;0.5" dur="2.5s" repeatCount="indefinite" />
+                </circle>
+                <circle cx="52" cy="9" r="1.5" stroke="url(#logoGradFooter)" stroke-width="0.8" fill="none" opacity="0.4">
+                    <animate attributeName="cx" values="52;55;52" dur="2s" repeatCount="indefinite" />
+                    <animate attributeName="cy" values="9;6;9" dur="2s" repeatCount="indefinite" />
+                </circle>
+                <defs>
+                    <linearGradient id="logoGradFooter" x1="0" y1="0" x2="70" y2="44" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#00d4ff" />
+                        <stop offset="60%" stop-color="#0055ff" />
+                        <stop offset="85%" stop-color="#a200ff" />
+                        <stop offset="100%" stop-color="#ff00d4" />
+                    </linearGradient>
+                </defs>
+            </svg>
+            <span>Speedy Bubbles</span>
+        </div>
+    </footer>
+
+    <!-- Floating Notepad -->
+    <div id="floatingNotepad" class="floating-notepad glass collapsed">
+        <div class="notepad-header">
+            <div class="header-group">
+                <div class="theme-switcher">
+                    <button class="theme-btn light" onclick="setTheme('light')" title="Light Mode">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <circle cx="12" cy="12" r="5"></circle>
+                            <line x1="12" y1="1" x2="12" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="23"></line>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                            <line x1="1" y1="12" x2="3" y2="12"></line>
+                            <line x1="21" y1="12" x2="23" y2="12"></line>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                        </svg>
+                    </button>
+                    <button class="theme-btn dark" onclick="setTheme('dark')" title="Dark Mode">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="header-group">
+                <button class="notepad-btn glow-toggle" id="glowToggleBtn" onclick="toggleGlow()" title="Toggle Glow">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <circle cx="12" cy="12" r="9"></circle>
+                        <circle cx="12" cy="12" r="3" fill="currentColor"></circle>
+                    </svg>
+                </button>
+                <button class="notepad-btn copy" id="copyNotepadBtn" onclick="copyNotepad()" title="Copy to clipboard">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <rect x="9" y="9" width="13" height="13" rx="2" />
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                    </svg>
+                </button>
+                <!-- Eye: open = content visible, closed = collapsed header only -->
+                <button class="notepad-btn toggle-btn" id="toggleNotepadBtn" onclick="toggleNotepad()" title="Toggle">
+                    <svg id="eyeOpen" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5" style="display:none;">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    <svg id="eyeClosed" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <path
+                            d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                        <line x1="1" y1="1" x2="23" y2="23" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="notepad-body">
+            <textarea id="notepadContent" placeholder="Notes..."></textarea>
+        </div>
+        <div class="notepad-footer">
+            <span id="saveStatus" style="font-size: 0.7rem; opacity: 0.5;"></span>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

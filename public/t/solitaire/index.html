@@ -1,0 +1,1913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#2e7d4f">
+<title>Solitaire</title>
+<style>
+  :root {
+    --cw: 72px;
+    --ch: 101px;
+    --radius: calc(var(--cw) * 0.09);
+    --gap: calc(var(--cw) * 0.14);
+    --felt: #2e7d4f;
+    --felt-dark: #266a43;
+    --slot: rgba(255,255,255,0.13);
+    --slot-border: rgba(255,255,255,0.28);
+    --back-a: #2456a8;
+    --back-b: #1f4d97;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; height: 100%;
+    background: radial-gradient(circle at 50% 0%, var(--felt) 0%, var(--felt-dark) 100%);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #fff;
+    overflow: hidden;
+    overscroll-behavior: none;
+    user-select: none; -webkit-user-select: none;
+  }
+  #app {
+    height: 100%;
+    display: flex; flex-direction: column;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
+  header {
+    flex: 0 0 auto;
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px;
+    flex-wrap: wrap;
+  }
+  header h1 {
+    font-size: clamp(18px, 4.5vw, 26px);
+    margin: 0; font-weight: 700; letter-spacing: 0.5px;
+    flex: 1 1 auto;
+    white-space: nowrap;
+  }
+  .stat {
+    font-size: clamp(12px, 3vw, 15px);
+    opacity: 0.92; font-variant-numeric: tabular-nums;
+    background: rgba(0,0,0,0.16);
+    padding: 4px 10px; border-radius: 999px;
+    white-space: nowrap;
+  }
+  button.btn {
+    font: inherit;
+    font-size: clamp(13px, 3.4vw, 16px);
+    font-weight: 600;
+    color: #1c4a2e;
+    background: #fff;
+    border: none; border-radius: 999px;
+    padding: 8px 16px;
+    cursor: pointer;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.2);
+    transition: transform .06s ease, box-shadow .06s ease;
+    touch-action: manipulation;
+  }
+  button.btn:active { transform: translateY(2px); box-shadow: 0 0 0 rgba(0,0,0,0.2); }
+  button.btn.ghost { background: rgba(255,255,255,0.16); color: #fff; box-shadow: 0 2px 0 rgba(0,0,0,0.15); }
+  button.btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+
+  #board {
+    flex: 1 1 auto;
+    padding: 6px clamp(6px, 2vw, 18px) 12px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    gap: calc(var(--ch) * 0.18);
+  }
+  .row {
+    display: grid;
+    grid-template-columns: repeat(7, var(--cw));
+    column-gap: var(--gap);
+    justify-content: center;
+  }
+  .tableau.row { flex: 1 1 auto; }
+  /* When cards are enlarged past the fit, let the board scroll and align to
+     the start so no column gets clipped or stranded off-screen. */
+  #board.scaled { overflow: auto; }
+  #board.scaled .row { justify-content: start; }
+  /* Side / horizontal stacking: tableau becomes 7 rows that each fan across. */
+  .tableau.row.side {
+    display: flex;
+    flex-direction: column;
+    grid-template-columns: none;
+    gap: var(--gap);
+    justify-content: flex-start;
+    align-items: flex-start;
+  }
+  .tableau.row.side.lefthand { align-items: flex-end; }
+  .col.side { flex: 0 0 auto; height: var(--ch); }
+
+  .slot {
+    width: var(--cw); height: var(--ch);
+    border-radius: var(--radius);
+    position: relative;
+  }
+  .slot.placeholder {
+    background: var(--slot);
+    border: 2px dashed var(--slot-border);
+  }
+  .slot.placeholder .ghost-suit {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: calc(var(--cw) * 0.5);
+    opacity: 0.22; color: #fff;
+  }
+  .col { position: relative; min-height: var(--ch); }
+
+  .card {
+    position: absolute; left: 0; top: 0;
+    width: var(--cw); height: var(--ch);
+    border-radius: var(--radius);
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.35);
+    cursor: pointer;
+    touch-action: none;
+    will-change: transform;
+  }
+  .card.faceup {
+    color: #1a1a1a;
+  }
+  .card.red { color: #d11d2e; }
+  .card .corner {
+    position: absolute;
+    display: flex; flex-direction: column; align-items: center;
+    line-height: 0.92;
+    font-weight: 700;
+  }
+  .card .corner.tl { top: calc(var(--ch) * 0.05); left: calc(var(--cw) * 0.08); }
+  .card .corner.br { bottom: calc(var(--ch) * 0.05); right: calc(var(--cw) * 0.08); transform: rotate(180deg); }
+  .card .corner .rk { font-size: calc(var(--cw) * 0.30); }
+  .card .corner .st { font-size: calc(var(--cw) * 0.24); }
+  .card .center {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: calc(var(--cw) * 0.52);
+  }
+  /* Large-print style: giant central rank */
+  .card .big-rank {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: calc(var(--cw) * 0.82);
+    font-weight: 800; letter-spacing: -1px;
+  }
+  /* Pips style: traditional suit arrangement + court cards */
+  .card .pips-area { position: absolute; inset: 14% 12%; }
+  .card .pip {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    font-size: calc(var(--cw) * 0.27); line-height: 1;
+  }
+  .card .pip.inv { transform: translate(-50%, -50%) rotate(180deg); }
+  .card .ace-pip {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: calc(var(--cw) * 0.62);
+  }
+  .card .court-art {
+    position: absolute;
+    top: 7%; left: 12%; width: 76%; height: 86%;
+    pointer-events: none;
+  }
+  .card.facedown {
+    background:
+      repeating-linear-gradient(45deg, var(--back-a) 0 6px, var(--back-b) 6px 12px);
+    border: calc(var(--cw)*0.05) solid #fff;
+  }
+  .card.facedown::after {
+    content: ""; position: absolute; inset: 12%;
+    border-radius: calc(var(--radius) * 0.6);
+    border: 2px solid rgba(255,255,255,0.35);
+  }
+  .card.selected {
+    outline: calc(var(--cw)*0.06) solid #ffd23f;
+    outline-offset: -1px;
+    box-shadow: 0 0 0 2px #b8860b, 0 4px 10px rgba(0,0,0,0.4);
+  }
+  .card.hint {
+    animation: pulse 0.7s ease-in-out 2;
+  }
+  @keyframes pulse {
+    0%,100% { box-shadow: 0 1px 2px rgba(0,0,0,0.35); }
+    50% { box-shadow: 0 0 0 4px #ffd23f, 0 0 14px #ffd23f; }
+  }
+  .card.shake {
+    animation: shake 280ms ease;
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-5px); }
+    40%, 80% { transform: translateX(5px); }
+  }
+  .hidden-card { visibility: hidden; }
+
+  #drag-layer {
+    position: fixed; left: 0; top: 0;
+    pointer-events: none; z-index: 1000;
+  }
+  #drag-layer .card { box-shadow: 0 8px 18px rgba(0,0,0,0.45); }
+
+  .stock-recycle {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: calc(var(--cw) * 0.55);
+    color: rgba(255,255,255,0.5);
+    border-radius: var(--radius);
+    background: var(--slot);
+    border: 2px dashed var(--slot-border);
+  }
+  .stock-recycle.empty-final { opacity: 0.4; }
+
+  #overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: none; align-items: center; justify-content: center;
+    z-index: 2000;
+    backdrop-filter: blur(2px);
+  }
+  #overlay.show { display: flex; }
+
+  #helpOverlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: none; align-items: center; justify-content: center;
+    z-index: 2100;
+    backdrop-filter: blur(2px);
+    padding: 12px;
+  }
+  #helpOverlay.show { display: flex; }
+
+  .help-card {
+    background: #fff; color: #1c4a2e;
+    border-radius: 18px; padding: 22px 24px;
+    text-align: left; max-width: 92vw; width: 460px;
+    max-height: 82vh; overflow: auto;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    animation: pop .35s ease;
+    font-size: 15px; line-height: 1.35;
+  }
+  .help-card h2 { margin: 0 0 10px; font-size: 24px; text-align: center; }
+  .help-card h3 { margin: 14px 0 6px; font-size: 16px; color: #2e7d4f; }
+  .help-card ul { margin: 4px 0 10px; padding-left: 18px; }
+  .help-card li { margin: 3px 0; }
+  .help-card p { margin: 4px 0 10px; }
+  .help-actions {
+    display: flex; gap: 10px; margin-top: 14px;
+    flex-wrap: wrap;
+  }
+  .help-actions .btn { flex: 1 1 auto; }
+  .help-foot {
+    margin: 12px 0 0; font-size: 13px; opacity: 0.75; text-align: center;
+  }
+
+  #tutorialBar {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    background: #fff;
+    color: #1c4a2e;
+    padding: 8px 12px;
+    border-bottom: 3px solid #2e7d4f;
+    font-size: 14px;
+    font-weight: 600;
+    flex: 0 0 auto;
+    z-index: 10;
+  }
+  #tutorialText {
+    flex: 1 1 auto;
+    line-height: 1.3;
+  }
+  #endTutorialBtn {
+    font-size: 12px;
+    padding: 4px 10px;
+    white-space: nowrap;
+  }
+
+  .win-card {
+    background: #fff; color: #1c4a2e;
+    border-radius: 18px; padding: 28px 32px;
+    text-align: center; max-width: 86vw;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    animation: pop .35s ease;
+  }
+  @keyframes pop { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .win-card h2 { margin: 0 0 6px; font-size: 30px; }
+  .win-card p { margin: 0 0 18px; font-size: 16px; color: #444; }
+  .confetti {
+    position: fixed; top: -12px; width: 10px; height: 14px;
+    z-index: 1999; pointer-events: none;
+    animation: fall linear forwards;
+  }
+  @keyframes fall {
+    to { transform: translateY(105vh) rotate(720deg); opacity: 0.9; }
+  }
+
+  #menu {
+    position: absolute; top: 54px; right: 12px;
+    background: #fff; color: #222;
+    border-radius: 12px; padding: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    display: none; z-index: 1500;
+    min-width: 180px;
+  }
+  #menu.show { display: block; }
+  #menu .opt {
+    padding: 10px 12px; border-radius: 8px; cursor: pointer;
+    font-size: 15px; display: flex; justify-content: space-between; align-items: center;
+  }
+  #menu .opt:hover { background: #f0f0f0; }
+  #menu .opt .val { font-weight: 700; color: #2e7d4f; }
+  #menu .opt.disabled { opacity: 0.45; }
+  #menu .opt.disabled:hover { background: none; }
+  #menu .opt.disabled .val { color: #999; }
+  #menu hr { border: none; border-top: 1px solid #eee; margin: 4px 0; }
+  #menu .opt.theme-opt { cursor: default; }
+  #menu .opt.theme-opt:hover { background: none; }
+  #menu .swatches { display: flex; gap: 6px; }
+  #menu .swatch {
+    width: 22px; height: 22px; border-radius: 6px;
+    cursor: pointer; border: 2px solid transparent;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.18);
+    transition: transform .08s ease;
+  }
+  #menu .swatch:active { transform: scale(0.9); }
+  #menu .swatch.active { border-color: #2e7d4f; }
+  #menu .size-row { display: block; }
+  #menu .size-row .size-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 6px;
+  }
+  #menu .size-row input[type="range"] {
+    width: 100%; margin: 0; accent-color: #2e7d4f;
+    cursor: pointer; touch-action: manipulation;
+  }
+  #menu .styles { display: flex; gap: 6px; flex-wrap: wrap; }
+  #menu .stylechip {
+    font-size: 12px; font-weight: 600;
+    padding: 5px 9px; border-radius: 7px;
+    background: #f0f0f0; color: #444;
+    cursor: pointer; border: 2px solid transparent;
+    white-space: nowrap;
+  }
+  #menu .stylechip.active { border-color: #2e7d4f; color: #2e7d4f; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>Solitaire</h1>
+    <span class="stat" id="timer">0:00</span>
+    <span class="stat" id="moves">0 moves</span>
+    <button class="btn ghost" id="undoBtn" title="Undo">↶ Undo</button>
+    <button class="btn" id="newBtn">New Game</button>
+    <button class="btn ghost" id="helpBtn" title="How to play">?</button>
+    <button class="btn ghost" id="menuBtn" aria-label="Menu">⚙</button>
+  </header>
+
+  <div id="tutorialBar">
+    <span id="tutorialText">Follow the yellow glow to learn moves.</span>
+    <button class="btn ghost" id="endTutorialBtn">End tutorial</button>
+  </div>
+
+  <div id="menu">
+    <div class="opt" data-act="draw">Draw mode <span class="val" id="drawVal">Draw 1</span></div>
+    <hr>
+    <div class="opt size-row">
+      <div class="size-head">Card size <span class="val" id="sizeVal">100%</span></div>
+      <input type="range" id="sizeSlider" min="100" max="220" step="5" value="100" aria-label="Card size">
+    </div>
+    <div class="opt theme-opt">Table <span class="swatches" id="feltSwatches"></span></div>
+    <div class="opt theme-opt">Texture <span class="swatches" id="textureSwatches"></span></div>
+    <div class="opt theme-opt">Card back <span class="swatches" id="backSwatches"></span></div>
+    <div class="opt size-row">
+      <div class="size-head">Card style</div>
+      <span class="styles" id="styleChips"></span>
+    </div>
+    <div class="opt size-row">
+      <div class="size-head">Hand</div>
+      <span class="styles" id="handChips"></span>
+    </div>
+    <div class="opt size-row">
+      <div class="size-head">Stacking</div>
+      <span class="styles" id="stackChips"></span>
+    </div>
+    <hr>
+    <div class="opt" data-act="hint">Show a hint</div>
+    <div class="opt" data-act="auto" id="autoOpt">Auto-finish <span class="val" id="autoNote"></span></div>
+    <div class="opt" data-act="restart">Restart this deal</div>
+    <hr>
+    <div class="opt" data-act="help">How to play</div>
+  </div>
+
+  <div id="board">
+    <div class="row top" id="topRow"></div>
+    <div class="row tableau" id="tableauRow"></div>
+  </div>
+</div>
+
+<div id="drag-layer"></div>
+
+<div id="overlay">
+  <div class="win-card">
+    <h2>🎉 You won!</h2>
+    <p id="winStats">Well played.</p>
+    <button class="btn" id="playAgain">Play again</button>
+  </div>
+</div>
+
+<div id="helpOverlay">
+  <div class="help-card">
+    <h2>How to play</h2>
+    <div class="help-body">
+      <p><strong>Goal:</strong> Move every card up to the four home piles, building each suit from Ace to King.</p>
+
+      <h3>The layout</h3>
+      <ul>
+        <li><strong>Stock (top right)</strong> — Tap to draw cards to the waste. (Placed on the right so right-handed players don't cover the board reaching for it.)</li>
+        <li><strong>Waste</strong> — The cards you drew. Only the top card can be played.</li>
+        <li><strong>Foundations (4 home piles)</strong> — Build up by suit: A, 2, 3… King. Same suit only.</li>
+        <li><strong>Tableau (7 big columns)</strong> — Build down, alternating colours (red on black, black on red). Only face-up cards and proper sequences can move.</li>
+      </ul>
+
+      <h3>How to move</h3>
+      <ul>
+        <li><strong>Tap</strong> a card (or run) — if there's an obvious legal spot it will move there automatically. Otherwise it gets selected.</li>
+        <li><strong>Drag</strong> the card or run straight onto a valid pile (use this when you want to choose the destination yourself).</li>
+        <li><strong>Double-tap</strong> a card to send it straight to its home foundation (if possible).</li>
+        <li>Empty tableau columns can only start with a King.</li>
+      </ul>
+
+      <h3>Tips for beginners</h3>
+      <ul>
+        <li>Use the <strong>Hint</strong> button (in the gear ⚙ menu) — it lights up a good move.</li>
+        <li>Undo is safe and unlimited while you learn.</li>
+        <li>When nothing moves, tap the stock to draw more cards.</li>
+        <li>Auto-finish (in the menu) will finish the game for you when only easy moves remain.</li>
+      </ul>
+    </div>
+
+    <div class="help-actions">
+      <button class="btn ghost" id="closeHelp">Got it</button>
+      <button class="btn" id="practiceBtn">Start guided tutorial</button>
+    </div>
+    <p class="help-foot">The guided tutorial uses a special easy deal + live tips + constant hints so you learn by doing. Follow the yellow glow!</p>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---- Constants -------------------------------------------------------
+  const SUITS = ["S", "H", "D", "C"];          // spades, hearts, diamonds, clubs
+  const SUIT_CHAR = { S: "♠", H: "♥", D: "♦", C: "♣" };
+  const RED = { H: true, D: true, S: false, C: false };
+  const RANKS = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
+  const STORAGE_KEY = "solitaire_state_v2";
+  const DRAG_THRESHOLD = 8; // px before a press becomes a drag
+
+  // ---- Themes ----------------------------------------------------------
+  const FELT_THEMES = {
+    emerald:  { name: "Emerald",  felt: "#2e7d4f", dark: "#266a43" },
+    ocean:    { name: "Ocean",    felt: "#1f6f8b", dark: "#185868" },
+    midnight: { name: "Midnight", felt: "#2b2f44", dark: "#1c1f30" },
+    burgundy: { name: "Burgundy", felt: "#7d2e3f", dark: "#5e2230" },
+    plum:     { name: "Plum",     felt: "#5b3a7d", dark: "#472d61" }
+  };
+  const BACK_THEMES = {
+    classic: { name: "Classic blue", a: "#2456a8", b: "#1f4d97" },
+    crimson: { name: "Crimson",      a: "#b3243a", b: "#8f1c2e" },
+    forest:  { name: "Forest",       a: "#2f7d4f", b: "#266a43" },
+    slate:   { name: "Slate",        a: "#4a5568", b: "#3a4452" },
+    royal:   { name: "Royal plum",   a: "#7a4fb0", b: "#633f93" }
+  };
+
+  // Optional surface textures for the table. "none" falls back to the plain
+  // felt colour above; the others are procedural (no images, keeps it 1 file).
+  // Each `css` is a full CSS `background` value applied to the page.
+  const TEXTURE_THEMES = {
+    none:   { name: "None" },
+    grass:  { name: "Grass",  css: "repeating-linear-gradient(91deg, rgba(0,0,0,0.12) 0 2px, rgba(0,0,0,0) 2px 5px), repeating-linear-gradient(89deg, rgba(255,255,255,0.07) 0 1px, rgba(255,255,255,0) 1px 6px), radial-gradient(circle at 50% 0%, #4a9140 0%, #2f6b2b 100%)" },
+    roots:  { name: "Roots",  css: "repeating-linear-gradient(90deg, rgba(0,0,0,0.14) 0 3px, rgba(0,0,0,0) 3px 10px), repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0 1px, rgba(255,255,255,0) 1px 8px), radial-gradient(ellipse at 35% 12%, #7d5636 0%, #553a24 100%)" },
+    cloth:  { name: "Felt",   css: "repeating-linear-gradient(45deg, rgba(0,0,0,0.06) 0 1px, rgba(0,0,0,0) 1px 3px), repeating-linear-gradient(-45deg, rgba(0,0,0,0.06) 0 1px, rgba(0,0,0,0) 1px 3px), radial-gradient(circle at 50% 0%, #2e7d4f 0%, #245f3c 100%)" },
+    carpet: { name: "Carpet", css: "repeating-linear-gradient(45deg, rgba(255,255,255,0.06) 0 7px, rgba(255,255,255,0) 7px 14px), repeating-linear-gradient(-45deg, rgba(255,255,255,0.06) 0 7px, rgba(255,255,255,0) 7px 14px), radial-gradient(circle at 50% 0%, #6d2433 0%, #4c1824 100%)" }
+  };
+
+  // Card face rendering styles — these change the actual layout of the face,
+  // not just colours. "pips" draws traditional suit-pip arrangements + emoji
+  // court cards; "large" blows up the rank for low-vision players; "fourcolor"
+  // gives every suit its own colour.
+  const CARD_STYLES = {
+    classic:   "Classic",
+    pips:      "Pips",
+    large:     "Large print",
+    fourcolor: "Four-color"
+  };
+  // Deck/waste side (handedness) and tableau stacking direction.
+  const HAND_MODES = { right: "Right", left: "Left" };
+  const STACK_MODES = { "down": "Down", "side-lr": "Side →", "side-rl": "Side ←" };
+  // Traditional pip positions (x,y as fractions); pips below the midline are
+  // drawn upside-down, as on a real deck.
+  const PIP_LAYOUT = {
+    2:  [[0.5,0.16],[0.5,0.84]],
+    3:  [[0.5,0.16],[0.5,0.5],[0.5,0.84]],
+    4:  [[0.3,0.16],[0.7,0.16],[0.3,0.84],[0.7,0.84]],
+    5:  [[0.3,0.16],[0.7,0.16],[0.5,0.5],[0.3,0.84],[0.7,0.84]],
+    6:  [[0.3,0.16],[0.7,0.16],[0.3,0.5],[0.7,0.5],[0.3,0.84],[0.7,0.84]],
+    7:  [[0.3,0.16],[0.7,0.16],[0.5,0.33],[0.3,0.5],[0.7,0.5],[0.3,0.84],[0.7,0.84]],
+    8:  [[0.3,0.16],[0.7,0.16],[0.5,0.33],[0.3,0.5],[0.7,0.5],[0.5,0.67],[0.3,0.84],[0.7,0.84]],
+    9:  [[0.3,0.14],[0.7,0.14],[0.3,0.38],[0.7,0.38],[0.5,0.5],[0.3,0.62],[0.7,0.62],[0.3,0.86],[0.7,0.86]],
+    10: [[0.3,0.14],[0.7,0.14],[0.5,0.26],[0.3,0.38],[0.7,0.38],[0.3,0.62],[0.7,0.62],[0.5,0.74],[0.3,0.86],[0.7,0.86]]
+  };
+
+  let feltTheme = FELT_THEMES[localStorage.getItem("solitaire_felt")] ? localStorage.getItem("solitaire_felt") : "emerald";
+  let backTheme = BACK_THEMES[localStorage.getItem("solitaire_back")] ? localStorage.getItem("solitaire_back") : "classic";
+  let cardStyle = CARD_STYLES[localStorage.getItem("solitaire_style")] ? localStorage.getItem("solitaire_style") : "classic";
+  let textureTheme = TEXTURE_THEMES[localStorage.getItem("solitaire_texture")] ? localStorage.getItem("solitaire_texture") : "none";
+  let handed = HAND_MODES[localStorage.getItem("solitaire_handed")] ? localStorage.getItem("solitaire_handed") : "right";
+  let stackMode = STACK_MODES[localStorage.getItem("solitaire_stack")] ? localStorage.getItem("solitaire_stack") : "down";
+  // Card-size multiplier (1.0 = auto-fit; larger = bigger cards for visibility).
+  let sizeScale = Math.min(2.2, Math.max(1, parseFloat(localStorage.getItem("solitaire_size") || "1") || 1));
+
+  // ---- State -----------------------------------------------------------
+  let state = null;
+  let drawMode = parseInt(localStorage.getItem("solitaire_draw") || "1", 10);
+  let selection = null; // {pile:"tableau", key:idx, index:cardIndex}
+  let history = [];     // for undo
+  let timerId = null;
+
+  // Tutorial / guided learning state
+  let isTutorial = false;
+  let tutorialStep = 0;
+
+  let autoFinishing = false;
+
+  // ---- DOM -------------------------------------------------------------
+  const topRow = document.getElementById("topRow");
+  const tableauRow = document.getElementById("tableauRow");
+  const dragLayer = document.getElementById("drag-layer");
+  const overlay = document.getElementById("overlay");
+  const menu = document.getElementById("menu");
+
+  // ---- Helpers ---------------------------------------------------------
+  function makeDeck() {
+    const d = [];
+    for (const s of SUITS) for (let r = 1; r <= 13; r++) d.push({ s, r, up: false });
+    return d;
+  }
+  function shuffle(a) {
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+  function isRed(c) { return RED[c.s]; }
+  function suitColor(c) {
+    if (cardStyle === "fourcolor") {
+      return { S: "#1a1a1a", C: "#1f8a3b", H: "#d11d2e", D: "#1565d8" }[c.s];
+    }
+    return isRed(c) ? "#d11d2e" : "#1a1a1a";
+  }
+
+  function makeTutorialDeck() {
+    // Build a deterministic, beginner-friendly deal with obvious moves.
+    // Good face-up cards for building down alternating colours + early aces + king.
+    let pool = makeDeck().slice();
+    const result = new Array(52);
+
+    function placeAt(pos, s, r) {
+      const idx = pool.findIndex(c => c.s === s && c.r === r);
+      if (idx !== -1) {
+        result[pos] = pool.splice(idx, 1)[0];
+      }
+    }
+
+    // Face-up positions in the deal (last card of each tableau column)
+    // Create a nice descending alternate colour chain for the player to practice moving.
+    placeAt(0, "C", 8);  // black 8  (col 0)
+    placeAt(2, "H", 7);  // red 7 on black 8
+    placeAt(5, "S", 6);  // black 6 on red 7
+    placeAt(9, "D", 5);  // red 5 on black 6
+    placeAt(14, "C", 4);
+    placeAt(20, "H", 3);
+    placeAt(27, "S", 2); // end of chain
+
+    // Early stock cards so the learner quickly sees aces and foundations
+    placeAt(28, "H", 1); // Ace of hearts - great for first foundation lesson
+    placeAt(29, "D", 1); // second ace
+    placeAt(30, "C", 13); // King of clubs - useful for empty columns
+
+    // Fill remaining spots with whatever is left (deterministic order)
+    let p = 0;
+    for (let i = 0; i < 52; i++) {
+      if (!result[i]) {
+        result[i] = pool[p++];
+      }
+    }
+
+    // All start face down; the dealer will flip the tops
+    result.forEach(c => { c.up = false; });
+    return result;
+  }
+
+  function newGame(deck) {
+    if (isTutorial) {
+      isTutorial = false;
+      hideTutorialBar();
+    }
+    autoFinishing = false;
+    const d = deck || shuffle(makeDeck());
+    const tableau = [[],[],[],[],[],[],[]];
+    let k = 0;
+    for (let col = 0; col < 7; col++) {
+      for (let n = 0; n <= col; n++) {
+        const card = d[k++];
+        card.up = (n === col);
+        tableau[col].push(card);
+      }
+    }
+    const stock = d.slice(k).map(c => (c.up = false, c));
+    state = {
+      stock,
+      waste: [],
+      foundations: { S: [], H: [], D: [], C: [] },
+      tableau,
+      moves: 0,
+      seconds: 0,
+      started: false,
+      seed: d.map(c => c.s + c.r) // for "restart this deal"
+    };
+    selection = null;
+    history = [];
+    stopTimer();
+    save();
+    render();
+  }
+
+  function restartDeal() {
+    if (!state || !state.seed) return;
+    // rebuild deck in original dealt order
+    const map = {};
+    for (const s of SUITS) for (let r = 1; r <= 13; r++) map[s + r] = { s, r, up: false };
+    const deck = state.seed.map(id => map[id]);
+    newGame(deck);
+  }
+
+  // ---- Undo ------------------------------------------------------------
+  function snapshot() {
+    history.push(JSON.stringify({
+      stock: state.stock, waste: state.waste,
+      foundations: state.foundations, tableau: state.tableau,
+      moves: state.moves
+    }));
+    if (history.length > 200) history.shift();
+  }
+  function undo() {
+    if (!history.length) return;
+    const s = JSON.parse(history.pop());
+    state.stock = s.stock; state.waste = s.waste;
+    state.foundations = s.foundations; state.tableau = s.tableau;
+    state.moves = s.moves;
+    selection = null;
+    save();
+    render();
+  }
+
+  // ---- Move validation -------------------------------------------------
+  function canPlaceOnTableau(card, destTopCard) {
+    if (!destTopCard) return card.r === 13;       // empty column -> King only
+    return destTopCard.up && (isRed(card) !== isRed(destTopCard)) && destTopCard.r === card.r + 1;
+  }
+  function canPlaceOnFoundation(card, suit) {
+    if (card.s !== suit) return false;
+    const f = state.foundations[suit];
+    if (f.length === 0) return card.r === 1;
+    return card.r === f[f.length - 1].r + 1;
+  }
+  // Is the run starting at index a valid movable sequence (all up, desc, alt color)?
+  function validRun(pile, index) {
+    for (let i = index; i < pile.length; i++) {
+      if (!pile[i].up) return false;
+      if (i > index) {
+        const prev = pile[i - 1], cur = pile[i];
+        if (!(isRed(prev) !== isRed(cur) && prev.r === cur.r + 1)) return false;
+      }
+    }
+    return true;
+  }
+
+  // ---- Mutations -------------------------------------------------------
+  function startTimerIfNeeded() {
+    if (state.started) return;
+    state.started = true;
+    timerId = setInterval(() => { state.seconds++; updateStatus(); }, 1000);
+  }
+  function stopTimer() { if (timerId) { clearInterval(timerId); timerId = null; } }
+
+  function flipTableauTops() {
+    for (const col of state.tableau) {
+      const top = col[col.length - 1];
+      if (top && !top.up) top.up = true;
+    }
+  }
+
+  function drawFromStock() {
+    snapshot();
+    startTimerIfNeeded();
+    if (state.stock.length === 0) {
+      // recycle waste back to stock
+      if (state.waste.length === 0) { history.pop(); return; }
+      state.stock = state.waste.reverse().map(c => (c.up = false, c));
+      state.waste = [];
+    } else {
+      const n = Math.min(drawMode, state.stock.length);
+      for (let i = 0; i < n; i++) {
+        const c = state.stock.pop();
+        c.up = true;
+        state.waste.push(c);
+      }
+    }
+    state.moves++;
+    afterMove();
+  }
+
+  // Move a run of cards from a source onto a destination pile.
+  function doMove(src, dst) {
+    snapshot();
+    startTimerIfNeeded();
+    let cards;
+    if (src.pile === "waste") cards = [state.waste.pop()];
+    else if (src.pile === "foundation") cards = [state.foundations[src.key].pop()];
+    else cards = state.tableau[src.key].splice(src.index);
+
+    if (dst.pile === "foundation") state.foundations[dst.key].push(cards[0]);
+    else state.tableau[dst.key].push(...cards);
+
+    flipTableauTops();
+    state.moves++;
+    selection = null;
+    afterMove();
+  }
+
+  function afterMove() {
+    save();
+    render();
+    if (isTutorial && !autoFinishing) {
+      tutorialStep = Math.min(tutorialStep + 1, 6);
+      updateTutorialMessage();
+      setTimeout(() => showHint(), 180);
+    }
+    if (isWon()) onWin();
+  }
+
+  function isWon() {
+    return SUITS.every(s => state.foundations[s].length === 13);
+  }
+
+  // Try to auto-move a card to any foundation. Returns true if moved.
+  function tryFoundation(src) {
+    let card;
+    if (src.pile === "waste") card = state.waste[state.waste.length - 1];
+    else if (src.pile === "tableau") {
+      const col = state.tableau[src.key];
+      if (src.index !== col.length - 1) return false; // only top card
+      card = col[col.length - 1];
+    } else return false;
+    if (!card) return false;
+    if (canPlaceOnFoundation(card, card.s)) {
+      doMove(src, { pile: "foundation", key: card.s });
+      return true;
+    }
+    return false;
+  }
+
+  // Find first legal destination for a run (used by tap-to-move & hints).
+  function findDestination(src) {
+    let runCards;
+    if (src.pile === "waste") runCards = [state.waste[state.waste.length - 1]];
+    else runCards = state.tableau[src.key].slice(src.index);
+    const lead = runCards[0];
+    if (!lead) return null;
+
+    // Single card -> foundation first
+    if (runCards.length === 1 && canPlaceOnFoundation(lead, lead.s)) {
+      return { pile: "foundation", key: lead.s };
+    }
+    // Tableau columns
+    for (let i = 0; i < 7; i++) {
+      if (src.pile === "tableau" && src.key === i) continue;
+      const col = state.tableau[i];
+      const top = col[col.length - 1];
+      if (canPlaceOnTableau(lead, top)) {
+        // avoid pointless empty-to-empty king shuffle from a column where it's already alone
+        if (src.pile === "tableau" && src.index === 0 && col.length === 0) continue;
+        return { pile: "tableau", key: i };
+      }
+    }
+    return null;
+  }
+
+  function flashInvalid(src) {
+    try {
+      const els = getRunElements(src);
+      els.forEach(el => {
+        el.classList.add("shake");
+        setTimeout(() => el.classList.remove("shake"), 320);
+      });
+    } catch (e) {}
+  }
+
+  // Auto-finish is only safe (guaranteed to win) when every remaining card is
+  // already face-up in the tableau: nothing face-down, stock and waste empty.
+  // In that state the lowest unplayed card is always a column top, so greedily
+  // sending tops home always completes. With face-down cards present, greedy
+  // foundation moves can strand the deal, so we don't offer it.
+  function canAutoFinish() {
+    if (!state) return false;
+    if (state.stock.length || state.waste.length) return false;
+    return state.tableau.every(col => col.every(c => c.up));
+  }
+
+  function updateMenuState() {
+    const opt = document.getElementById("autoOpt");
+    const note = document.getElementById("autoNote");
+    if (!opt) return;
+    const ready = canAutoFinish();
+    opt.classList.toggle("disabled", !ready);
+    if (note) note.textContent = ready ? "Ready" : "";
+  }
+
+  function autoFinish() {
+    if (!state || !canAutoFinish()) return;
+    autoFinishing = true;
+    let guard = 0;
+    function step() {
+      if (guard > 300) {
+        autoFinishing = false;
+        return;
+      }
+      guard++;
+      let didMove = false;
+
+      // Waste top to foundation if possible
+      if (state.waste.length) {
+        const c = state.waste[state.waste.length - 1];
+        if (canPlaceOnFoundation(c, c.s)) {
+          doMove({ pile: "waste" }, { pile: "foundation", key: c.s });
+          didMove = true;
+        }
+      }
+
+      // Tableau tops to their foundations (multiple small passes to catch newly exposed cards faster)
+      for (let pass = 0; pass < 3; pass++) {
+        for (let i = 0; i < 7; i++) {
+          const col = state.tableau[i];
+          if (!col.length) continue;
+          const c = col[col.length - 1];
+          if (c && c.up && canPlaceOnFoundation(c, c.s)) {
+            doMove({ pile: "tableau", key: i, index: col.length - 1 }, { pile: "foundation", key: c.s });
+            didMove = true;
+          }
+        }
+      }
+
+      if (didMove) {
+        setTimeout(step, 100);
+      } else {
+        autoFinishing = false;
+        // Nothing left that can auto-go home. Give the player a helpful hint instead of doing nothing.
+        setTimeout(showHint, 80);
+      }
+    }
+    step();
+  }
+
+  // ---- Rendering -------------------------------------------------------
+  function corners(rank, sc) {
+    return '<div class="corner tl"><span class="rk">' + rank + '</span><span class="st">' + sc + '</span></div>' +
+           '<div class="corner br"><span class="rk">' + rank + '</span><span class="st">' + sc + '</span></div>';
+  }
+
+  // Hand-drawn, double-headed court cards (King / Queen / Jack), recoloured to
+  // the card's suit colour. The top figure is mirrored to the bottom half, the
+  function courtFigure(rank, color) {
+    const skin = "#f3cab3";
+    const gold = "#f1c40f", goldDark = "#d68910";
+    const white = "#fdfefe"; const gray = "#bdc3c7";
+    const black = "#1a1a1a";
+    const hairColor = "#854d0e"; // rich brown
+
+    // Determine accent colors dynamically:
+    // Red cards get blue accents; Black/Green/Blue cards get red accents.
+    const isRedSuit = (color === "#d11d2e" || color === "#1565d8");
+    const accent = isRedSuit ? "#1f4d97" : "#d11d2e";
+
+    if (rank === 13) { // King
+      return '<!-- King Robe with curved shoulders -->' +
+        '<path d="M20,68 C22,54 25,46 32,46 L68,46 C75,46 78,54 80,68 Z" fill="' + color + '" stroke="' + black + '" stroke-width="0.8"/>' +
+        '<!-- Robe Accent Trim -->' +
+        '<path d="M20,68 C22,54 25,46 32,46 L37,46 C32,46 29,55 26,68 Z M80,68 C78,54 75,46 68,46 L63,46 C68,46 71,54 74,68 Z" fill="' + accent + '" stroke="' + black + '" stroke-width="0.5"/>' +
+        '<path d="M44,46 L44,68 L56,68 L56,46 Z" fill="' + accent + '" opacity="0.15"/>' +
+        '<!-- Ermine Collar -->' +
+        '<path d="M32,46 C35,55 42,60 50,60 C58,60 65,55 68,46 C58,50 42,50 32,46 Z" fill="' + white + '" stroke="' + black + '" stroke-width="0.8"/>' +
+        '<!-- Ermine spots -->' +
+        '<path d="M41,51 L41,54 M40,51 L42,51 M49,53 L49,56 M48,53 L50,53 M57,51 L57,54 M56,51 L58,51" stroke="' + black + '" stroke-width="0.8" stroke-linecap="round"/>' +
+        '<!-- Sword held in hand -->' +
+        '<!-- Blade -->' +
+        '<path d="M22,50 L22,23 L25,18 L28,23 L28,50 Z" fill="' + white + '" stroke="' + black + '" stroke-width="0.8"/>' +
+        '<!-- Guard -->' +
+        '<rect x="18" y="50" width="14" height="3" rx="0.5" fill="' + gold + '" stroke="' + black + '" stroke-width="0.8"/>' +
+        '<!-- Hilt -->' +
+        '<rect x="23" y="53" width="4" height="6" fill="' + goldDark + '" stroke="' + black + '" stroke-width="0.6"/>' +
+        '<circle cx="25" cy="60" r="1.5" fill="' + gold + '" stroke="' + black + '" stroke-width="0.5"/>' +
+        '<!-- Hand fist -->' +
+        '<path d="M23,53 C21,53 19,55 19,58 C19,61 22,63 25,63 C28,63 30,61 30,58 Z" fill="' + skin + '" stroke="' + black + '" stroke-width="0.8"/>' +
+        '<!-- Face skin and neck -->' +
+        '<rect x="46" y="44" width="8" height="8" fill="' + skin + '"/>' +
+        '<path d="M38,32 C38,25 62,25 62,32 C62,38 59,45 50,47 C41,45 38,38 38,32 Z" fill="' + skin + '" stroke="' + black + '" stroke-width="0.8"/>' +
+        '<!-- King Hair (curly locks) -->' +
+        '<path d="M38,26 C34,30 33,39 37,45 C38,45 39,41 38,35 C40,29 39,26 38,26 Z M62,26 C66,30 67,39 63,45 C62,45 61,41 62,35 C60,29 61,26 62,26 Z" fill="' + hairColor + '" stroke="' + black + '" stroke-width="0.8"/>' +
+        '<!-- Eyes -->' +
+        '<path d="M43,32 Q45.5,30 48,32" stroke="' + black + '" stroke-width="1.2" fill="none"/>' +
+        '<circle cx="45.5" cy="33.5" r="0.8" fill="' + black + '"/>' +
+        '<path d="M57,32 Q54.5,30 52,32" stroke="' + black + '" stroke-width="1.2" fill="none"/>' +
+        '<circle cx="54.5" cy="33.5" r="0.8" fill="' + black + '"/>' +
+        '<!-- Eyebrows -->' +
+        '<path d="M42,30 Q45.5,28 48,30" stroke="' + black + '" stroke-width="0.8" fill="none"/>' +
+        '<path d="M58,30 Q54.5,28 52,30" stroke="' + black + '" stroke-width="0.8" fill="none"/>' +
+        '<!-- Nose -->' +
+        '<path d="M50,28 L50,35 L48,36" stroke="' + black + '" stroke-width="0.8" fill="none" stroke-linecap="round"/>' +
+        '<!-- Beard and Mustache -->' +
+        '<path d="M39,37 C39,48 44,54 50,54 C56,54 61,48 61,37 C59,40 41,40 39,37 Z" fill="' + white + '" stroke="' + black + '" stroke-width="0.8"/>' +
+        '<!-- Beard texture lines -->' +
+        '<path d="M43,43 C45,48 48,51 50,51 C52,51 55,48 57,43" stroke="' + gray + '" stroke-width="0.8" fill="none"/>' +
+        '<path d="M46,47 C48,50 52,50 54,47" stroke="' + gray + '" stroke-width="0.8" fill="none"/>' +
+        '<!-- Mustache -->' +
+        '<path d="M43,38 C45,42 49,42 50,40 C51,42 55,42 57,38 C53,38 47,38 43,38 Z" fill="' + white + '" stroke="' + black + '" stroke-width="0.7"/>' +
+        '<!-- Mouth -->' +
+        '<path d="M47,42 Q50,44 53,42" stroke="' + black + '" stroke-width="0.6" fill="none"/>' +
+        '<!-- Crown base and velvet cap inside -->' +
+        '<path d="M37,20 C37,14 44,14 50,14 C56,14 63,14 63,20 Z" fill="' + accent + '" stroke="' + black + '" stroke-width="0.6"/>' +
+        '<!-- Crown gold arches -->' +
+        '<rect x="35" y="20" width="30" height="4" rx="1" fill="' + gold + '" stroke="' + black + '" stroke-width="0.8"/>' +
+        '<!-- Jewels on band -->' +
+        '<circle cx="40" cy="22" r="0.8" fill="' + accent + '"/>' +
+        '<circle cx="50" cy="22" r="0.8" fill="' + color + '"/>' +
+        '<circle cx="60" cy="22" r="0.8" fill="' + accent + '"/>' +
+        '<!-- Points -->' +
+        '<path d="M35,20 L37,10 L44,16 L50,8 L56,16 L63,10 L65,20 Z" fill="' + gold + '" stroke="' + black + '" stroke-width="0.8" stroke-linejoin="round"/>' +
+        '<circle cx="37" cy="10" r="1.2" fill="' + white + '" stroke="' + black + '" stroke-width="0.4"/>' +
+        '<circle cx="50" cy="8" r="1.5" fill="' + white + '" stroke="' + black + '" stroke-width="0.4"/>' +
+        '<circle cx="63" cy="10" r="1.2" fill="' + white + '" stroke="' + black + '" stroke-width="0.4"/>' +
+        '<!-- Cross on top of peak -->' +
+        '<path d="M49,6 L51,6 M50,5 L50,8" stroke="' + black + '" stroke-width="0.8"/>';
+    }
+    if (rank === 12) { // Queen
+      return '<!-- Queen Robe with curved shoulders -->' +
+        '<path d="M22,68 C24,55 27,46 35,46 L65,46 C73,46 76,55 78,68 Z" fill="' + color + '" stroke="' + black + '" stroke-width="0.8"/>' +
+        '<!-- Robe Accent Trim -->' +
+        '<path d="M22,68 C24,55 27,46 35,46 L39,46 C33,46 30,55 28,68 Z M78,68 C76,55 73,46 65,46 L61,46 C67,46 70,55 72,68 Z" fill="' + accent + '" stroke="' + black + '" stroke-width="0.5"/>' +
+        '<!-- V-neck collar -->' +
+        '<path d="M38,46 L50,60 L62,46" fill="' + white + '" stroke="' + black + '" stroke-width="0.8"/>' +
+        '<!-- Lace pattern on collar -->' +
+        '<path d="M40,46 Q42,49 44,46 Q46,49 48,46 Q50,49 52,46 Q54,49 56,46 Q58,49 60,46" stroke="' + goldDark + '" stroke-width="0.6" fill="none"/>' +
+        '<!-- Necklace with a gemstone -->' +
+        '<path d="M43,49 C45,52 55,52 57,49" stroke="' + gold + '" stroke-width="0.8" fill="none"/>' +
+        '<circle cx="50" cy="52" r="2" fill="' + accent + '" stroke="' + black + '" stroke-width="0.6"/>' +
+        '<!-- Veil falling behind shoulders -->' +
+        '<path d="M34,26 C26,34 24,48 28,64 L32,64 C29,48 30,36 35,26 Z M66,26 C74,34 76,48 72,64 L68,64 C71,48 70,36 65,26 Z" fill="' + white + '" opacity="0.75" stroke="' + black + '" stroke-width="0.6"/>' +
+        '<!-- Hand holding a Flower -->' +
+        '<!-- Hand -->' +
+        '<path d="M27,54 C25,54 23,56 23,59 C23,62 26,64 29,64 C32,64 34,62 34,59 Z" fill="' + skin + '" stroke="' + black + '" stroke-width="0.8"/>' +
+        '<!-- Flower Stem -->' +
+        '<path d="M27,59 C27,53 23,46 23,40" stroke="#27ae60" stroke-width="1.2" fill="none" stroke-linecap="round"/>' +
+        '<path d="M25,50 C22,48 21,51 25,50 Z" fill="#27ae60" stroke="' + black + '" stroke-width="0.5"/>' +
+        '<!-- Flower Bud (Rose/Tulip shape) -->' +
+        '<path d="M23,40 C20,38 20,33 23,33 C26,33 26,38 23,40 Z" fill="' + accent + '" stroke="' + black + '" stroke-width="0.8"/>' +
+        '<path d="M23,33 L23,40" stroke="' + black + '" stroke-width="0.5" opacity="0.5"/>' +
+        '<!-- Face and Neck -->' +
+        '<rect x="47" y="42" width="6" height="8" fill="' + skin + '"/>' +
+        '<path d="M40,32 C40,25 60,25 60,32 C60,38 57,44 50,45 C43,44 40,38 40,32 Z" fill="' + skin + '" stroke="' + black + '" stroke-width="0.8"/>' +
+        '<!-- Queen Hair (elegant wavy lock framing face) -->' +
+        '<path d="M40,28 C36,32 36,40 41,44 C42,44 43,40 42,34 C44,29 42,28 40,28 Z M60,28 C64,32 64,40 59,44 C58,44 57,40 58,34 C56,29 58,28 60,28 Z" fill="' + hairColor + '" stroke="' + black + '" stroke-width="0.8"/>' +
+        '<!-- Eyes -->' +
+        '<path d="M43,32 Q45.5,30.5 48,32" stroke="' + black + '" stroke-width="0.8" fill="none"/>' +
+        '<circle cx="45.5" cy="33.5" r="0.6" fill="' + black + '"/>' +
+        '<path d="M57,32 Q54.5,30.5 52,32" stroke="' + black + '" stroke-width="0.8" fill="none"/>' +
+        '<circle cx="54.5" cy="33.5" r="0.6" fill="' + black + '"/>' +
+        '<!-- Eyebrows -->' +
+        '<path d="M42,31 Q45,29 48,31" stroke="' + black + '" stroke-width="0.5" fill="none"/>' +
+        '<path d="M58,31 Q55,29 52,31" stroke="' + black + '" stroke-width="0.5" fill="none"/>' +
+        '<!-- Nose -->' +
+        '<path d="M50,30 L50,35 L49,36" stroke="' + black + '" stroke-width="0.6" fill="none" stroke-linecap="round"/>' +
+        '<!-- Red Lips -->' +
+        '<path d="M47,39 C48,41 52,41 53,39 C51,38 49,38 47,39 Z" fill="' + accent + '" stroke="' + black + '" stroke-width="0.5"/>' +
+        '<path d="M47,39 L53,39" stroke="' + black + '" stroke-width="0.4"/>' +
+        '<!-- Tiara/Crown -->' +
+        '<rect x="38" y="22" width="24" height="4" rx="1" fill="' + gold + '" stroke="' + black + '" stroke-width="0.8"/>' +
+        '<path d="M38,22 L40,14 L45,19 L50,11 L55,19 L60,14 L62,22 Z" fill="' + gold + '" stroke="' + black + '" stroke-width="0.8" stroke-linejoin="round"/>' +
+        '<circle cx="40" cy="14" r="1.2" fill="' + white + '" stroke="' + black + '" stroke-width="0.4"/>' +
+        '<circle cx="50" cy="11" r="1.5" fill="' + accent + '" stroke="' + black + '" stroke-width="0.4"/>' +
+        '<circle cx="60" cy="14" r="1.2" fill="' + white + '" stroke="' + black + '" stroke-width="0.4"/>';
+    }
+    // Jack (Rank 11)
+    return '<!-- Jack Robe with curved shoulders -->' +
+      '<path d="M22,68 C24,55 27,46 32,46 L68,46 C75,46 78,54 80,68 Z" fill="' + color + '" stroke="' + black + '" stroke-width="0.8"/>' +
+      '<!-- Robe Accent Trim -->' +
+      '<path d="M22,68 C24,55 27,46 32,46 L37,46 C32,46 29,55 27,68 Z M78,68 C76,55 73,46 68,46 L63,46 C68,46 71,55 73,68 Z" fill="' + accent + '" stroke="' + black + '" stroke-width="0.5"/>' +
+      '<!-- Doublet Collar -->' +
+      '<path d="M32,46 L40,55 L50,46 L60,55 L68,46" fill="' + white + '" stroke="' + black + '" stroke-width="0.8"/>' +
+      '<!-- Gold Buttons -->' +
+      '<circle cx="50" cy="52" r="1.5" fill="' + gold + '" stroke="' + black + '" stroke-width="0.5"/>' +
+      '<circle cx="50" cy="58" r="1.5" fill="' + gold + '" stroke="' + black + '" stroke-width="0.5"/>' +
+      '<circle cx="50" cy="64" r="1.5" fill="' + gold + '" stroke="' + black + '" stroke-width="0.5"/>' +
+      '<!-- Halberd held by Jack -->' +
+      '<!-- Pole -->' +
+      '<path d="M20,68 L20,12" stroke="' + gray + '" stroke-width="1.8" stroke-linecap="round"/>' +
+      '<!-- Spearhead -->' +
+      '<path d="M17,12 L20,5 L23,12 L20,14 Z" fill="' + white + '" stroke="' + black + '" stroke-width="0.8"/>' +
+      '<!-- Axe Blade -->' +
+      '<path d="M20,14 C22,14 25,15 25,17 C25,20 22,21 20,20 Z" fill="' + white + '" stroke="' + black + '" stroke-width="0.8"/>' +
+      '<!-- Beak -->' +
+      '<path d="M20,14 L15,16 L15,19 L20,18 Z" fill="' + white + '" stroke="' + black + '" stroke-width="0.8"/>' +
+      '<!-- Hand holding pole -->' +
+      '<path d="M18,54 C16,54 14,56 14,59 C14,62 17,64 20,64 C23,64 25,62 25,59 Z" fill="' + skin + '" stroke="' + black + '" stroke-width="0.8"/>' +
+      '<!-- Face and Neck -->' +
+      '<rect x="46" y="44" width="8" height="8" fill="' + skin + '"/>' +
+      '<path d="M40,32 C40,25 60,25 60,32 C60,38 57,44 50,45 C43,44 40,38 40,32 Z" fill="' + skin + '" stroke="' + black + '" stroke-width="0.8"/>' +
+      '<!-- Hair (bob cut style) -->' +
+      '<path d="M41,29 C34,33 34,42 42,45 C43,38 44,32 42,29 Z M59,29 C66,33 66,42 58,45 C57,38 56,32 58,29 Z" fill="#d35400" stroke="' + black + '" stroke-width="0.8"/>' +
+      '<!-- Eyes -->' +
+      '<path d="M43,32 Q45.5,30.5 48,32" stroke="' + black + '" stroke-width="0.8" fill="none"/>' +
+      '<circle cx="45.5" cy="33.5" r="0.6" fill="' + black + '"/>' +
+      '<path d="M57,32 Q54.5,30.5 52,32" stroke="' + black + '" stroke-width="0.8" fill="none"/>' +
+      '<circle cx="54.5" cy="33.5" r="0.6" fill="' + black + '"/>' +
+      '<!-- Eyebrows -->' +
+      '<path d="M43,31 Q45,29 48,31" stroke="' + black + '" stroke-width="0.5" fill="none"/>' +
+      '<path d="M57,31 Q55,29 52,31" stroke="' + black + '" stroke-width="0.5" fill="none"/>' +
+      '<!-- Nose -->' +
+      '<path d="M50,30 L50,35 L48,36" stroke="' + black + '" stroke-width="0.8" fill="none" stroke-linecap="round"/>' +
+      '<!-- Mouth -->' +
+      '<path d="M47,40 Q50,42 53,40" stroke="' + black + '" stroke-width="0.6" fill="none"/>' +
+      '<!-- Cap and feather -->' +
+      '<path d="M36,28 C36,22 64,22 64,28 C64,30 36,30 36,28 Z" fill="' + accent + '" stroke="' + black + '" stroke-width="0.8"/>' +
+      '<path d="M37,28 L63,28" stroke="' + gold + '" stroke-width="2" stroke-linecap="round"/>' +
+      '<!-- Badge on cap -->' +
+      '<circle cx="44" cy="27" r="2.5" fill="' + goldDark + '" stroke="' + black + '" stroke-width="0.5"/>' +
+      '<circle cx="44" cy="27" r="1" fill="' + accent + '"/>' +
+      '<!-- Feather -->' +
+      '<path d="M58,24 C64,16 72,10 78,6 C70,12 64,18 58,24 Z" fill="' + white + '" stroke="' + black + '" stroke-width="0.6"/>';
+  }
+  function courtSVG(rank, color) {
+    const fig = courtFigure(rank, color);
+    return '<svg class="court-art" viewBox="0 0 100 140" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">' +
+      '<rect x="4" y="4" width="92" height="132" rx="8" fill="none" stroke="' + color + '" stroke-width="1.4" opacity="0.45"/>' +
+      '<g>' + fig + '</g>' +
+      '<g transform="rotate(180 50 70)">' + fig + '</g>' +
+      '<line x1="7" y1="70" x2="93" y2="70" stroke="' + color + '" stroke-width="0.8" opacity="0.4"/>' +
+      '</svg>';
+  }
+
+  function faceHTML(card, rank, sc) {
+    if (cardStyle === "large") {
+      // Oversized central rank for low-vision players; suit only in one corner.
+      return '<div class="corner tl"><span class="rk">' + rank + '</span><span class="st">' + sc + '</span></div>' +
+             '<div class="big-rank">' + rank + '</div>';
+    }
+    if (cardStyle === "pips" || cardStyle === "classic" || cardStyle === "fourcolor") {
+      const r = card.r;
+      if (r === 1) return corners(rank, sc) + '<div class="ace-pip">' + sc + '</div>';
+      if (r >= 11) {
+        if (cardStyle === "pips") {
+          return corners(rank, sc) + courtSVG(r, suitColor(card));
+        }
+        return corners(rank, sc) + '<div class="center">' + sc + '</div>';
+      }
+      const pts = PIP_LAYOUT[r] || [];
+      const pips = pts.map(function (p) {
+        return '<span class="pip' + (p[1] > 0.5 ? ' inv' : '') +
+               '" style="left:' + (p[0] * 100) + '%;top:' + (p[1] * 100) + '%">' + sc + '</span>';
+      }).join('');
+      return corners(rank, sc) + '<div class="pips-area">' + pips + '</div>';
+    }
+    // fallback
+    return corners(rank, sc) + '<div class="center">' + sc + '</div>';
+  }
+
+  function cardEl(card, faceOverride) {
+    const el = document.createElement("div");
+    const up = faceOverride !== undefined ? faceOverride : card.up;
+    el.className = "card " + (up ? "faceup " : "facedown ") + "style-" + cardStyle;
+    if (up) {
+      const rank = RANKS[card.r - 1];
+      const sc = SUIT_CHAR[card.s];
+      el.style.color = suitColor(card);
+      el.innerHTML = faceHTML(card, rank, sc);
+    }
+    return el;
+  }
+
+  function render() {
+    topRow.innerHTML = "";
+    tableauRow.innerHTML = "";
+
+    // Top row: foundations on one side, waste + stock (deck) on the other,
+    // a spacer between. Order flips with handedness so the deck sits under the
+    // player's dominant hand (less reaching across the board).
+
+    // --- Foundations (4 home piles, as a group) ---
+    const foundationSlots = [];
+    for (const s of SUITS) {
+      const slot = document.createElement("div");
+      slot.className = "slot";
+      slot.dataset.pile = "foundation";
+      slot.dataset.key = s;
+      const f = state.foundations[s];
+      if (f.length) {
+        const c = cardEl(f[f.length - 1], true);
+        c.dataset.pile = "foundation";
+        c.dataset.key = s;
+        slot.appendChild(c);
+      } else {
+        const ph = document.createElement("div");
+        ph.className = "slot placeholder";
+        ph.innerHTML = '<div class="ghost-suit">' + SUIT_CHAR[s] + "</div>";
+        slot.appendChild(ph);
+      }
+      foundationSlots.push(slot);
+    }
+
+    // --- Spacer ---
+    const spacer = document.createElement("div");
+    spacer.className = "slot";
+
+    // --- Waste ---
+    const wasteSlot = document.createElement("div");
+    wasteSlot.className = "slot";
+    wasteSlot.dataset.pile = "waste";
+    const wlen = state.waste.length;
+    if (wlen) {
+      const top = state.waste[wlen - 1];
+      const c = cardEl(top, true);
+      c.dataset.pile = "waste";
+      if (selection && selection.pile === "waste") c.classList.add("selected");
+      wasteSlot.appendChild(c);
+    } else {
+      const ph = document.createElement("div");
+      ph.className = "slot placeholder";
+      wasteSlot.appendChild(ph);
+    }
+
+    // --- Stock (the deck) ---
+    const stockSlot = document.createElement("div");
+    stockSlot.className = "slot";
+    stockSlot.dataset.pile = "stock";
+    if (state.stock.length) {
+      const back = cardEl(state.stock[state.stock.length - 1], false);
+      stockSlot.appendChild(back);
+    } else {
+      const rec = document.createElement("div");
+      rec.className = "stock-recycle" + (state.waste.length ? "" : " empty-final");
+      rec.textContent = state.waste.length ? "↺" : "";
+      stockSlot.appendChild(rec);
+    }
+
+    if (handed === "left") {
+      // Deck/waste on the left, foundations on the right.
+      topRow.appendChild(stockSlot);
+      topRow.appendChild(wasteSlot);
+      topRow.appendChild(spacer);
+      foundationSlots.forEach(s => topRow.appendChild(s));
+    } else {
+      // Default right-handed: foundations left, deck/waste on the right.
+      foundationSlots.forEach(s => topRow.appendChild(s));
+      topRow.appendChild(spacer);
+      topRow.appendChild(wasteSlot);
+      topRow.appendChild(stockSlot);
+    }
+
+    // --- Tableau ---
+    // "down" = classic vertical fan (cards overlap downward).
+    // "side-lr"/"side-rl" = horizontal fan so even a tall, enlarged pile stays
+    // fully visible across its row, left-to-right or right-to-left.
+    const side = stackMode !== "down";
+    const rl = stackMode === "side-rl";
+    tableauRow.classList.toggle("side", side);
+    tableauRow.classList.toggle("lefthand", side && handed === "left");
+    const cwv = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--cw"));
+    const ch = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--ch"));
+    const upStep = side ? cwv * 0.36 : ch * 0.26;
+    const downStep = side ? cwv * 0.18 : ch * 0.13;
+    for (let i = 0; i < 7; i++) {
+      const col = document.createElement("div");
+      col.className = "col" + (side ? " side" : "");
+      col.dataset.pile = "tableau";
+      col.dataset.key = i;
+      const pile = state.tableau[i];
+      if (pile.length === 0) {
+        const ph = document.createElement("div");
+        ph.className = "slot placeholder";
+        col.appendChild(ph);
+      }
+      // Pre-compute each card's offset along the fan axis.
+      const offs = [];
+      let acc = 0;
+      for (let j = 0; j < pile.length; j++) {
+        offs.push(acc);
+        acc += pile[j].up ? upStep : downStep;
+      }
+      const maxOff = pile.length ? offs[pile.length - 1] : 0;
+      for (let j = 0; j < pile.length; j++) {
+        const card = pile[j];
+        const c = cardEl(card, card.up);
+        if (side) {
+          // right-to-left mirrors positions so the top card lands at the left.
+          c.style.left = (rl ? (maxOff - offs[j]) : offs[j]) + "px";
+          c.style.top = "0px";
+        } else {
+          c.style.top = offs[j] + "px";
+        }
+        c.dataset.pile = "tableau";
+        c.dataset.key = i;
+        c.dataset.index = j;
+        if (selection && selection.pile === "tableau" && selection.key === i && j >= selection.index) {
+          c.classList.add("selected");
+        }
+        col.appendChild(c);
+      }
+      if (side) {
+        col.style.width = (maxOff + cwv) + "px";
+        col.style.height = ch + "px";
+        col.style.minHeight = ch + "px";
+      } else {
+        col.style.minHeight = (acc + ch) + "px";
+      }
+      tableauRow.appendChild(col);
+    }
+
+    updateStatus();
+    updateMenuState();
+    document.getElementById("undoBtn").disabled = history.length === 0;
+  }
+
+  function updateStatus() {
+    const m = Math.floor(state.seconds / 60), s = state.seconds % 60;
+    document.getElementById("timer").textContent = m + ":" + (s < 10 ? "0" : "") + s;
+    document.getElementById("moves").textContent = state.moves + (state.moves === 1 ? " move" : " moves");
+    document.getElementById("drawVal").textContent = "Draw " + drawMode;
+  }
+
+  // ---- Themes & sizing controls ----------------------------------------
+  function applyFelt() {
+    const t = FELT_THEMES[feltTheme] || FELT_THEMES.emerald;
+    const root = document.documentElement.style;
+    root.setProperty("--felt", t.felt);
+    root.setProperty("--felt-dark", t.dark);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", t.felt);
+  }
+  function applyBack() {
+    const t = BACK_THEMES[backTheme] || BACK_THEMES.classic;
+    const root = document.documentElement.style;
+    root.setProperty("--back-a", t.a);
+    root.setProperty("--back-b", t.b);
+  }
+  function applyTexture() {
+    const t = TEXTURE_THEMES[textureTheme];
+    // "none" (or unknown) clears the inline override so the felt colour shows.
+    document.body.style.background = (t && t.css) ? t.css : "";
+  }
+  function buildSwatches() {
+    const fc = document.getElementById("feltSwatches");
+    const bc = document.getElementById("backSwatches");
+    const tc = document.getElementById("textureSwatches");
+    if (tc) {
+      tc.innerHTML = "";
+      for (const key in TEXTURE_THEMES) {
+        const t = TEXTURE_THEMES[key];
+        const sw = document.createElement("span");
+        sw.className = "swatch" + (key === textureTheme ? " active" : "");
+        // "None" previews the current felt colour; textures preview themselves.
+        sw.style.background = t.css || ("linear-gradient(135deg, " + (FELT_THEMES[feltTheme] || FELT_THEMES.emerald).felt + ", " + (FELT_THEMES[feltTheme] || FELT_THEMES.emerald).dark + ")");
+        sw.title = t.name;
+        sw.dataset.texture = key;
+        tc.appendChild(sw);
+      }
+    }
+    if (fc) {
+      fc.innerHTML = "";
+      for (const key in FELT_THEMES) {
+        const t = FELT_THEMES[key];
+        const sw = document.createElement("span");
+        sw.className = "swatch" + (key === feltTheme ? " active" : "");
+        sw.style.background = "linear-gradient(135deg, " + t.felt + ", " + t.dark + ")";
+        sw.title = t.name;
+        sw.dataset.felt = key;
+        fc.appendChild(sw);
+      }
+    }
+    if (bc) {
+      bc.innerHTML = "";
+      for (const key in BACK_THEMES) {
+        const t = BACK_THEMES[key];
+        const sw = document.createElement("span");
+        sw.className = "swatch" + (key === backTheme ? " active" : "");
+        sw.style.background = "repeating-linear-gradient(45deg, " + t.a + " 0 4px, " + t.b + " 4px 8px)";
+        sw.title = t.name;
+        sw.dataset.back = key;
+        bc.appendChild(sw);
+      }
+    }
+  }
+  // Generic labelled-chip picker (Card style, Hand, Stacking).
+  function buildChipRow(id, options, current, dataKey) {
+    const c = document.getElementById(id);
+    if (!c) return;
+    c.innerHTML = "";
+    for (const key in options) {
+      const chip = document.createElement("span");
+      chip.className = "stylechip" + (key === current ? " active" : "");
+      chip.textContent = options[key];
+      chip.dataset[dataKey] = key;
+      c.appendChild(chip);
+    }
+  }
+  function buildStyleChips() {
+    buildChipRow("styleChips", CARD_STYLES, cardStyle, "style");
+    buildChipRow("handChips", HAND_MODES, handed, "hand");
+    buildChipRow("stackChips", STACK_MODES, stackMode, "stack");
+  }
+  function applySize() {
+    const slider = document.getElementById("sizeSlider");
+    const val = document.getElementById("sizeVal");
+    const pct = Math.round(sizeScale * 100);
+    if (slider) slider.value = pct;
+    if (val) val.textContent = pct + "%";
+  }
+
+  // ---- Sizing ----------------------------------------------------------
+  function resize() {
+    const board = document.getElementById("board");
+    const styles = getComputedStyle(board);
+    const padL = parseFloat(styles.paddingLeft), padR = parseFloat(styles.paddingRight);
+    const padT = parseFloat(styles.paddingTop), padB = parseFloat(styles.paddingBottom);
+    const availW = board.clientWidth - padL - padR;
+    let fitCw;
+    if (stackMode === "down") {
+      // 7 columns + 6 gaps where gap = 0.14*cw  => avail = cw*(7 + 6*0.14)
+      fitCw = availW / (7 + 6 * 0.14);
+      fitCw = Math.max(38, Math.min(fitCw, 116));
+    } else {
+      // Side mode: fit the top row + 7 stacked tableau rows into the height,
+      // so all seven piles are visible at once; piles then fan across the width
+      // (board scrolls horizontally if a pile is longer than the screen).
+      const availH = board.clientHeight - padT - padB;
+      const ch = availH / 8.8;           // ≈ topRow(1) + 7 rows + gaps
+      fitCw = Math.min(ch / 1.4, availW / 3.4);
+      fitCw = Math.max(26, Math.min(fitCw, 116));
+    }
+    // sizeScale > 1 enlarges cards beyond the fit; the board then scrolls so
+    // every card stays reachable (better for low-vision / older players).
+    const cw = fitCw * sizeScale;
+    board.classList.toggle("scaled", sizeScale > 1.001 || stackMode !== "down");
+    const ch = cw * 1.4;
+    document.documentElement.style.setProperty("--cw", cw + "px");
+    document.documentElement.style.setProperty("--ch", ch + "px");
+    if (state) render();
+  }
+
+  // ---- Win -------------------------------------------------------------
+  function onWin() {
+    stopTimer();
+    if (isTutorial) {
+      isTutorial = false;
+      hideTutorialBar();
+    }
+    autoFinishing = false;
+    localStorage.removeItem(STORAGE_KEY);
+    const m = Math.floor(state.seconds / 60), s = state.seconds % 60;
+    document.getElementById("winStats").textContent =
+      "Finished in " + m + ":" + (s < 10 ? "0" : "") + s + " and " + state.moves + " moves.";
+    overlay.classList.add("show");
+    confetti();
+  }
+  function confetti() {
+    const colors = ["#ffd23f","#ff6b6b","#4ecdc4","#ff9f1c","#a06cd5","#fff"];
+    for (let i = 0; i < 80; i++) {
+      const c = document.createElement("div");
+      c.className = "confetti";
+      c.style.left = Math.random() * 100 + "vw";
+      c.style.background = colors[i % colors.length];
+      c.style.animationDuration = (1.6 + Math.random() * 1.8) + "s";
+      c.style.animationDelay = (Math.random() * 0.6) + "s";
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 3800);
+    }
+  }
+
+  // ---- Persistence -----------------------------------------------------
+  function save() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        stock: state.stock, waste: state.waste, foundations: state.foundations,
+        tableau: state.tableau, moves: state.moves, seconds: state.seconds, seed: state.seed
+      }));
+    } catch (e) {}
+  }
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return false;
+      const s = JSON.parse(raw);
+      if (!s.tableau) return false;
+      state = {
+        stock: s.stock, waste: s.waste, foundations: s.foundations,
+        tableau: s.tableau, moves: s.moves || 0, seconds: s.seconds || 0,
+        started: (s.seconds || 0) > 0, seed: s.seed
+      };
+      history = [];
+      selection = null;
+      return true;
+    } catch (e) { return false; }
+  }
+
+  // ---- Interaction (pointer: drag + tap) -------------------------------
+  let press = null; // {x,y,card src, dragging, els[], offsetX, offsetY}
+
+  function pileFromPoint(x, y) {
+    const stack = document.elementsFromPoint(x, y);
+    for (const el of stack) {
+      if (el.dataset && el.dataset.pile) return el;
+    }
+    return null;
+  }
+
+  function getRunElements(src) {
+    // returns the DOM card elements that belong to the dragged run, in order
+    const els = [];
+    if (src.pile === "waste") {
+      els.push(document.querySelector('.card[data-pile="waste"]'));
+    } else if (src.pile === "foundation") {
+      els.push(document.querySelector('.card[data-pile="foundation"][data-key="' + src.key + '"]'));
+    } else {
+      const col = tableauRow.children[src.key];
+      const cards = col.querySelectorAll(".card");
+      for (let i = src.index; i < cards.length; i++) els.push(cards[i]);
+    }
+    return els.filter(Boolean);
+  }
+
+  function onPointerDown(e) {
+    if (overlay.classList.contains("show")) return;
+    if (helpOverlay && helpOverlay.classList.contains("show")) return;
+    const cardEl = e.target.closest(".card");
+    const pileEl = e.target.closest("[data-pile]");
+    if (!pileEl) { closeMenu(); return; }
+    const pile = pileEl.dataset.pile;
+
+    // Stock click = draw
+    if (pile === "stock") {
+      e.preventDefault();
+      drawFromStock();
+      return;
+    }
+
+    if (!cardEl) {
+      // tapped empty pile -> maybe a tap-move destination
+      if (selection) handleTapDestination({ pile: pileEl.dataset.pile, key: keyOf(pileEl) });
+      return;
+    }
+
+    // Determine src
+    let src;
+    if (pile === "waste") src = { pile: "waste" };
+    else if (pile === "foundation") src = { pile: "foundation", key: cardEl.dataset.key };
+    else src = { pile: "tableau", key: +cardEl.dataset.key, index: +cardEl.dataset.index };
+
+    // Classic Klondike rules: foundations are one-way only.
+    // You cannot move cards out of foundations back to tableau or elsewhere.
+    // We block starting a grab from a foundation card.
+    // If a selection already exists, we let the tap proceed so handleTap can treat
+    // the foundation as a *destination* for the current selection.
+    if (pile === "foundation" && !selection) {
+      return;
+    }
+
+    // Face-down tableau card: only top one is interactive (flips via draw rules normally—here ignore)
+    if (pile === "tableau") {
+      const card = state.tableau[src.key][src.index];
+      if (!card.up) return;
+      if (!validRun(state.tableau[src.key], src.index)) return; // can't grab broken run
+    }
+
+    e.preventDefault();
+    press = {
+      x: e.clientX, y: e.clientY, src, dragging: false,
+      pointerId: e.pointerId, moved: false
+    };
+    try { pileEl.setPointerCapture(e.pointerId); } catch (er) {}
+  }
+
+  function keyOf(pileEl) {
+    const k = pileEl.dataset.key;
+    if (k === undefined) return undefined;
+    return pileEl.dataset.pile === "tableau" ? +k : k;
+  }
+
+  function beginDrag() {
+    press.dragging = true;
+    const els = getRunElements(press.src);
+    const first = els[0];
+    const rect = first.getBoundingClientRect();
+    press.offsetX = press.x - rect.left;
+    press.offsetY = press.y - rect.top;
+    press.els = els;
+    press.clones = [];
+    const side = stackMode !== "down";
+    const cwv = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--cw"));
+    const ch = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--ch"));
+    const step = side ? cwv * 0.36 : ch * 0.26;
+    els.forEach((el, i) => {
+      el.classList.add("hidden-card");
+      const clone = el.cloneNode(true);
+      clone.classList.remove("hidden-card", "selected");
+      clone.style.position = "absolute";
+      clone.style.left = (side ? i * step : 0) + "px";
+      clone.style.top = (side ? 0 : i * step) + "px";
+      dragLayer.appendChild(clone);
+      press.clones.push(clone);
+    });
+    moveDragLayer(press.x, press.y);
+    selection = null;
+  }
+
+  function moveDragLayer(x, y) {
+    dragLayer.style.transform = "translate(" + (x - press.offsetX) + "px," + (y - press.offsetY) + "px)";
+  }
+
+  function onPointerMove(e) {
+    if (!press) return;
+    const dx = e.clientX - press.x, dy = e.clientY - press.y;
+    if (!press.dragging) {
+      if (Math.hypot(dx, dy) > DRAG_THRESHOLD) { press.moved = true; beginDrag(); }
+      else return;
+    }
+    e.preventDefault();
+    moveDragLayer(e.clientX, e.clientY);
+  }
+
+  function onPointerUp(e) {
+    if (!press) { return; }
+    const wasDrag = press.dragging;
+    const src = press.src;
+
+    if (wasDrag) {
+      // find drop target
+      // temporarily hide drag layer so elementsFromPoint sees the board
+      dragLayer.style.display = "none";
+      const targetPileEl = pileFromPoint(e.clientX, e.clientY);
+      dragLayer.style.display = "";
+      cleanupDrag();
+
+      if (targetPileEl) {
+        const dst = { pile: targetPileEl.dataset.pile, key: keyOf(targetPileEl) };
+        attemptMove(src, dst);
+      } else {
+        flashInvalid(src);
+        render();
+      }
+    } else {
+      // it's a tap
+      cleanupDrag();
+      handleTap(src);
+    }
+    press = null;
+  }
+
+  function cleanupDrag() {
+    if (press && press.els) press.els.forEach(el => el.classList.remove("hidden-card"));
+    dragLayer.innerHTML = "";
+    dragLayer.style.transform = "";
+  }
+
+  function attemptMove(src, dst) {
+    // resolve run lead card
+    let lead, runLen;
+    if (src.pile === "waste") { lead = state.waste[state.waste.length - 1]; runLen = 1; }
+    else if (src.pile === "foundation") { const f = state.foundations[src.key]; lead = f[f.length - 1]; runLen = 1; }
+    else { const col = state.tableau[src.key]; lead = col[src.index]; runLen = col.length - src.index; }
+    if (!lead) { flashInvalid(src); render(); return; }
+
+    if (dst.pile === "foundation") {
+      if (runLen === 1 && canPlaceOnFoundation(lead, dst.key) && lead.s === dst.key) {
+        doMove(src, dst); return;
+      }
+      // allow dropping on the matching foundation even if key differs (player aimed roughly)
+      if (runLen === 1 && canPlaceOnFoundation(lead, lead.s)) { doMove(src, { pile: "foundation", key: lead.s }); return; }
+      flashInvalid(src); render(); return;
+    }
+    if (dst.pile === "tableau") {
+      if (src.pile === "tableau" && src.key === dst.key) { flashInvalid(src); render(); return; }
+      const col = state.tableau[dst.key];
+      if (canPlaceOnTableau(lead, col[col.length - 1])) { doMove(src, dst); return; }
+      flashInvalid(src); render(); return;
+    }
+    flashInvalid(src); render();
+  }
+
+  // Tap behavior: tap to select a run; tap a destination to move; double-tap to send to foundation.
+  let lastTap = 0, lastTapSrc = null;
+  function handleTap(src) {
+    const now = Date.now();
+    const isDouble = (now - lastTap < 320) && sameSrc(src, lastTapSrc);
+    lastTap = now; lastTapSrc = src;
+
+    if (isDouble) {
+      if (tryFoundation(src)) { selection = null; return; }
+    }
+
+    // Single tap on a card with an obvious destination → auto-move (grandma request: fewer steps)
+    // Uses the same findDestination as hints for consistency.
+    if (!selection) {
+      const dest = findDestination(src);
+      if (dest) {
+        attemptMove(src, dest);
+        return;
+      }
+    }
+
+    // If we already have a selection and tapped elsewhere -> treat tapped card's pile as destination
+    if (selection && !sameSrc(src, selection)) {
+      const destPile = src.pile;
+      // destination should be the pile, foundation key from the tapped card
+      if (destPile === "tableau") { attemptMove(selection, { pile: "tableau", key: src.key }); if (!selection) return; }
+      else if (destPile === "foundation") { attemptMove(selection, { pile: "foundation", key: src.key }); return; }
+      // if move failed selection stays; fall through to reselect
+    }
+
+    // No obvious auto-move → select the run for manual placement or dragging
+    if (selection && sameSrc(src, selection)) {
+      selection = null; render(); return; // tap again to deselect
+    }
+    selection = src;
+    render();
+  }
+
+  function handleTapDestination(dst) {
+    if (!selection) return;
+    attemptMove(selection, dst);
+    if (selection) { selection = null; render(); }
+  }
+
+  function sameSrc(a, b) {
+    if (!a || !b) return false;
+    return a.pile === b.pile && a.key === b.key && a.index === b.index;
+  }
+
+  // ---- Hint ------------------------------------------------------------
+  function showHint() {
+    const sources = [];
+    if (state.waste.length) sources.push({ pile: "waste" });
+    for (let i = 0; i < 7; i++) {
+      const col = state.tableau[i];
+      for (let j = 0; j < col.length; j++) {
+        if (col[j].up && validRun(col, j)) { sources.push({ pile: "tableau", key: i, index: j }); break; }
+      }
+    }
+    for (const src of sources) {
+      const dst = findDestination(src);
+      if (dst) {
+        const els = getRunElements(src);
+        if (els[0]) { els[0].classList.add("hint"); setTimeout(() => els.forEach(e => e.classList.remove("hint")), 1500); }
+        return;
+      }
+    }
+    // no move: suggest drawing
+    const stockSlot = topRow.querySelector('[data-pile="stock"] .card, [data-pile="stock"] .stock-recycle');
+    if (stockSlot) { stockSlot.classList.add("hint"); setTimeout(() => stockSlot.classList.remove("hint"), 1500); }
+  }
+
+  // ---- Help / Instructions + Practice mode -----------------------------
+  const helpOverlay = document.getElementById("helpOverlay");
+
+  function showHelp() {
+    if (helpOverlay) helpOverlay.classList.add("show");
+  }
+  function closeHelp() {
+    if (helpOverlay) helpOverlay.classList.remove("show");
+  }
+
+  function startPractice() {
+    closeHelp();
+    drawMode = 1;
+    localStorage.setItem("solitaire_draw", "1");
+    isTutorial = true;
+    tutorialStep = 0;
+
+    const deck = makeTutorialDeck();
+    newGame(deck);
+
+    showTutorialBar();
+    updateTutorialMessage();
+
+    // Kick off with a hint so the first good move (e.g. the 7 onto the 8) is highlighted right away
+    setTimeout(() => {
+      showHint();
+    }, 420);
+  }
+
+  // ---- More hand-holdy guided tutorial -------------------------------
+  const tutorialBar = document.getElementById("tutorialBar");
+  const tutorialTextEl = document.getElementById("tutorialText");
+
+  function showTutorialBar() {
+    if (tutorialBar) tutorialBar.style.display = "flex";
+  }
+  function hideTutorialBar() {
+    if (tutorialBar) tutorialBar.style.display = "none";
+  }
+
+  function updateTutorialMessage() {
+    if (!tutorialTextEl || !isTutorial) return;
+    const messages = [
+      "Tutorial: See the yellow glow? Tap or drag that card onto a valid spot (alternating colour + one lower).",
+      "Nice! Tableau columns build DOWN with opposite colours (red on black, black on red).",
+      "Look for Aces (they just came out of the stock). Move them to the top-right home piles.",
+      "Double-tap any card to send it straight home to the foundations when possible.",
+      "Empty column? Only a King can start a new pile there.",
+      "You're doing great! Use the gear menu (⚙) → Hint whenever you want a suggestion. Play freely or hit End tutorial."
+    ];
+    const idx = Math.min(tutorialStep, messages.length - 1);
+    tutorialTextEl.textContent = messages[idx];
+  }
+
+  function endTutorial() {
+    isTutorial = false;
+    hideTutorialBar();
+    autoFinishing = false;
+    // Let the current deal continue as a normal game
+  }
+
+  // ---- Wire up UI ------------------------------------------------------
+  document.getElementById("newBtn").addEventListener("click", () => {
+    closeMenu();
+    const inProgress = state && state.started && !isWon() && state.moves > 0;
+    if (inProgress && !confirm("New game? Current deal will be lost.")) return;
+    newGame();
+  });
+  document.getElementById("undoBtn").addEventListener("click", () => { closeMenu(); undo(); });
+  document.getElementById("helpBtn").addEventListener("click", () => { closeMenu(); showHelp(); });
+  document.getElementById("playAgain").addEventListener("click", () => { overlay.classList.remove("show"); newGame(); });
+
+  // Help modal buttons
+  const closeHelpBtn = document.getElementById("closeHelp");
+  if (closeHelpBtn) closeHelpBtn.addEventListener("click", closeHelp);
+  const practiceBtn = document.getElementById("practiceBtn");
+  if (practiceBtn) practiceBtn.addEventListener("click", startPractice);
+
+  const endTutorialBtn = document.getElementById("endTutorialBtn");
+  if (endTutorialBtn) endTutorialBtn.addEventListener("click", endTutorial);
+
+  // Click backdrop to close help
+  if (helpOverlay) {
+    helpOverlay.addEventListener("click", (e) => {
+      if (e.target === helpOverlay) closeHelp();
+    });
+  }
+
+  const menuBtn = document.getElementById("menuBtn");
+  menuBtn.addEventListener("click", (e) => { e.stopPropagation(); updateMenuState(); menu.classList.toggle("show"); });
+  function closeMenu() { menu.classList.remove("show"); }
+  document.addEventListener("click", (e) => {
+    if (!menu.contains(e.target) && e.target !== menuBtn) closeMenu();
+  });
+  menu.addEventListener("click", (e) => {
+    const opt = e.target.closest(".opt");
+    if (!opt) return;
+    const act = opt.dataset.act;
+    if (act === "draw") {
+      drawMode = drawMode === 1 ? 3 : 1;
+      localStorage.setItem("solitaire_draw", drawMode);
+      updateStatus();
+    } else if (act === "hint") { closeMenu(); showHint(); }
+    else if (act === "auto") {
+      closeMenu();
+      // Only run when it can actually finish the deal; otherwise nudge the
+      // player toward the next good move instead of doing nothing.
+      if (canAutoFinish()) autoFinish();
+      else showHint();
+    }
+    else if (act === "restart") {
+      closeMenu();
+      const inProgress = state && state.started && !isWon() && state.moves > 0;
+      if (inProgress && !confirm("Restart this exact deal?")) return;
+      restartDeal();
+    }
+    else if (act === "help") { closeMenu(); showHelp(); }
+  });
+
+  // Theme + size controls (live inside the gear menu, so stop clicks from
+  // bubbling out and closing it).
+  document.getElementById("feltSwatches").addEventListener("click", (e) => {
+    const sw = e.target.closest(".swatch"); if (!sw) return;
+    e.stopPropagation();
+    feltTheme = sw.dataset.felt;
+    localStorage.setItem("solitaire_felt", feltTheme);
+    applyFelt(); buildSwatches();
+  });
+  document.getElementById("backSwatches").addEventListener("click", (e) => {
+    const sw = e.target.closest(".swatch"); if (!sw) return;
+    e.stopPropagation();
+    backTheme = sw.dataset.back;
+    localStorage.setItem("solitaire_back", backTheme);
+    applyBack(); buildSwatches();
+  });
+  document.getElementById("textureSwatches").addEventListener("click", (e) => {
+    const sw = e.target.closest(".swatch"); if (!sw) return;
+    e.stopPropagation();
+    textureTheme = sw.dataset.texture;
+    localStorage.setItem("solitaire_texture", textureTheme);
+    applyTexture(); buildSwatches();
+  });
+  document.getElementById("styleChips").addEventListener("click", (e) => {
+    const chip = e.target.closest(".stylechip"); if (!chip) return;
+    e.stopPropagation();
+    cardStyle = chip.dataset.style;
+    localStorage.setItem("solitaire_style", cardStyle);
+    buildStyleChips();
+    if (state) render();
+  });
+  document.getElementById("handChips").addEventListener("click", (e) => {
+    const chip = e.target.closest(".stylechip"); if (!chip) return;
+    e.stopPropagation();
+    handed = chip.dataset.hand;
+    localStorage.setItem("solitaire_handed", handed);
+    buildStyleChips();
+    resize(); // re-render (alignment of side rows depends on handedness)
+  });
+  document.getElementById("stackChips").addEventListener("click", (e) => {
+    const chip = e.target.closest(".stylechip"); if (!chip) return;
+    e.stopPropagation();
+    stackMode = chip.dataset.stack;
+    localStorage.setItem("solitaire_stack", stackMode);
+    buildStyleChips();
+    resize(); // geometry changes between down/side, so recompute then render
+  });
+  const sizeSlider = document.getElementById("sizeSlider");
+  sizeSlider.addEventListener("click", (e) => e.stopPropagation());
+  sizeSlider.addEventListener("input", (e) => {
+    sizeScale = (parseInt(e.target.value, 10) || 100) / 100;
+    localStorage.setItem("solitaire_size", sizeScale);
+    applySize();
+    resize();
+  });
+
+  // Pointer events on the board
+  const board = document.getElementById("board");
+  board.addEventListener("pointerdown", onPointerDown);
+  board.addEventListener("pointermove", onPointerMove);
+  board.addEventListener("pointerup", onPointerUp);
+  board.addEventListener("pointercancel", () => { if (press) { cleanupDrag(); render(); press = null; } });
+
+  // Keep the board fitted on any viewport change, including rotation. Some
+  // browsers report stale dimensions right after orientationchange, so we
+  // re-fit a few times and also listen to the visualViewport for good measure.
+  window.addEventListener("resize", resize);
+  window.addEventListener("orientationchange", () => {
+    resize();
+    setTimeout(resize, 150);
+    setTimeout(resize, 400);
+  });
+  if (window.screen && screen.orientation && screen.orientation.addEventListener) {
+    screen.orientation.addEventListener("change", () => { resize(); setTimeout(resize, 200); });
+  }
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", resize);
+  }
+  window.addEventListener("pageshow", resize);
+
+  // ---- Boot ------------------------------------------------------------
+  applyFelt();
+  applyBack();
+  applyTexture();
+  buildSwatches();
+  buildStyleChips();
+  applySize();
+  if (load()) {
+    resize();          // also renders
+    render();
+    // Resume ticking for in-progress saved games (timer was frozen on reload)
+    if (state.started && !timerId) {
+      timerId = setInterval(() => { state.seconds++; updateStatus(); }, 1000);
+    }
+  } else {
+    newGame();
+    resize();
+  }
+})();
+</script>
+</body>
+</html>

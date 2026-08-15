@@ -1,0 +1,14 @@
+{
+  "name": "Dash Runner",
+  "short_name": "Dash",
+  "description": "A third-person endless runner. Swipe to dodge, jump and slide. Runs fully offline in your browser.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#0b1026",
+  "theme_color": "#0b1026",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

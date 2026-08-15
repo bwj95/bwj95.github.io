@@ -2,10 +2,8 @@
 import '../styles/global.css';
 import ParticleField from '../components/ParticleField.astro';
 import Nav from '../components/Nav.astro';
-import ThemeConsole from '../components/ThemeConsole.astro';
 import Grasshopper from '../components/Grasshopper.astro';
 import { site } from '../data/site';
-import { fonts, accents, options } from '../data/themes';
 
 interface Props { title?: string; description?: string; }
 const {
@@ -23,101 +21,6 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical.href} />
     <meta name="theme-color" content="#050505" />
-
-    <!-- Design Console theme engine — runs pre-paint to apply the saved / shared
-         look before first render (no flash). Data comes from src/data/themes.ts. -->
-    <script define:vars={{ FONTS: fonts, ACCENTS: accents, OPTIONS: options }}>
-      (function () {
-        var root = document.documentElement;
-        var state = { s: 'aurora', f: null, a: null, o: {} };
-        function applyStyle(v) {
-          state.s = v || 'aurora';
-          if (state.s === 'aurora') root.removeAttribute('data-style');
-          else root.setAttribute('data-style', state.s);
-        }
-        function optByKey(k) { for (var i = 0; i < OPTIONS.length; i++) if (OPTIONS[i].key === k) return OPTIONS[i]; return null; }
-        function applyOpt(k, val) {
-          var op = optByKey(k); if (!op) return;
-          if (val == null || val === op.default) { root.removeAttribute(op.attr); delete state.o[k]; }
-          else { root.setAttribute(op.attr, val); state.o[k] = val; }
-        }
-        function applyFont(i) {
-          state.f = (i == null || i === '') ? null : +i;
-          if (state.f == null) {
-            root.style.removeProperty('--font-display');
-            root.style.removeProperty('--font-body');
-            root.style.removeProperty('--font-hero');
-          } else if (FONTS[state.f]) {
-            root.style.setProperty('--font-display', FONTS[state.f].display);
-            root.style.setProperty('--font-body', FONTS[state.f].body);
-            root.style.setProperty('--font-hero', FONTS[state.f].hero);
-          }
-        }
-        function applyAccent(i) {
-          state.a = (i == null || i === '') ? null : +i;
-          if (state.a == null) {
-            root.style.removeProperty('--spectrum');
-            root.style.removeProperty('--accent');
-          } else if (ACCENTS[state.a]) {
-            root.style.setProperty('--spectrum', ACCENTS[state.a].spectrum);
-            root.style.setProperty('--accent', ACCENTS[state.a].accent);
-          }
-        }
-        function persist() {
-          var p = [];
-          if (state.s !== 'aurora') p.push('s=' + state.s);
-          if (state.f != null) p.push('f=' + state.f);
-          if (state.a != null) p.push('a=' + state.a);
-          for (var k in state.o) if (state.o[k]) p.push(k + '=' + state.o[k]);
-          var h = p.join('&');
-          try { history.replaceState(null, '', h ? '#' + h : location.pathname + location.search); } catch (e) {}
-          try { localStorage.setItem('ws-theme', h); } catch (e) {}
-          if (window.__wsSync) window.__wsSync();
-        }
-        function parse(str) {
-          var o = {};
-          (str || '').split('&').forEach(function (kv) { var q = kv.split('='); if (q[0]) o[q[0]] = q[1]; });
-          return o;
-        }
-        function load() {
-          var h = (location.hash || '').slice(1);
-          if (!h) { try { h = localStorage.getItem('ws-theme') || ''; } catch (e) {} }
-          var o = parse(h);
-          if (o.s) applyStyle(o.s);
-          if (o.f != null) applyFont(o.f);
-          if (o.a != null) applyAccent(o.a);
-          OPTIONS.forEach(function (op) { if (o[op.key] != null) applyOpt(op.key, o[op.key]); });
-        }
-        window.__wsTheme = {
-          state: state, OPTIONS: OPTIONS,
-          setStyle: function (v) { applyStyle(v); applyFont(null); applyAccent(null); persist(); },
-          setFont: function (i) { applyFont(i); persist(); },
-          setAccent: function (i) { applyAccent(i); persist(); },
-          setOpt: function (k, v) { applyOpt(k, v); persist(); },
-          apply: function (cfg) {
-            applyStyle(cfg.s || 'aurora');
-            applyFont(cfg.f == null ? null : cfg.f);
-            applyAccent(cfg.a == null ? null : cfg.a);
-            OPTIONS.forEach(function (op) { applyOpt(op.key, (cfg.o && cfg.o[op.key] != null) ? cfg.o[op.key] : op.default); });
-            persist();
-          },
-          reset: function () {
-            applyStyle('aurora'); applyFont(null); applyAccent(null);
-            OPTIONS.forEach(function (op) { root.removeAttribute(op.attr); }); state.o = {};
-            persist();
-          },
-          random: function () {
-            var modes = ['aurora', 'brutalist', 'editorial', 'neon', 'bento', 'kinetic'];
-            applyStyle(modes[(Math.random() * modes.length) | 0]);
-            applyFont((Math.random() * FONTS.length) | 0);
-            applyAccent((Math.random() * ACCENTS.length) | 0);
-            OPTIONS.forEach(function (op) { applyOpt(op.key, op.choices[(Math.random() * op.choices.length) | 0].val); });
-            persist();
-          }
-        };
-        load();
-      })();
-    </script>
 
     <!-- Open Graph / social -->
     <meta property="og:type" content="website" />
@@ -138,16 +41,12 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   </head>
   <body>
+    <div class="progress" aria-hidden="true"><span class="progress__bar" id="progressBar"></span></div>
     <ParticleField />
-    <div class="cursor" id="cursor" aria-hidden="true"></div>
-    <div class="dotgrid-glow" id="dotglow" aria-hidden="true"></div>
-    <div class="crt" id="crt" aria-hidden="true"></div>
-    <div class="workprev" id="workprev" aria-hidden="true"></div>
     <Nav />
     <main id="top">
       <slot />
     </main>
-    <ThemeConsole />
 
     <footer class="foot">
       <div class="wrap foot__inner">
@@ -164,7 +63,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
       </div>
       <div class="wrap foot__base">
         <span>© {new Date().getFullYear()}</span>
-        <span class="foot__built">Built by hand — Astro. The site is its own argument.</span>
+        <span class="foot__built">Built by hand — Astro + WebGL. The site is its own argument.</span>
       </div>
     </footer>
 
@@ -180,157 +79,31 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
       );
       document.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
 
-      // track cursor position as CSS vars (drives the dot-grid glow mask)
-      const rootEl = document.documentElement;
-      window.addEventListener('pointermove', (e) => {
-        rootEl.style.setProperty('--mx', e.clientX + 'px');
-        rootEl.style.setProperty('--my', e.clientY + 'px');
-      }, { passive: true });
-
-      // custom cursor follower (active only when data-cursor is dot/ring)
-      const cursorEl = document.getElementById('cursor');
-      if (cursorEl && window.matchMedia('(pointer: fine)').matches) {
-        let cx = window.innerWidth / 2, cy = window.innerHeight / 2;
-        let x = cx, y = cy;
-        window.addEventListener('pointermove', (e) => { cx = e.clientX; cy = e.clientY; }, { passive: true });
-        const tick = () => {
-          // ring lags for a smooth trail; dot follows closely
-          const lag = document.documentElement.getAttribute('data-cursor') === 'ring' ? 0.2 : 0.5;
-          x += (cx - x) * lag; y += (cy - y) * lag;
-          cursorEl.style.transform = `translate(${x}px, ${y}px)`;
-          requestAnimationFrame(tick);
+      // top scroll-progress bar (scaleX 0→1 across the document)
+      const bar = document.getElementById('progressBar');
+      if (bar) {
+        let pTick = false;
+        const pUpdate = () => {
+          const max = document.documentElement.scrollHeight - window.innerHeight;
+          bar.style.transform = `scaleX(${max > 0 ? Math.min(1, window.scrollY / max) : 0})`;
+          pTick = false;
         };
-        requestAnimationFrame(tick);
+        window.addEventListener('scroll', () => { if (!pTick) { requestAnimationFrame(pUpdate); pTick = true; } }, { passive: true });
+        window.addEventListener('resize', pUpdate, { passive: true });
+        pUpdate();
       }
 
-      // sideways parallax (data-parallax="sideways") — headings drift horizontally
-      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        const PX: [string, number][] = [
-          ['.hero .eyebrow', -46], ['.hero__title', 26], ['.hero__lead', -34],
-          ['.sec-head .eyebrow', -50], ['.sec-head__title', 34], ['.sec-head .lead', -28],
-        ];
-        const targets: [HTMLElement, number][] = [];
-        PX.forEach(([sel, sp]) => document.querySelectorAll<HTMLElement>(sel).forEach((el) => targets.push([el, sp])));
-        let pxTicking = false;
-        const pxUpdate = () => {
-          const on = document.documentElement.getAttribute('data-parallax') === 'sideways';
-          const vh = window.innerHeight;
-          for (const [el, sp] of targets) {
-            if (!on) { if (el.style.transform) { el.style.transform = ''; el.style.transition = ''; } continue; }
-            const r = el.getBoundingClientRect();
-            const prog = (r.top + r.height / 2 - vh / 2) / vh; // +below viewport centre, −above
-            el.style.transition = 'none';
-            el.style.transform = `translateX(${(prog * sp).toFixed(1)}px)`;
-          }
-          pxTicking = false;
-        };
-        window.addEventListener('scroll', () => { if (!pxTicking) { requestAnimationFrame(pxUpdate); pxTicking = true; } }, { passive: true });
-        window.addEventListener('resize', () => requestAnimationFrame(pxUpdate), { passive: true });
-        // react the instant the console toggles the attribute
-        new MutationObserver(() => requestAnimationFrame(pxUpdate)).observe(document.documentElement, { attributes: true, attributeFilter: ['data-parallax'] });
-        requestAnimationFrame(pxUpdate);
-      }
-
-      // Index layout: show a poster thumbnail that follows the cursor on row hover
-      const workprev = document.getElementById('workprev');
-      if (workprev) {
-        let active = false;
-        document.querySelectorAll<HTMLElement>('.card').forEach((card) => {
-          const poster = card.querySelector('.card__poster');
-          card.addEventListener('pointerenter', () => {
-            if (document.documentElement.getAttribute('data-layout') !== 'list' || !poster) return;
-            const clone = poster.cloneNode(true) as HTMLElement;
-            clone.querySelectorAll('.card__status').forEach((n) => n.remove());
-            workprev.replaceChildren(clone);
-            workprev.classList.add('show');
-            active = true;
-          });
-          card.addEventListener('pointermove', (e) => {
-            if (!active) return;
-            workprev.style.left = e.clientX + 'px';
-            workprev.style.top = e.clientY + 'px';
-          });
-          card.addEventListener('pointerleave', () => { workprev.classList.remove('show'); active = false; });
-        });
-      }
-
-      // Horizontal layouts (rail / coverflow): drag-to-scroll with the mouse.
-      // We DON'T hijack the wheel — vertical page scroll is never trapped. Touch
-      // and trackpad use the browser's native horizontal panning.
-      document.querySelectorAll<HTMLElement>('.grid').forEach((rail) => {
-        let down = false, moved = false, sx = 0, sl = 0;
-        rail.addEventListener('pointerdown', (e) => {
-          if (e.pointerType !== 'mouse' || e.button !== 0) return;
-          if (rail.scrollWidth <= rail.clientWidth) return; // only when horizontally scrollable
-          down = true; moved = false; sx = e.clientX; sl = rail.scrollLeft;
-        });
-        rail.addEventListener('pointermove', (e) => {
-          if (!down) return;
-          const dx = e.clientX - sx;
-          if (!moved && Math.abs(dx) > 6) { moved = true; rail.style.cursor = 'grabbing'; try { rail.setPointerCapture(e.pointerId); } catch {} }
-          if (moved) rail.scrollLeft = sl - dx;
-        });
-        const end = () => { down = false; rail.style.cursor = ''; };
-        rail.addEventListener('pointerup', end);
-        rail.addEventListener('pointercancel', end);
-        // swallow the click that ends a drag so cards don't navigate mid-swipe
-        rail.addEventListener('click', (e) => { if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; } }, true);
-      });
-
-      // 3D coverflow — JS-driven (works in every browser). Each card rotates/scales
-      // by its horizontal distance from the rail's centre.
-      const cfGrids = document.querySelectorAll<HTMLElement>('.grid');
-      const applyCoverflow = (grid: HTMLElement) => {
-        const rect = grid.getBoundingClientRect();
-        const center = rect.left + rect.width / 2;
-        grid.querySelectorAll<HTMLElement>('.card').forEach((card) => {
-          const cr = card.getBoundingClientRect();
-          const d = ((cr.left + cr.width / 2) - center) / rect.width;
-          const c = Math.max(-1, Math.min(1, d * 2.2));
-          card.style.transform = `rotateY(${(-c * 40).toFixed(1)}deg) scale(${(1 - Math.abs(c) * 0.2).toFixed(3)})`;
-          card.style.opacity = String((1 - Math.abs(c) * 0.55).toFixed(3));
-          card.style.zIndex = String(100 - Math.round(Math.abs(c) * 100));
-        });
-      };
-      const clearCoverflow = (grid: HTMLElement) =>
-        grid.querySelectorAll<HTMLElement>('.card').forEach((card) => { card.style.transform = ''; card.style.opacity = ''; card.style.zIndex = ''; });
-      let cfTick = false;
-      const cfUpdate = () => {
-        const on = document.documentElement.getAttribute('data-layout') === 'coverflow';
-        cfGrids.forEach((g) => (on ? applyCoverflow(g) : clearCoverflow(g)));
-        cfTick = false;
-      };
-      cfGrids.forEach((g) => g.addEventListener('scroll', () => { if (!cfTick) { requestAnimationFrame(cfUpdate); cfTick = true; } }, { passive: true }));
-      window.addEventListener('resize', () => requestAnimationFrame(cfUpdate), { passive: true });
-      new MutationObserver(() => requestAnimationFrame(cfUpdate)).observe(document.documentElement, { attributes: true, attributeFilter: ['data-layout'] });
-      requestAnimationFrame(cfUpdate);
-
-      // Effects that only make sense with a real pointer
+      // Magnetic buttons — nudge toward the cursor while hovered (pointer-fine only)
       if (window.matchMedia('(pointer: fine)').matches && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        // Magnetic buttons — nudge toward the cursor while hovered
         document.querySelectorAll<HTMLElement>('.btn').forEach((btn) => {
           btn.addEventListener('pointermove', (e) => {
             const r = btn.getBoundingClientRect();
             const mx = e.clientX - (r.left + r.width / 2);
             const my = e.clientY - (r.top + r.height / 2);
-            btn.style.transform = `translate(${(mx * 0.28).toFixed(1)}px, ${(my * 0.4).toFixed(1)}px)`;
+            btn.style.transform = `translate(${(mx * 0.22).toFixed(1)}px, ${(my * 0.32).toFixed(1)}px)`;
           });
           btn.addEventListener('pointerleave', () => { btn.style.transform = ''; });
         });
-
-        // Text scramble on hover (nav links) — hacker reveal
-        const CH = '!<>-_\\/[]{}=+*^?#________';
-        const scramble = (el: HTMLElement) => {
-          const text = el.dataset.text || el.textContent || '';
-          el.dataset.text = text;
-          let frame = 0;
-          clearInterval((el as any)._sc);
-          (el as any)._sc = setInterval(() => {
-            el.textContent = text.split('').map((c, i) => (i < frame || c === ' ' ? c : CH[(Math.random() * CH.length) | 0])).join('');
-            if (frame++ >= text.length) { clearInterval((el as any)._sc); el.textContent = text; }
-          }, 26);
-        };
-        document.querySelectorAll<HTMLElement>('.nav__links a').forEach((a) => a.addEventListener('pointerenter', () => scramble(a)));
       }
     </script>
   </body>
@@ -339,6 +112,15 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
 <style>
   /* floating nav is fixed (out of flow) — reserve clearance so content starts below it */
   main { padding-top: 4.5rem; }
+
+  /* top scroll-progress hairline */
+  .progress { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 60; pointer-events: none; }
+  .progress__bar {
+    display: block; width: 100%; height: 100%;
+    background: var(--spectrum);
+    transform: scaleX(0); transform-origin: 0 50%;
+    will-change: transform;
+  }
   .foot { border-top: 1px solid var(--border); margin-top: 4rem; padding-block: 3.5rem 2.5rem; background: rgba(255,255,255,0.01); }
   .foot__inner { display: flex; flex-wrap: wrap; gap: 2rem; justify-content: space-between; align-items: flex-start; }
   .foot__mark { --gh-size: clamp(40px, 7vw, 52px); display: inline-block; color: var(--text-dim); transition: color 0.2s var(--ease); }

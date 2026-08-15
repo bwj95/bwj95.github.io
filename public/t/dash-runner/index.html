@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b1026">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Dash Runner</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="scene"></canvas>
+
+  <div id="hud" class="hidden">
+    <div class="hud-pill"><span class="lbl">SCORE</span><b id="score">0</b></div>
+    <div class="hud-pill"><span class="lbl">COINS</span><b id="coins">0</b></div>
+    <div class="hud-pill"><span class="lbl">BEST</span><b id="best">0</b></div>
+  </div>
+
+  <div id="overlay">
+    <div class="card">
+      <h1>DASH<span>RUNNER</span></h1>
+      <p class="tag">Third-person endless runner</p>
+      <div class="controls">
+        <div><b>Swipe</b> or <b>Arrows</b> to move</div>
+        <div><b>Up</b> jump &nbsp;·&nbsp; <b>Down</b> slide</div>
+      </div>
+      <button id="start" class="btn">TAP TO PLAY</button>
+      <p class="hint">Works offline · install to your home screen</p>
+    </div>
+  </div>
+
+  <div id="gameover" class="hidden">
+    <div class="card">
+      <h2>BUSTED</h2>
+      <p class="tag">The inspector caught you</p>
+      <div class="stats">
+        <div><span>Score</span><b id="finalScore">0</b></div>
+        <div><span>Coins</span><b id="finalCoins">0</b></div>
+        <div><span>Best</span><b id="finalBest">0</b></div>
+      </div>
+      <button id="retry" class="btn">RUN AGAIN</button>
+    </div>
+  </div>
+
+  <div id="pausebtn" class="hidden">⏸</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="game.js"></script>
+</body>
+</html>

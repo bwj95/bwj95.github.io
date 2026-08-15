@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Loki's Beach | Molecular Observation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@400;600;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+    <!-- Simulation canvas -->
+    <canvas id="moleculeCanvas" class="bg-canvas"></canvas>
+
+    <!-- Navigation -->
+    <nav id="mainNav" class="glass-nav">
+        <div class="nav-side nav-side-left">
+            <div class="logo">Loki's Beach</div>
+        </div>
+        <div class="nav-center">
+            <h1 class="nav-title">Molecular Observation</h1>
+        </div>
+        <div class="nav-side nav-side-right">
+            <button id="menuToggle" aria-label="Toggle Controls">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Live molecule legend -->
+    <aside class="legend-panel glass">
+        <div class="legend-head">
+            <span class="legend-title">Molecules formed</span>
+            <span class="atom-tally"><strong id="atomCount">0</strong> atoms</span>
+        </div>
+        <ul id="legendList" class="legend-list">
+            <li class="legend-empty">No molecules yet — atoms are drifting free.</li>
+        </ul>
+    </aside>
+
+    <!-- Floating control panel -->
+    <section class="control-panel glass">
+        <div class="cp-group">
+            <span class="cp-label">Place atom</span>
+            <div class="element-picker">
+                <button class="el-btn active" data-element="H"  style="--el:#7cc4ff"><b>H</b><small>Hydrogen</small></button>
+                <button class="el-btn" data-element="O"  style="--el:#ff6b6b"><b>O</b><small>Oxygen</small></button>
+                <button class="el-btn" data-element="C"  style="--el:#aab4c4"><b>C</b><small>Carbon</small></button>
+                <button class="el-btn" data-element="N"  style="--el:#5b8def"><b>N</b><small>Nitrogen</small></button>
+                <button class="el-btn" data-element="Cl" style="--el:#4ade80"><b>Cl</b><small>Chlorine</small></button>
+                <button class="el-btn" data-element="Na" style="--el:#c084fc"><b>Na</b><small>Sodium</small></button>
+            </div>
+        </div>
+
+        <div class="cp-group">
+            <span class="cp-label">Temperature — <span id="tempValue">Cool</span></span>
+            <input type="range" id="tempSlider" min="0" max="1.5" step="0.01" value="0.2" class="temp-slider">
+        </div>
+
+        <div class="cp-group">
+            <span class="cp-label">Reactions</span>
+            <div class="preset-row">
+                <button class="preset-btn" data-preset="water">💧 Water</button>
+                <button class="preset-btn" data-preset="combustion">🔥 Combustion</button>
+                <button class="preset-btn" data-preset="salt">🧂 Salt</button>
+                <button class="preset-btn" data-preset="ammonia">🌫 Ammonia</button>
+                <button class="preset-btn" data-preset="gases">💨 Gases</button>
+            </div>
+        </div>
+
+        <div class="cp-group cp-actions">
+            <button class="act-btn active" id="bondingBtn" aria-pressed="true" title="Bonding on/off">Bonding</button>
+            <button class="act-btn active" id="labelsBtn" aria-pressed="true" title="Show symbols">Labels</button>
+            <button class="act-btn" id="dragBtn" aria-pressed="false" title="Drag atoms">Drag</button>
+            <button class="act-btn" id="pauseBtn" aria-pressed="false" title="Pause">Pause</button>
+            <button class="act-btn" id="breakBtn" title="Break every bond">Break all</button>
+            <button class="act-btn danger" id="clearBtn" title="Clear canvas">Clear</button>
+        </div>
+
+        <p class="cp-hint">Click empty space to drop the selected atom. Cool = molecules form · Hot = bonds snap.</p>
+    </section>
+
+    <footer>
+        <p>&copy; <span id="year"></span> Loki's Beach</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

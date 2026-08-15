@@ -4,6 +4,7 @@ import Grasshopper from './Grasshopper.astro';
 const links = [
   { label: 'The Screen', href: '/#work' },
   { label: 'The Bench', href: '/#hardware' },
+  { label: 'The Toolbox', href: '/#toolbox' },
 ];
 ---
 <header class="nav" id="nav">
@@ -17,9 +18,6 @@ const links = [
 
   <button class="nav__burger" id="navBurger" aria-label="Open menu" aria-expanded="false" aria-controls="navMenu">
     <span class="nav__burger-box" aria-hidden="true"><span class="nav__burger-line"></span></span>
-    <span class="nav__burger-plus" aria-hidden="true"></span>
-    <span class="nav__burger-dots" aria-hidden="true"><span></span><span></span><span></span></span>
-    <span class="nav__burger-text" aria-hidden="true"></span>
   </button>
 </header>
 
@@ -83,31 +81,7 @@ const links = [
   .nav__burger[aria-expanded="true"] .nav__burger-line::before { top: 0; transform: rotate(45deg); }
   .nav__burger[aria-expanded="true"] .nav__burger-line::after { top: 0; transform: rotate(-45deg); }
 
-  /* ---- swappable icon (console option: data-burger) ---- */
-  .nav__burger-plus, .nav__burger-dots, .nav__burger-text { display: none; }
-
-  /* PLUS: + rotates to × */
-  :root[data-burger="plus"] .nav__burger-box { display: none; }
-  :root[data-burger="plus"] .nav__burger-plus { display: block; position: relative; width: 16px; height: 16px; transition: transform 0.3s var(--ease); }
-  .nav__burger-plus::before, .nav__burger-plus::after { content: ''; position: absolute; background: currentColor; border-radius: 2px; }
-  .nav__burger-plus::before { top: 50%; left: 0; width: 16px; height: 2px; transform: translateY(-50%); }
-  .nav__burger-plus::after { left: 50%; top: 0; width: 2px; height: 16px; transform: translateX(-50%); }
-  :root[data-burger="plus"] .nav__burger[aria-expanded="true"] .nav__burger-plus { transform: rotate(45deg); }
-
-  /* DOTS: three dots, rotate on open */
-  :root[data-burger="dots"] .nav__burger-box { display: none; }
-  :root[data-burger="dots"] .nav__burger-dots { display: flex; align-items: center; gap: 3px; transition: transform 0.3s var(--ease); }
-  .nav__burger-dots > span { width: 4px; height: 4px; border-radius: 50%; background: currentColor; }
-  :root[data-burger="dots"] .nav__burger[aria-expanded="true"] .nav__burger-dots { transform: rotate(90deg); }
-
-  /* TEXT: “Menu” ⇄ “Close” */
-  :root[data-burger="text"] .nav__burger-box { display: none; }
-  :root[data-burger="text"] .nav__burger { width: auto; padding: 0 0.6rem; }
-  :root[data-burger="text"] .nav__burger-text { display: inline; font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; }
-  :root[data-burger="text"] .nav__burger-text::after { content: 'Menu'; }
-  :root[data-burger="text"] .nav__burger[aria-expanded="true"] .nav__burger-text::after { content: 'Close'; }
-
-  /* ---- the menu (dropdown by default; inherits the active vibe via .glass + vars) ----
+  /* ---- the menu (dropdown, body-level) ----
      Fixed + body-level so the fullscreen variant anchors to the viewport. z-index below
      the nav (50) so the pill's burger stays on top to close it. */
   .nav__menu {
@@ -129,22 +103,7 @@ const links = [
   @media (max-width: 720px) {
     .nav__links { display: none; }
     .nav__burger { display: inline-flex; }
-    .nav__cta { display: none; } /* Put me to work lives in the menu at this size */
   }
-  /* Minimal taskbar mode hides the links at all widths → burger takes over */
-  :root[data-nav="mini"] .nav__links { display: none; }
-  :root[data-nav="mini"] .nav__burger { display: inline-flex; }
-
-  /* ---- Menu = Fullscreen (console option: data-menu="overlay") ---- */
-  :root[data-menu="overlay"] .nav__menu {
-    position: fixed; inset: 0; top: 0; right: 0;
-    width: 100vw; height: 100dvh; border-radius: 0;
-    padding: 2rem; transform: none;
-    display: grid; align-content: center; justify-items: center; gap: 0.4rem;
-  }
-  :root[data-menu="overlay"] .nav__menu nav { align-items: center; gap: 0.3rem; }
-  :root[data-menu="overlay"] .nav__menu a { font-size: clamp(1.6rem, 7vw, 2.6rem); font-family: var(--font-display); }
-  :root[data-menu="overlay"] .nav__menu-cta { margin-top: 1.2rem; padding: 0.9rem 2rem; font-size: 0.9rem; }
 
   @media (prefers-reduced-motion: reduce) {
     .nav, .nav__menu, .nav__burger-line, .nav__burger-line::before, .nav__burger-line::after { transition: none; }

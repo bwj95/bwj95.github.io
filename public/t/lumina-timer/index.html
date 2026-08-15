@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LuminaTimer | Premium Focus Suite</title>
+  <!-- Google Fonts: Outfit (modern sans) & JetBrains Mono (timer text) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⏱️</text></svg>">
+</head>
+<body class="mode-stopwatch">
+  <div class="glow-bg"></div>
+  
+  <div class="app-container">
+    <header>
+      <div class="logo">
+        <svg class="logo-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        <span class="logo-text">Lumina<span>Timer</span></span>
+      </div>
+      
+      <div class="global-actions">
+        <button id="sound-toggle-btn" class="icon-btn" title="Toggle Sound Alarm">
+          <svg id="sound-on-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+          <svg id="sound-off-icon" class="hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <line x1="23" y1="9" x2="17" y2="15"></line>
+            <line x1="17" y1="9" x2="23" y2="15"></line>
+          </svg>
+        </button>
+        <button id="fullscreen-toggle-btn" class="icon-btn" title="Toggle Fullscreen Focus">
+          <svg id="fullscreen-enter" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+          </svg>
+          <svg id="fullscreen-exit" class="hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 14h6v6m10-6h-6v6M4 10h6V4m10 6h-6V4"></path>
+          </svg>
+        </button>
+        <button id="shutdown-btn" class="icon-btn btn-shutdown-app" title="Close App">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+            <line x1="12" y1="2" x2="12" y2="12"></line>
+          </svg>
+        </button>
+      </div>
+    </header>
+    
+    <!-- Mode Selection Tabs -->
+    <nav class="mode-tabs">
+      <button class="tab-btn active" data-mode="stopwatch">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 15 15"></polyline>
+        </svg>
+        Stopwatch
+      </button>
+      <button class="tab-btn" data-mode="timer">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="6" x2="12" y2="12"></line>
+          <line x1="12" y1="12" x2="16" y2="12"></line>
+        </svg>
+        Timer
+      </button>
+      <button class="tab-btn" data-mode="pomodoro">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+        </svg>
+        Pomodoro
+      </button>
+    </nav>
+    
+    <!-- Main Focus Area containing the Timer Circle -->
+    <main class="focus-area">
+      <div class="timer-display-wrapper">
+        <svg class="progress-ring" width="340" height="340" viewBox="0 0 340 340">
+          <circle class="progress-ring-bg" stroke="rgba(255,255,255,0.03)" stroke-width="8" fill="transparent" r="150" cx="170" cy="170" />
+          <circle class="progress-ring-fill" stroke="var(--accent)" stroke-width="8" fill="transparent" r="150" cx="170" cy="170" stroke-linecap="round" />
+        </svg>
+        
+        <div class="timer-text-container">
+          <div id="timer-sub-text" class="timer-sub-text">READY</div>
+          <div id="timer-digits" class="timer-digits">00:00<span class="millis">.00</span></div>
+          <div id="pomo-dots" class="pomo-dots hidden">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </div>
+      
+      <!-- Primary Controls (Start, Pause, Reset, Lap) -->
+      <div class="controls-container">
+        <button id="reset-btn" class="btn btn-outline" disabled>Reset</button>
+        <button id="primary-btn" class="btn btn-gradient btn-play">Start</button>
+        <button id="lap-btn" class="btn btn-outline hidden">Lap</button>
+      </div>
+    </main>
+
+    <!-- Contextual Mode Panels (Settings, Presets, Lap Lists, Tasks) -->
+    <section class="panels-container">
+      
+      <!-- Stopwatch Panel: Laps List -->
+      <div id="panel-stopwatch" class="glass-panel panel-content active">
+        <div class="panel-header">
+          <h2>Lap History</h2>
+          <button id="clear-laps-btn" class="text-btn hidden">Clear Laps</button>
+        </div>
+        <div class="lap-list-wrapper">
+          <div id="lap-empty" class="panel-empty-state">
+            <p>No laps recorded. Press "Lap" while the stopwatch is running.</p>
+          </div>
+          <table id="lap-table" class="lap-table hidden">
+            <thead>
+              <tr>
+                <th>Lap</th>
+                <th>Lap Time</th>
+                <th>Total Time</th>
+              </tr>
+            </thead>
+            <tbody id="lap-list">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Timer Panel: Setup Settings & Presets -->
+      <div id="panel-timer" class="glass-panel panel-content hidden">
+        <div class="timer-inputs-wrapper">
+          <div class="timer-input-group">
+            <label for="input-hours">Hours</label>
+            <input type="number" id="input-hours" min="0" max="99" value="0" placeholder="00">
+          </div>
+          <div class="timer-input-sep">:</div>
+          <div class="timer-input-group">
+            <label for="input-minutes">Minutes</label>
+            <input type="number" id="input-minutes" min="0" max="59" value="5" placeholder="05">
+          </div>
+          <div class="timer-input-sep">:</div>
+          <div class="timer-input-group">
+            <label for="input-seconds">Seconds</label>
+            <input type="number" id="input-seconds" min="0" max="59" value="0" placeholder="00">
+          </div>
+        </div>
+        
+        <div class="sound-select-wrapper">
+          <label for="timer-sound">Alarm Sound</label>
+          <select id="timer-sound" class="custom-select">
+            <option value="digital">Digital Beep</option>
+            <option value="chime">Modern Chime</option>
+            <option value="bells">Gentle Bells</option>
+            <option value="tibet">Tibetan Bowl</option>
+          </select>
+        </div>
+
+        <div class="presets-section">
+          <h3>Quick Presets</h3>
+          <div class="preset-chips">
+            <button class="chip" data-time="60">1 Min</button>
+            <button class="chip" data-time="300">5 Min</button>
+            <button class="chip" data-time="600">10 Min</button>
+            <button class="chip" data-time="900">15 Min</button>
+            <button class="chip" data-time="1800">30 Min</button>
+            <button class="chip" data-time="3600">1 Hour</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pomodoro Panel: Session Toggles and Task List -->
+      <div id="panel-pomodoro" class="glass-panel panel-content hidden">
+        <div class="pomo-modes">
+          <button class="pomo-mode-btn active" data-pomo-mode="work">Focus (25m)</button>
+          <button class="pomo-mode-btn" data-pomo-mode="short-break">Short Break (5m)</button>
+          <button class="pomo-mode-btn" data-pomo-mode="long-break">Long Break (15m)</button>
+        </div>
+
+        <div class="pomo-tasks-section">
+          <div class="panel-header">
+            <h2>Focus Tasks</h2>
+            <span id="pomo-task-count" class="badge">0 completed</span>
+          </div>
+          
+          <form id="add-task-form" class="task-form">
+            <input type="text" id="new-task-input" placeholder="What are you working on?" required autocomplete="off">
+            <button type="submit" class="btn-task-add" aria-label="Add Task">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </button>
+          </form>
+
+          <div class="tasks-list-wrapper">
+            <div id="tasks-empty" class="panel-empty-state">
+              <p>No tasks yet. Add a task above to focus your sessions.</p>
+            </div>
+            <ul id="tasks-list" class="tasks-list">
+              <!-- Rendered dynamically -->
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+    </section>
+  </div>
+  
+  <footer>
+    <p>LuminaTimer &copy; 2026. Designed for deep focus.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

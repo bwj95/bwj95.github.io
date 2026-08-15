@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dev &amp; Text Utilities — JSON · Base64 · URL · case · count</title>
+<meta name="description" content="A grab-bag of everyday developer and text tools: JSON formatter, Base64, URL encode/decode, case converter, word counter. Free, in-browser, private." />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='88'>⚙️</text></svg>" />
+<style>
+  :root{
+    --bg:#07070a; --panel:rgba(255,255,255,.035); --panel2:rgba(255,255,255,.06);
+    --border:rgba(255,255,255,.09); --border-bright:rgba(255,255,255,.18);
+    --text:#e9e9ee; --dim:#a2a2ac; --faint:#6a6a74;
+    --accent:#6ceaff; --spectrum:linear-gradient(135deg,#a78bfa,#6ceaff 55%,#ff6ec7);
+    --ok:#7ff2a0; --bad:#ff8a8a;
+    --radius:14px; --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;font-family:var(--sans);color:var(--text);
+    background:radial-gradient(60vw 60vw at 85% 0%,rgba(108,234,255,.10),transparent 60%),
+      radial-gradient(50vw 50vw at 0% 15%,rgba(167,139,250,.08),transparent 60%),var(--bg);
+    background-attachment:fixed;line-height:1.55}
+  .wrap{max-width:920px;margin:0 auto;padding:clamp(1rem,4vw,2.5rem)}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:2rem}
+  .brand{font-family:var(--mono);font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+  .back{font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;color:var(--faint);text-decoration:none;
+    padding:.5rem .9rem;border:1px solid var(--border);border-radius:100px;transition:.2s}
+  .back:hover{color:var(--text);border-color:var(--border-bright)}
+  h1{font-size:clamp(1.8rem,5vw,2.9rem);margin:.2rem 0 1.4rem;letter-spacing:-.02em}
+  .grad{background:var(--spectrum);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .tabs{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1.2rem}
+  .tab{font-family:var(--mono);font-size:.8rem;color:var(--dim);background:var(--panel);border:1px solid var(--border);
+    padding:.5rem .9rem;border-radius:100px;cursor:pointer;transition:.2s}
+  .tab:hover{color:var(--text);border-color:var(--border-bright)}
+  .tab.active{color:#0c0c0f;background:var(--accent);border-color:transparent;font-weight:600}
+  .panel{display:none;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:1.2rem}
+  .panel.active{display:block}
+  .desc{color:var(--faint);font-size:.85rem;margin:0 0 1rem}
+  textarea{width:100%;min-height:150px;resize:vertical;background:var(--bg);color:var(--text);border:1px solid var(--border);
+    border-radius:10px;padding:.8rem;font-family:var(--mono);font-size:.88rem;line-height:1.5}
+  textarea:focus{outline:none;border-color:var(--accent)}
+  .io{display:grid;gap:.9rem}
+  @media(min-width:680px){.io.two{grid-template-columns:1fr 1fr}}
+  .bar{display:flex;flex-wrap:wrap;gap:.5rem;margin:.9rem 0}
+  button.act{font-family:var(--mono);font-size:.78rem;color:var(--text);background:var(--panel2);border:1px solid var(--border);
+    padding:.5rem .9rem;border-radius:100px;cursor:pointer;transition:.2s}
+  button.act:hover{border-color:var(--border-bright)}
+  button.act.primary{color:#0c0c0f;background:var(--accent);border-color:transparent;font-weight:600}
+  .status{font-family:var(--mono);font-size:.8rem;margin-top:.6rem;min-height:1.2em}
+  .status.ok{color:var(--ok)} .status.bad{color:var(--bad)}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:.8rem;margin-top:1rem}
+  .stat{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:.8rem;text-align:center}
+  .stat b{display:block;font-size:1.5rem;background:var(--spectrum);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .stat span{font-family:var(--mono);font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--faint)}
+  .casegrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.5rem;margin:.9rem 0}
+  .foot{color:var(--faint);font-size:.8rem;margin-top:2.5rem;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><span class="brand">✦ Free tool · runs offline</span><a class="back" href="/#toolbox">↩ Gallery</a></div>
+  <h1>Dev &amp; Text <span class="grad">Utilities</span></h1>
+
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-t="json">JSON</button>
+    <button class="tab" data-t="base64">Base64</button>
+    <button class="tab" data-t="url">URL</button>
+    <button class="tab" data-t="case">Case</button>
+    <button class="tab" data-t="count">Word count</button>
+  </div>
+
+  <!-- JSON -->
+  <div class="panel active" data-p="json">
+    <p class="desc">Format, validate, and minify JSON. Errors point to the character.</p>
+    <textarea id="jsonIn" placeholder='{"paste":"your JSON here"}' spellcheck="false"></textarea>
+    <div class="bar">
+      <button class="act primary" id="jsonFormat">Format</button>
+      <button class="act" id="jsonMin">Minify</button>
+      <button class="act" id="jsonCopy">Copy</button>
+    </div>
+    <div class="status" id="jsonStatus"></div>
+  </div>
+
+  <!-- Base64 -->
+  <div class="panel" data-p="base64">
+    <p class="desc">Encode text to Base64 or decode it back. UTF-8 safe.</p>
+    <div class="io two">
+      <textarea id="b64Plain" placeholder="Plain text" spellcheck="false"></textarea>
+      <textarea id="b64Enc" placeholder="Base64" spellcheck="false"></textarea>
+    </div>
+    <div class="bar">
+      <button class="act primary" id="b64Encode">Encode →</button>
+      <button class="act primary" id="b64Decode">← Decode</button>
+    </div>
+    <div class="status" id="b64Status"></div>
+  </div>
+
+  <!-- URL -->
+  <div class="panel" data-p="url">
+    <p class="desc">Percent-encode / decode URL components.</p>
+    <div class="io two">
+      <textarea id="urlPlain" placeholder="Plain text" spellcheck="false"></textarea>
+      <textarea id="urlEnc" placeholder="Encoded" spellcheck="false"></textarea>
+    </div>
+    <div class="bar">
+      <button class="act primary" id="urlEncode">Encode →</button>
+      <button class="act primary" id="urlDecode">← Decode</button>
+    </div>
+    <div class="status" id="urlStatus"></div>
+  </div>
+
+  <!-- Case -->
+  <div class="panel" data-p="case">
+    <p class="desc">Transform text case and format.</p>
+    <textarea id="caseIn" placeholder="Type or paste text" spellcheck="false"></textarea>
+    <div class="casegrid">
+      <button class="act" data-case="upper">UPPER CASE</button>
+      <button class="act" data-case="lower">lower case</button>
+      <button class="act" data-case="title">Title Case</button>
+      <button class="act" data-case="sentence">Sentence case</button>
+      <button class="act" data-case="camel">camelCase</button>
+      <button class="act" data-case="snake">snake_case</button>
+      <button class="act" data-case="kebab">kebab-case</button>
+      <button class="act" data-case="trim">Trim + tidy spaces</button>
+    </div>
+    <button class="act" id="caseCopy">Copy result</button>
+  </div>
+
+  <!-- Word count -->
+  <div class="panel" data-p="count">
+    <p class="desc">Live word, character, sentence, and reading-time counts.</p>
+    <textarea id="countIn" placeholder="Type or paste text" spellcheck="false"></textarea>
+    <div class="stats">
+      <div class="stat"><b id="cWords">0</b><span>Words</span></div>
+      <div class="stat"><b id="cChars">0</b><span>Characters</span></div>
+      <div class="stat"><b id="cNoSpace">0</b><span>No spaces</span></div>
+      <div class="stat"><b id="cSent">0</b><span>Sentences</span></div>
+      <div class="stat"><b id="cLines">0</b><span>Lines</span></div>
+      <div class="stat"><b id="cRead">0s</b><span>Read time</span></div>
+    </div>
+  </div>
+
+  <p class="foot">100% client-side. Built for the gallery at bwj95.github.io.</p>
+</div>
+
+<script>
+// tabs
+const tabs=document.getElementById('tabs');
+tabs.addEventListener('click',e=>{const b=e.target.closest('.tab');if(!b)return;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t===b));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.dataset.p===b.dataset.t));});
+
+const $=id=>document.getElementById(id);
+const setStatus=(el,msg,ok)=>{el.textContent=msg;el.className='status '+(ok?'ok':'bad');};
+async function copy(text,el){try{await navigator.clipboard.writeText(text);if(el)setStatus(el,'Copied to clipboard.',true);}catch{if(el)setStatus(el,'Copy failed — select manually.',false);}}
+
+// JSON
+$('jsonFormat').onclick=()=>{try{const v=JSON.parse($('jsonIn').value);$('jsonIn').value=JSON.stringify(v,null,2);setStatus($('jsonStatus'),'Valid JSON — formatted.',true);}catch(e){setStatus($('jsonStatus'),'Invalid: '+e.message,false);}};
+$('jsonMin').onclick=()=>{try{const v=JSON.parse($('jsonIn').value);$('jsonIn').value=JSON.stringify(v);setStatus($('jsonStatus'),'Valid JSON — minified.',true);}catch(e){setStatus($('jsonStatus'),'Invalid: '+e.message,false);}};
+$('jsonCopy').onclick=()=>copy($('jsonIn').value,$('jsonStatus'));
+
+// Base64 (UTF-8 safe)
+const b64enc=s=>btoa(String.fromCharCode(...new TextEncoder().encode(s)));
+const b64dec=s=>new TextDecoder().decode(Uint8Array.from(atob(s),c=>c.charCodeAt(0)));
+$('b64Encode').onclick=()=>{try{$('b64Enc').value=b64enc($('b64Plain').value);setStatus($('b64Status'),'Encoded.',true);}catch(e){setStatus($('b64Status'),'Error: '+e.message,false);}};
+$('b64Decode').onclick=()=>{try{$('b64Plain').value=b64dec($('b64Enc').value.trim());setStatus($('b64Status'),'Decoded.',true);}catch(e){setStatus($('b64Status'),'Not valid Base64.',false);}};
+
+// URL
+$('urlEncode').onclick=()=>{try{$('urlEnc').value=encodeURIComponent($('urlPlain').value);setStatus($('urlStatus'),'Encoded.',true);}catch(e){setStatus($('urlStatus'),'Error.',false);}};
+$('urlDecode').onclick=()=>{try{$('urlPlain').value=decodeURIComponent($('urlEnc').value);setStatus($('urlStatus'),'Decoded.',true);}catch(e){setStatus($('urlStatus'),'Malformed encoding.',false);}};
+
+// Case
+const words=s=>s.split(/[\s_\-]+/).filter(Boolean);
+const casers={
+  upper:s=>s.toUpperCase(),lower:s=>s.toLowerCase(),
+  title:s=>s.replace(/\w\S*/g,w=>w[0].toUpperCase()+w.slice(1).toLowerCase()),
+  sentence:s=>s.toLowerCase().replace(/(^\s*\w|[.!?]\s*\w)/g,c=>c.toUpperCase()),
+  camel:s=>words(s).map((w,i)=>i?w[0].toUpperCase()+w.slice(1).toLowerCase():w.toLowerCase()).join(''),
+  snake:s=>words(s).map(w=>w.toLowerCase()).join('_'),
+  kebab:s=>words(s).map(w=>w.toLowerCase()).join('-'),
+  trim:s=>s.replace(/[ \t]+/g,' ').replace(/ *\n */g,'\n').trim(),
+};
+document.querySelectorAll('[data-case]').forEach(b=>b.onclick=()=>{$('caseIn').value=casers[b.dataset.case]($('caseIn').value);});
+$('caseCopy').onclick=()=>copy($('caseIn').value);
+
+// Word count (live)
+const ci=$('countIn');
+function updateCount(){const t=ci.value;
+  const w=(t.trim().match(/\S+/g)||[]).length;
+  $('cWords').textContent=w;
+  $('cChars').textContent=t.length;
+  $('cNoSpace').textContent=t.replace(/\s/g,'').length;
+  $('cSent').textContent=(t.match(/[.!?]+(\s|$)/g)||[]).length;
+  $('cLines').textContent=t?t.split(/\n/).length:0;
+  const secs=Math.round(w/200*60);
+  $('cRead').textContent=secs<60?secs+'s':Math.floor(secs/60)+'m '+(secs%60)+'s';
+}
+ci.addEventListener('input',updateCount);updateCount();
+</script>
+</body>
+</html>

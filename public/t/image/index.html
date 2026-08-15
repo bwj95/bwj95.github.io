@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Image Toolkit — compress · resize · convert</title>
+<meta name="description" content="Compress, resize, and convert images (PNG · JPEG · WebP) right in your browser. Free, private — nothing is uploaded." />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='88'>🖼️</text></svg>" />
+<style>
+  :root{
+    --bg:#07070a; --panel:rgba(255,255,255,.035); --panel2:rgba(255,255,255,.06);
+    --border:rgba(255,255,255,.09); --border-bright:rgba(255,255,255,.18);
+    --text:#e9e9ee; --dim:#a2a2ac; --faint:#6a6a74;
+    --accent:#a78bfa; --spectrum:linear-gradient(135deg,#a78bfa,#6ceaff 55%,#ff6ec7);
+    --radius:16px; --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;font-family:var(--sans);color:var(--text);
+    background:
+      radial-gradient(60vw 60vw at 15% 0%,rgba(167,139,250,.10),transparent 60%),
+      radial-gradient(50vw 50vw at 100% 20%,rgba(108,234,255,.08),transparent 60%),
+      var(--bg);
+    background-attachment:fixed;line-height:1.55}
+  a{color:inherit}
+  .wrap{max-width:1000px;margin:0 auto;padding:clamp(1rem,4vw,2.5rem)}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:2rem}
+  .brand{font-family:var(--mono);font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+  .back{font-family:var(--mono);font-size:.72rem;letter-spacing:.1em;color:var(--faint);text-decoration:none;
+    padding:.5rem .9rem;border:1px solid var(--border);border-radius:100px;transition:.2s}
+  .back:hover{color:var(--text);border-color:var(--border-bright)}
+  h1{font-size:clamp(1.8rem,5vw,2.9rem);margin:.2rem 0 .5rem;letter-spacing:-.02em}
+  .grad{background:var(--spectrum);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lead{color:var(--dim);max-width:60ch;margin:0 0 2rem}
+  .drop{border:1.5px dashed var(--border-bright);border-radius:var(--radius);padding:2.5rem 1.5rem;text-align:center;
+    background:var(--panel);cursor:pointer;transition:.2s;margin-bottom:1.4rem}
+  .drop.drag{border-color:var(--accent);background:var(--panel2)}
+  .drop strong{color:var(--text)} .drop small{color:var(--faint);display:block;margin-top:.4rem}
+  .controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1rem;
+    background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:1.2rem;margin-bottom:1.4rem}
+  .ctl{display:flex;flex-direction:column;gap:.45rem}
+  label{font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+  select,input[type=number]{background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:.6rem .7rem;font:inherit;font-size:.92rem}
+  input[type=range]{accent-color:var(--accent);width:100%}
+  .rangeval{font-family:var(--mono);font-size:.8rem;color:var(--dim)}
+  .row{display:flex;align-items:center;gap:.6rem}
+  .results{display:flex;flex-direction:column;gap:.9rem}
+  .card{display:flex;gap:1rem;align-items:center;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:.9rem}
+  .thumb{width:72px;height:72px;flex:0 0 auto;border-radius:10px;object-fit:cover;background:#111;border:1px solid var(--border)}
+  .meta{flex:1 1 auto;min-width:0}
+  .meta .name{font-size:.92rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .meta .sizes{font-family:var(--mono);font-size:.78rem;color:var(--dim);margin-top:.2rem}
+  .save{color:#0c0c0f;background:var(--accent);text-decoration:none;font-family:var(--mono);font-size:.78rem;
+    padding:.55rem .9rem;border-radius:100px;white-space:nowrap;font-weight:600}
+  .save:hover{filter:brightness(1.08)}
+  .pill{font-family:var(--mono);font-size:.7rem;padding:.15rem .5rem;border-radius:100px;border:1px solid var(--border)}
+  .down{color:#7ff2a0} .up{color:#ff8a8a}
+  .empty{color:var(--faint);font-family:var(--mono);font-size:.82rem;text-align:center;padding:1rem}
+  .foot{color:var(--faint);font-size:.8rem;margin-top:2.5rem;text-align:center}
+  .btn-clear{background:none;border:1px solid var(--border);color:var(--dim);font:inherit;font-size:.8rem;
+    padding:.5rem .9rem;border-radius:100px;cursor:pointer;font-family:var(--mono)}
+  .btn-clear:hover{border-color:var(--border-bright);color:var(--text)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <span class="brand">✦ Free tool · nothing uploaded</span>
+    <a class="back" href="/#toolbox">↩ Gallery</a>
+  </div>
+  <h1>Image <span class="grad">Toolkit</span></h1>
+  <p class="lead">Compress, resize, and convert images — PNG, JPEG, WebP — right here in your browser. Your files never leave the page: no upload, no server, no waiting. Drop as many as you like.</p>
+
+  <div class="drop" id="drop">
+    <strong>Drop images here</strong> or click to choose
+    <small>PNG · JPEG · WebP · GIF · BMP — batch supported</small>
+    <input type="file" id="file" accept="image/*" multiple hidden />
+  </div>
+
+  <div class="controls">
+    <div class="ctl">
+      <label for="fmt">Output format</label>
+      <select id="fmt">
+        <option value="image/webp">WebP (smallest)</option>
+        <option value="image/jpeg">JPEG</option>
+        <option value="image/png">PNG (lossless)</option>
+      </select>
+    </div>
+    <div class="ctl">
+      <label for="q">Quality <span class="rangeval" id="qv">80%</span></label>
+      <input type="range" id="q" min="10" max="100" value="80" />
+    </div>
+    <div class="ctl">
+      <label for="maxw">Max width (px, 0 = keep)</label>
+      <input type="number" id="maxw" min="0" step="10" value="0" placeholder="0" />
+    </div>
+    <div class="ctl" style="justify-content:flex-end">
+      <button class="btn-clear" id="clear">Clear all</button>
+    </div>
+  </div>
+
+  <div class="results" id="results"><div class="empty">Processed images appear here.</div></div>
+
+  <p class="foot">100% client-side. Built for the gallery at bwj95.github.io.</p>
+</div>
+
+<script>
+const drop=document.getElementById('drop'),file=document.getElementById('file'),
+  fmt=document.getElementById('fmt'),q=document.getElementById('q'),qv=document.getElementById('qv'),
+  maxw=document.getElementById('maxw'),results=document.getElementById('results'),clearBtn=document.getElementById('clear');
+let items=[]; // {name, origSize, file}
+
+const fmtBytes=b=>b<1024?b+' B':b<1048576?(b/1024).toFixed(1)+' KB':(b/1048576).toFixed(2)+' MB';
+q.addEventListener('input',()=>{qv.textContent=q.value+'%';reprocess();});
+fmt.addEventListener('change',reprocess); maxw.addEventListener('change',reprocess);
+q.parentElement.querySelector('label'); // noop
+
+drop.addEventListener('click',()=>file.click());
+file.addEventListener('change',e=>addFiles(e.target.files));
+;['dragover','dragenter'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('drag');}));
+;['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('drag');}));
+drop.addEventListener('drop',e=>{if(e.dataTransfer?.files) addFiles(e.dataTransfer.files);});
+clearBtn.addEventListener('click',()=>{items=[];render();});
+
+function addFiles(list){
+  for(const f of list){ if(!f.type.startsWith('image/'))continue; items.push({name:f.name,origSize:f.size,file:f}); }
+  render();
+}
+function reprocess(){ if(items.length) render(); }
+
+async function convert(item){
+  const url=URL.createObjectURL(item.file);
+  const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url;});
+  let w=img.naturalWidth,h=img.naturalHeight;
+  const mw=parseInt(maxw.value)||0;
+  if(mw>0 && w>mw){ h=Math.round(h*mw/w); w=mw; }
+  const c=document.createElement('canvas'); c.width=w; c.height=h;
+  const ctx=c.getContext('2d'); ctx.drawImage(img,0,0,w,h);
+  URL.revokeObjectURL(url);
+  const type=fmt.value, quality=type==='image/png'?undefined:q.value/100;
+  const blob=await new Promise(r=>c.toBlob(r,type,quality));
+  return {blob,w,h,dataURL:c.toDataURL(type,quality)};
+}
+
+async function render(){
+  if(!items.length){results.innerHTML='<div class="empty">Processed images appear here.</div>';return;}
+  results.innerHTML='<div class="empty">Processing…</div>';
+  const frag=document.createDocumentFragment();
+  for(const item of items){
+    let out; try{ out=await convert(item);}catch{ continue; }
+    const ext=fmt.value.split('/')[1].replace('jpeg','jpg');
+    const base=item.name.replace(/\.[^.]+$/,'');
+    const delta=out.blob.size-item.origSize, pct=Math.round((out.blob.size/item.origSize-1)*100);
+    const card=document.createElement('div');card.className='card';
+    const a=document.createElement('a');a.className='save';a.download=base+'.'+ext;
+    a.href=URL.createObjectURL(out.blob);a.textContent='Save';
+    card.innerHTML=`<img class="thumb" src="${out.dataURL}" alt="">
+      <div class="meta"><div class="name">${base}.${ext} · ${out.w}×${out.h}</div>
+      <div class="sizes">${fmtBytes(item.origSize)} → ${fmtBytes(out.blob.size)}
+      <span class="pill ${delta<=0?'down':'up'}">${delta<=0?'':'+'}${pct}%</span></div></div>`;
+    card.appendChild(a);frag.appendChild(card);
+  }
+  results.innerHTML='';results.appendChild(frag);
+}
+</script>
+</body>
+</html>
