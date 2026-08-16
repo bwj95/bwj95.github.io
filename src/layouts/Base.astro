@@ -2,7 +2,7 @@
 import '../styles/global.css';
 import ParticleField from '../components/ParticleField.astro';
 import Nav from '../components/Nav.astro';
-import Grasshopper from '../components/Grasshopper.astro';
+import FlameGlobe from '../components/FlameGlobe.astro';
 import { site } from '../data/site';
 
 interface Props { title?: string; description?: string; }
@@ -52,7 +52,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
       <div class="wrap foot__inner">
         <div>
           <a class="foot__mark" href="/" aria-label="Home">
-            <Grasshopper class="foot__gh" />
+            <FlameGlobe class="foot__mark-svg" />
           </a>
           <p class="foot__tag">{site.tagline}</p>
         </div>
@@ -104,8 +104,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
 </html>
 
 <style>
-  /* floating nav is fixed (out of flow) — reserve clearance so content starts below it */
-  main { padding-top: 4.5rem; }
+  /* the top bar is fixed (out of flow) — reserve exactly its height so content
+     starts flush beneath it. --nav-h lives in global.css; see the note there. */
+  main { padding-top: var(--nav-h); }
 
   /* top scroll-progress hairline */
   .progress { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 60; pointer-events: none; }
@@ -117,7 +118,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
   }
   .foot { border-top: 1px solid var(--border); margin-top: 4rem; padding-block: 3.5rem 2.5rem; background: rgba(255,255,255,0.01); }
   .foot__inner { display: flex; flex-wrap: wrap; gap: 2rem; justify-content: space-between; align-items: flex-start; }
-  .foot__mark { --gh-size: clamp(40px, 7vw, 52px); display: inline-block; color: var(--text-dim); transition: color 0.2s var(--ease); }
+  .foot__mark { --mark-size: clamp(40px, 7vw, 52px); display: inline-block; color: var(--text-dim); transition: color 0.2s var(--ease); }
   .foot__mark:hover { color: var(--accent); }
   .foot__tag { color: var(--text-dim); max-width: 42ch; margin-top: 0.5rem; }
   .foot__links { display: flex; flex-wrap: wrap; gap: 1.4rem; font-family: var(--font-mono); font-size: 0.82rem; }

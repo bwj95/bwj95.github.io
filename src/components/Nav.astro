@@ -1,5 +1,5 @@
 ---
-import Grasshopper from './Grasshopper.astro';
+import FlameGlobe from './FlameGlobe.astro';
 import Search from './Search.astro';
 const links = [
   { label: 'Built', href: '/#built' },
@@ -7,83 +7,99 @@ const links = [
 ];
 ---
 <header class="nav" id="nav">
-  <a class="nav__brand" href="/" aria-label="Home">
-    <Grasshopper class="nav__gh" />
-  </a>
+  {/* the bar is full-bleed; this inner .wrap keeps its contents on the same
+      gutter and max-width as every section below, so the mark lines up with
+      the page rather than floating off the viewport corner */}
+  <div class="nav__inner wrap">
+    <a class="nav__brand" href="/" aria-label="Home">
+      <FlameGlobe class="nav__mark" />
+    </a>
 
-  <nav class="nav__links" aria-label="Primary">
-    {links.map((l) => <a href={l.href}>{l.label}</a>)}
-  </nav>
+    <nav class="nav__links" aria-label="Primary">
+      {links.map((l) => <a href={l.href}>{l.label}</a>)}
+    </nav>
 
-  <div class="nav__search">
-    <svg class="nav__search-icon" viewBox="0 0 16 16" aria-hidden="true">
-      <circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.6" />
-      <line x1="10.4" y1="10.4" x2="14" y2="14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-    </svg>
-    <input
-      type="search"
-      id="navSearch"
-      class="nav__search-input"
-      placeholder="Search"
-      aria-label="Search everything built and bookmarked"
-      autocomplete="off"
-      spellcheck="false"
-      role="combobox"
-      aria-expanded="false"
-      aria-controls="searchPanel"
-      aria-autocomplete="list"
-    />
-    <kbd class="nav__search-kbd" aria-hidden="true">/</kbd>
+    <div class="nav__right">
+      <div class="nav__search">
+        <svg class="nav__search-icon" viewBox="0 0 16 16" aria-hidden="true">
+          <circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.6" />
+          <line x1="10.4" y1="10.4" x2="14" y2="14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
+        <input
+          type="search"
+          id="navSearch"
+          class="nav__search-input"
+          placeholder="Search"
+          aria-label="Search everything built and bookmarked"
+          autocomplete="off"
+          spellcheck="false"
+          role="combobox"
+          aria-expanded="false"
+          aria-controls="searchPanel"
+          aria-autocomplete="list"
+        />
+        <kbd class="nav__search-kbd" aria-hidden="true">/</kbd>
+      </div>
+
+      <button class="nav__burger" id="navBurger" aria-label="Open menu" aria-expanded="false" aria-controls="navMenu">
+        <span class="nav__burger-box" aria-hidden="true"><span class="nav__burger-line"></span></span>
+      </button>
+    </div>
   </div>
-
-  <button class="nav__burger" id="navBurger" aria-label="Open menu" aria-expanded="false" aria-controls="navMenu">
-    <span class="nav__burger-box" aria-hidden="true"><span class="nav__burger-line"></span></span>
-  </button>
 </header>
 
 <Search />
 
-<!-- menu lives OUTSIDE the glass pill: a filtered/transformed ancestor would trap
-     the fullscreen (position:fixed) variant. Body-level → true viewport anchoring. -->
-<div class="nav__menu glass" id="navMenu">
-  <nav aria-label="Menu">
+<!-- menu lives OUTSIDE the bar: the bar's backdrop-filter makes it a containing
+     block for position:fixed children, which would trap this. Body-level → true
+     viewport anchoring. The outer div is only a positioner (it mirrors .wrap's
+     width + gutter so the panel lands flush under the burger at any viewport);
+     the glass panel is the child. -->
+<div class="nav__menu" id="navMenu">
+  <nav class="nav__menu-panel glass" aria-label="Menu">
     {links.map((l) => <a href={l.href}>{l.label}</a>)}
   </nav>
 </div>
 
 <style>
-  /* floating centered pill — detached from the top edge */
+  /* Full-bleed bar, flush to the top edge. Height comes from --nav-h in
+     global.css — `main` reserves exactly that much clearance and #anchor jumps
+     offset by it, so all three stay in step. */
   .nav {
     position: fixed;
-    top: 0.9rem;
-    /* centre WITHOUT a transform, so the fullscreen menu (position:fixed) can
-       escape to the viewport instead of being trapped by a transformed parent */
-    left: 0; right: 0;
-    margin-inline: auto;
-    width: max-content;
+    top: 0; left: 0; right: 0;
     z-index: 50;
-    display: flex;
-    align-items: center;
-    gap: clamp(0.9rem, 2.6vw, 1.9rem);
-    height: 54px;
-    padding: 0 0.55rem 0 1.25rem;
-    max-width: calc(100vw - 1.6rem);
-    border-radius: 100px;
-    border: 1px solid var(--border);
-    background: linear-gradient(180deg, rgba(14, 14, 17, 0.78), rgba(8, 8, 10, 0.66));
+    height: var(--nav-h);
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(12, 12, 15, 0.86), rgba(8, 8, 10, 0.74));
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    box-shadow: 0 14px 44px rgba(0, 0, 0, 0.5);
-    transition: transform 0.4s var(--ease), opacity 0.35s var(--ease);
+    transition: transform 0.4s var(--ease);
   }
+  /* slides straight up out of view — no opacity fade, so it reads as one solid
+     bar leaving rather than dissolving in place */
   .nav.is-hidden {
-    transform: translateY(calc(-100% - 1.2rem));
-    opacity: 0;
+    transform: translateY(-100%);
     pointer-events: none;
   }
 
+  .nav__inner {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: clamp(0.9rem, 2.6vw, 1.9rem);
+  }
+  /* everything after the links is pushed to the right edge of the bar */
+  .nav__right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 0;   /* lets the search field shrink instead of overflowing */
+  }
+
   /* colour only — no transform, so the mark never shifts out from under the cursor */
-  .nav__brand { --gh-size: 34px; display: inline-flex; align-items: center; color: var(--accent); transition: color 0.2s var(--ease); }
+  .nav__brand { --mark-size: 32px; display: inline-flex; align-items: center; flex: 0 0 auto; color: var(--accent); transition: color 0.2s var(--ease); }
   .nav__brand:hover { color: var(--text); }
   .nav__links { display: flex; gap: clamp(0.9rem, 2.6vw, 1.7rem); }
   .nav__links a { font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.04em; color: var(--text-dim); transition: color 0.2s; }
@@ -137,19 +153,29 @@ const links = [
   .nav__burger[aria-expanded="true"] .nav__burger-line::after { top: 0; transform: rotate(-45deg); }
 
   /* ---- the menu (dropdown, body-level) ----
-     Fixed + body-level so the fullscreen variant anchors to the viewport. z-index below
-     the nav (50) so the pill's burger stays on top to close it. */
+     Fixed + body-level so it anchors to the viewport. z-index below the bar
+     (50) so the burger stays on top and can close it. */
   .nav__menu {
-    position: fixed; top: calc(0.9rem + 54px + 10px); left: 50%;
+    position: fixed;
+    top: calc(var(--nav-h) + 8px);
+    left: 0; right: 0;
+    margin-inline: auto;
+    max-width: var(--maxw);
+    padding-inline: var(--gutter);
+    display: flex;
+    justify-content: flex-end;   /* panel lands under the burger */
+    z-index: 49;
+    pointer-events: none;        /* positioner only — never eats clicks */
+  }
+  .nav__menu-panel {
     width: min(280px, calc(100vw - 1.6rem));
     padding: 0.55rem;
-    display: flex; flex-direction: column; gap: 0.15rem;
-    opacity: 0; visibility: hidden; transform: translateX(-50%) translateY(-8px);
+    display: flex; flex-direction: column; gap: 0.1rem;
+    opacity: 0; visibility: hidden; transform: translateY(-8px);
     transition: opacity 0.25s var(--ease), transform 0.25s var(--ease), visibility 0.25s;
-    z-index: 49;
+    pointer-events: auto;
   }
-  .nav__menu.is-open { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
-  .nav__menu nav { display: flex; flex-direction: column; gap: 0.1rem; }
+  .nav__menu.is-open .nav__menu-panel { opacity: 1; visibility: visible; transform: translateY(0); }
   .nav__menu a { padding: 0.7rem 0.9rem; border-radius: max(6px, calc(var(--radius-sm) - 6px)); color: var(--text-dim); font-family: var(--font-mono); font-size: 0.92rem; transition: color 0.2s, background 0.2s; }
   .nav__menu a:hover { color: var(--text); background: var(--panel-2); }
   .nav__menu-cta { justify-content: center; margin-top: 0.35rem; }
@@ -161,7 +187,7 @@ const links = [
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .nav, .nav__menu, .nav__burger-line, .nav__burger-line::before, .nav__burger-line::after { transition: none; }
+    .nav, .nav__menu-panel, .nav__burger-line, .nav__burger-line::before, .nav__burger-line::after { transition: none; }
   }
 </style>
 
