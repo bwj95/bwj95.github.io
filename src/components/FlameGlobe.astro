@@ -1,6 +1,10 @@
 ---
 // Flame-in-a-globe — the site's identity / home mark (bwj95.github.io is this site).
 //
+// MIRRORED IN THREE REPOS — web-studio (bwj95.github.io), traditions-astro and
+// customizer are separate git repos with no shared package, so this file is
+// copied, not imported. If you change it, change all three or they drift.
+//
 // A blue flame sealed inside a glass sphere, wrapped in an oscillating web.
 //
 // Deliberately SVG + CSS, not a canvas. The customizer's InteractiveCore draws
@@ -63,11 +67,16 @@ const { class: cls = '' } = Astro.props;
 >
   <defs>
     <!-- glass body: brightest where the light enters (upper left), clearing
-         through the middle so the flame reads through it -->
+         through the middle so the flame reads through it.
+         Tinted toward the LIGHT, never toward currentColor: on a light-themed
+         host (traditions' default palette, the customizer's editorial vibe)
+         currentColor is dark text, and a dark body turns the sphere into a grey
+         smudge. Real glass on a pale ground is nearly invisible — rim and
+         refraction carry it — which is exactly what this gives. -->
     <radialGradient id={`${uid}-body`} cx="34%" cy="28%" r="78%">
-      <stop offset="0%"   stop-color="#fff" stop-opacity="0.22" />
-      <stop offset="42%"  stop-color="currentColor" stop-opacity="0.07" />
-      <stop offset="100%" stop-color="currentColor" stop-opacity="0.16" />
+      <stop offset="0%"   stop-color="#fff" stop-opacity="0.26" />
+      <stop offset="42%"  stop-color="#fff" stop-opacity="0.06" />
+      <stop offset="100%" stop-color="#fff" stop-opacity="0.13" />
     </radialGradient>
 
     <!-- fresnel: glass is nearly invisible face-on and bright at a glancing
