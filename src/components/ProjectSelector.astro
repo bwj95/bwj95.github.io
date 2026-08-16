@@ -24,7 +24,6 @@ const first = items[0];
           <li
             class="sel__opt"
             role="option"
-            data-value={i}
             data-desc={p.blurb}
             data-url={p.url}
             data-external={p.external ? '1' : ''}
@@ -216,6 +215,29 @@ const first = items[0];
     const nameEl = root.querySelector<HTMLElement>('[data-sel-name]')!;
     const descText = root.querySelector<HTMLElement>('[data-sel-desc-text]')!;
     const openBtn = root.querySelector<HTMLAnchorElement>('[data-sel-open]')!;
+
+    // Shuffle on every visit, so a different piece is featured each time you
+    // land here rather than whichever one happens to sort first.
+    //
+    // It HAS to happen client-side: the site is statically built, so shuffling
+    // at build time would bake in one fixed order until the next deploy.
+    //
+    // Shuffle the DOM FIRST, then read the options back out of it. Reading them
+    // before reordering would leave the array in the old order, and the arrow
+    // keys walk that array — so ArrowDown would jump around the visible list
+    // instead of moving to the next row.
+    const shuffle = (nodes: HTMLElement[]) => {
+      for (let i = nodes.length - 1; i > 0; i--) {           // Fisher-Yates
+        const j = Math.floor(Math.random() * (i + 1));
+        [nodes[i], nodes[j]] = [nodes[j], nodes[i]];
+      }
+      // one fragment, so the list reflows once instead of once per row
+      const frag = document.createDocumentFragment();
+      nodes.forEach((n) => frag.appendChild(n));
+      list.appendChild(frag);
+    };
+    shuffle([...root.querySelectorAll<HTMLElement>('.sel__opt')]);
+
     const opts = [...root.querySelectorAll<HTMLElement>('.sel__opt')];
     let idx = 0;
 
@@ -223,7 +245,7 @@ const first = items[0];
     const openList = () => { list.classList.add('is-open'); trigger.setAttribute('aria-expanded', 'true'); };
     const closeList = () => { list.classList.remove('is-open'); trigger.setAttribute('aria-expanded', 'false'); };
 
-    const select = (i: number) => {
+    const select = (i: number, scroll = true) => {
       idx = Math.max(0, Math.min(i, opts.length - 1));
       opts.forEach((o, k) => o.setAttribute('aria-selected', String(k === idx)));
       nameEl.textContent = opts[idx].querySelector('.sel__opt-name')?.textContent || '';
@@ -235,8 +257,15 @@ const first = items[0];
       } else {
         openBtn.removeAttribute('target'); openBtn.removeAttribute('rel');
       }
-      opts[idx].scrollIntoView({ block: 'nearest' });
+      if (scroll) opts[idx].scrollIntoView({ block: 'nearest' });
     };
+
+    // The trigger, blurb and Open link were rendered against the BUILD-TIME
+    // first item, which the shuffle just moved. Re-point them at whatever now
+    // sits at the top, or the label and the link would disagree with the list.
+    // `false` = don't scroll: this runs on load, and scrollIntoView on a
+    // closed list would yank the page down to the selector.
+    select(0, false);
 
     trigger.addEventListener('click', (e) => {
       e.stopPropagation();
