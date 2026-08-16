@@ -27,6 +27,10 @@ export const KIND_LABEL: Record<Kind, string> = {
 const all: Project[] = [
   { id: 'traditions', name: 'Traditions', kind: 'site', url: '/traditions', external: true,
     blurb: 'Field guide to nine wellness traditions and thirty-odd techniques.' },
+  { id: 'customizer', name: 'Web Customizer', kind: 'site', url: 'https://web-customizer.bwj9515.workers.dev/', external: true,
+    blurb: 'Restyle a whole site live — pick a look from a game-menu style select, then tune every knob.' },
+  { id: 'bazi', name: 'BaZi Calculator', kind: 'site', url: 'https://bazi.bwj9515.workers.dev/', external: true,
+    blurb: 'Four Pillars chart from a birth moment — astronomy computed from scratch, not table lookups.' },
 
   { id: 'tool-image', name: 'Image Toolkit', kind: 'tool', url: '/t/image/',
     blurb: 'Compress, resize and convert PNG / JPEG / WebP. Batch, nothing uploaded.' },
