@@ -1,374 +1,325 @@
 ---
-// Flame-in-a-globe — the site's identity / home mark (bwj95.github.io is this site).
+// The site's identity mark — a live blue flame (bwj95.github.io is this site).
+//
+// NAME NOTE: the file is still FlameGlobe.astro (imported by Nav + footer, and
+// mirrored by name in traditions + customizer) but the GLOBE IS GONE — this is
+// now just the flame. Kept the filename to avoid rippling the imports/mirror.
 //
 // MIRRORED IN THREE REPOS — web-studio (bwj95.github.io), traditions-astro and
 // customizer are separate git repos with no shared package, so this file is
 // copied, not imported. If you change it, change all three or they drift.
 //
-// A blue flame sealed inside a glass sphere, wrapped in an oscillating web.
+// WHY A CANVAS, NOT SVG — the flame is meant to read like canvasui.dev's
+// flame-wrap: turbulent licking ridges, a white-hot heart, rising DIGITAL embers
+// (binary/hex glyphs, for the eventual "Spark Digital" name), and it
+// has to bend toward the cursor and flare on click. That's a per-pixel noise
+// fire; an SVG path (even morphed) can't do turbulence or react smoothly. Per the
+// standing canvasui-look pattern we don't ship their WebGL — we rebuild the look
+// in canvas2D on our own artwork.
 //
-// Deliberately SVG + CSS, not a canvas. The customizer's InteractiveCore draws
-// its globe with 58 projected nodes on a <canvas>; that look does NOT survive
-// being shrunk to a 32px nav brand (it turns to mush) and would cost a permanent
-// rAF loop per instance — two of them, since nav and footer both render this.
+// HOW IT STAYS CHEAP — the fire is computed into a tiny fixed buffer (48×64 fire
+// cells) with a 3-octave fbm, then drawn UPSCALED with smoothing on, so it looks
+// soft and organic at any --mark-size for a fixed per-frame cost (the buffer
+// never grows). A SINGLE shared controller drives every flame on the page from
+// one rAF and one global pointer, and pauses when nothing is on-screen.
 //
-// Rotation is faked the honest way: a meridian scaled on X from 1 → 0 → 1 is
-// geometrically what a real meridian does as a sphere turns. Two of them, half a
-// period apart, read as one rotating web.
-//
-// MATERIAL — after canvasui.dev/docs/components/particle-object, which renders
-// an object as a drifting point cloud of soft round particles. Three things
-// carry that over at logo scale:
-//   · the web is DOTTED, not stroked — `stroke-dasharray` with a round linecap
-//     turns each ring into a string of soft circular particles, and the dots
-//     still scale with the oscillation for free.
-//   · the dots drift: a slow `stroke-dashoffset` crawl is their idle shimmer.
-//   · the flame blooms through a blur, the way their particles glow.
-//
-// GLASS is what sells "sealed inside": the sphere gets a translucent body, a
-// fresnel rim that brightens at the edge, and a specular highlight painted OVER
-// the flame. That last one is the whole trick — a highlight in front of the
-// flame reads as a surface between you and it. Behind it, and it's just a ball.
-//
-// The FLAME ITSELF is a second glass object — after canvasui's glass-object
-// (transmission/ior/dispersion/bevel/clearcoat; each mapped in the comment at
-// the flame group) — with a flame-wrap blaze of rising blue embers off its
-// shoulders (their default colour IS this blue).
-//
-// The glass and web inherit currentColor (so the nav's accent→text hover still
-// works); the flame is FIXED blue, because it's the brand, not the theme.
-// Override size with --mark-size.
-
-// One source of truth for the silhouette: the visible flame, its bloom and the
-// mask pocket that clears the web from behind it are all this same path.
-const FLAME = `M24 13.07
-  C25.73 17.18 30.26 19.77 30.26 26.03
-  C30.26 30.68 27.46 33.7 24 33.7
-  C20.54 33.7 17.74 30.68 17.74 26.03
-  C17.74 22.79 19.25 20.85 20.98 19.12
-  C21.19 21.71 21.95 23.12 23.03 23.87
-  C22.27 20.2 22.62 16.31 24 13.07 Z`;
-
-// nav and footer both render this component — hard-coded ids would collide.
-const uid = 'fg' + Math.random().toString(36).slice(2, 8);
+// The flame is FIXED blue (the brand palette, matching canvasui's [0.31,0.54,1]),
+// not currentColor. Override size with --mark-size.
 
 interface Props { class?: string }
 const { class: cls = '' } = Astro.props;
 ---
-<svg
-  class={`mark ${cls}`}
-  viewBox="0 0 48 48"
-  role="img"
-  aria-hidden="true"
-  fill="none"
-  stroke="currentColor"
-  stroke-linecap="round"
-  stroke-linejoin="round"
->
-  <defs>
-    <!-- glass body: brightest where the light enters (upper left), clearing
-         through the middle so the flame reads through it.
-         Tinted toward the LIGHT, never toward currentColor: on a light-themed
-         host (traditions' default palette, the customizer's editorial vibe)
-         currentColor is dark text, and a dark body turns the sphere into a grey
-         smudge. Real glass on a pale ground is nearly invisible — rim and
-         refraction carry it — which is exactly what this gives. -->
-    <radialGradient id={`${uid}-body`} cx="34%" cy="28%" r="78%">
-      <stop offset="0%"   stop-color="#fff" stop-opacity="0.26" />
-      <stop offset="42%"  stop-color="#fff" stop-opacity="0.06" />
-      <stop offset="100%" stop-color="#fff" stop-opacity="0.13" />
-    </radialGradient>
-
-    <!-- fresnel: glass is nearly invisible face-on and bright at a glancing
-         angle, so the rim carries almost all of the material -->
-    <radialGradient id={`${uid}-rim`} cx="50%" cy="50%" r="50%">
-      <stop offset="88%"  stop-color="currentColor" stop-opacity="0" />
-      <stop offset="97%"  stop-color="currentColor" stop-opacity="0.30" />
-      <stop offset="100%" stop-color="currentColor" stop-opacity="0.55" />
-    </radialGradient>
-
-    <linearGradient id={`${uid}-flame`} x1="24" y1="13" x2="24" y2="34" gradientUnits="userSpaceOnUse">
-      <stop offset="0%"   stop-color="#8fd4ff" />
-      <stop offset="45%"  stop-color="#3d8bff" />
-      <stop offset="100%" stop-color="#1b3fd8" />
-    </linearGradient>
-
-    <!-- the hot heart of a blue flame is almost white -->
-    <linearGradient id={`${uid}-core`} x1="24" y1="20" x2="24" y2="32" gradientUnits="userSpaceOnUse">
-      <stop offset="0%"   stop-color="#ffffff" />
-      <stop offset="60%"  stop-color="#cbe9ff" />
-      <stop offset="100%" stop-color="#7fc4ff" />
-    </linearGradient>
-
-    <filter id={`${uid}-bloom`} x="-80%" y="-80%" width="260%" height="260%">
-      <feGaussianBlur stdDeviation="2.4" />
-    </filter>
-    <filter id={`${uid}-soft`} x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="0.9" />
-    </filter>
-    <!-- a specular with a hard edge is a painted grey shape; blurring it is what
-         turns it back into light sitting on a surface -->
-    <filter id={`${uid}-spec`} x="-90%" y="-90%" width="280%" height="280%">
-      <feGaussianBlur stdDeviation="1.1" />
-    </filter>
-
-    <!-- feathered hole shaped like the flame, so the web passes BEHIND it -->
-    <mask id={`${uid}-pocket`} maskUnits="userSpaceOnUse" x="0" y="0" width="48" height="48">
-      <rect x="0" y="0" width="48" height="48" fill="#fff" />
-      <path d={FLAME} fill="#000" stroke="#000" stroke-width="3.4" filter={`url(#${uid}-soft)`} />
-    </mask>
-
-    <!-- the flame's own footprint, for the refraction pass -->
-    <clipPath id={`${uid}-flameclip`}>
-      <path d={FLAME} />
-    </clipPath>
-
-    <!-- the beveled "liquid lip": glass edges catch the key light hardest on the
-         side facing it, so the rim runs bright white top-left → faint blue -->
-    <linearGradient id={`${uid}-lip`} x1="17" y1="14" x2="31" y2="34" gradientUnits="userSpaceOnUse">
-      <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.95" />
-      <stop offset="45%"  stop-color="#9ad8ff" stop-opacity="0.40" />
-      <stop offset="100%" stop-color="#3d6bff" stop-opacity="0.22" />
-    </linearGradient>
-  </defs>
-
-  <!-- 1. the glass body, behind everything -->
-  <circle cx="24" cy="24" r="17" fill={`url(#${uid}-body)`} stroke="none" />
-
-  <!-- 2. the particle web. Mask on a STATIC wrapper, spin on the inner group,
-          so the pocket stays put while the web turns behind it. -->
-  <g mask={`url(#${uid}-pocket)`}>
-    <g class="mark__web">
-      <circle class="mark__limb" cx="24" cy="24" r="17" stroke-width="1.5" />
-      <ellipse class="mark__equator" cx="24" cy="24" rx="17" ry="5.6"
-               stroke-width="1.4" transform="rotate(-16 24 24)" />
-      <circle class="mark__meridian mark__meridian--a" cx="24" cy="24" r="17" stroke-width="1.4" />
-      <circle class="mark__meridian mark__meridian--b" cx="24" cy="24" r="17" stroke-width="1.4" />
-    </g>
-  </g>
-
-  <!-- 3. the flame — a GLASS OBJECT, after canvasui's glass-object
-          (MeshPhysicalMaterial: transmission 1, ior, dispersion, bevel,
-          clearcoat). What each of theirs becomes here, back to front:
-            transmission — the web is drawn AGAIN inside the flame's clip,
-              lensed (scaled toward the flame's centre): the background is
-              genuinely visible through the glass, bent. This is the cue that
-              makes it read as glass instead of paint.
-            tint         — a translucent blue body OVER that refracted image,
-              so the glass colours what you see through it.
-            glow         — the core is blurred into the volume, light inside
-              glass rather than an opaque white shape on top.
-            dispersion   — cyan/violet fringes: the outline twice, nudged
-              opposite ways.
-            bevel        — the "liquid lip": the outline stroked in a light
-              gradient, white where the key light lands.
-            clearcoat    — one blurred streak on the shoulder. -->
-  <g class="mark__flame">
-    <path class="mark__bloom" d={FLAME} fill="#3d8bff" stroke="none"
-          filter={`url(#${uid}-bloom)`} opacity="0.7" />
-
-    <!-- transmission: the lensed web, clipped to the flame -->
-    <g clip-path={`url(#${uid}-flameclip)`}>
-      <g class="mark__lens">
-        <g class="mark__web">
-          <circle class="mark__limb" cx="24" cy="24" r="17" stroke-width="1.5" />
-          <ellipse class="mark__equator" cx="24" cy="24" rx="17" ry="5.6"
-                   stroke-width="1.4" transform="rotate(-16 24 24)" />
-          <circle class="mark__meridian mark__meridian--a" cx="24" cy="24" r="17" stroke-width="1.4" />
-          <circle class="mark__meridian mark__meridian--b" cx="24" cy="24" r="17" stroke-width="1.4" />
-        </g>
-      </g>
-    </g>
-
-    <!-- tint: the glass volume colouring what shows through it -->
-    <path d={FLAME} fill={`url(#${uid}-flame)`} fill-opacity="0.6" stroke="none" />
-
-    <!-- glow: the hot heart, blurred INTO the volume -->
-    <path
-      class="mark__core"
-      d="M24 20.63
-         C25.73 23.44 27.13 25.38 27.13 27.76
-         C27.13 30.04 25.73 31.65 24 31.65
-         C22.27 31.65 20.87 30.04 20.87 27.76
-         C20.87 25.38 22.27 23.44 24 20.63 Z"
-      fill={`url(#${uid}-core)`}
-      stroke="none"
-      filter={`url(#${uid}-soft)`}
-      opacity="0.9"
-    />
-
-    <!-- dispersion: refraction splits at the silhouette -->
-    <path d={FLAME} fill="none" stroke="#66f2ff" stroke-width="0.8"
-          stroke-opacity="0.45" transform="translate(-0.45 0.1)" />
-    <path d={FLAME} fill="none" stroke="#b48cff" stroke-width="0.8"
-          stroke-opacity="0.4" transform="translate(0.45 -0.1)" />
-
-    <!-- bevel: the liquid lip -->
-    <path d={FLAME} fill="none" stroke={`url(#${uid}-lip)`} stroke-width="1.25" />
-
-    <!-- clearcoat: one polished streak on the lit shoulder -->
-    <path d="M20.6 21.6 C21.3 19.4 22.2 17.5 23.3 15.7"
-          stroke="#fff" stroke-opacity="0.55" stroke-width="1.05"
-          fill="none" filter={`url(#${uid}-spec)`} />
-  </g>
-
-  <!-- 3b. the blaze, after canvasui's flame-wrap (whose default colour is
-          exactly this blue): sparks rise off the flame's shoulders, wobble,
-          and fade smoothstep-in / smoothstep-out. Sealed in with the flame. -->
-  <g class="mark__embers" fill="#9ad8ff" stroke="none">
-    <circle class="mark__ember" cx="21.6" cy="17.5" r="0.65" style="--ed: 2.6s; --el: -0.4s; --ex: -1.6px" />
-    <circle class="mark__ember" cx="26.2" cy="16.2" r="0.55" style="--ed: 3.1s; --el: -1.7s; --ex: 1.9px" />
-    <circle class="mark__ember" cx="24.1" cy="14.2" r="0.7"  style="--ed: 2.2s; --el: -1.1s; --ex: 0.7px" fill="#e6f5ff" />
-    <circle class="mark__ember" cx="19.9" cy="20.8" r="0.5"  style="--ed: 3.4s; --el: -2.5s; --ex: -2.1px" />
-    <circle class="mark__ember" cx="27.9" cy="20.2" r="0.5"  style="--ed: 2.9s; --el: -0.9s; --ex: 1.3px" />
-  </g>
-
-  <!-- 4. the glass SURFACE, painted over the flame — this is what puts the
-          flame behind glass rather than merely in front of a circle -->
-  <circle cx="24" cy="24" r="17" fill={`url(#${uid}-rim)`} stroke="none" />
-  <circle cx="24" cy="24" r="17" stroke="currentColor" stroke-width="0.7" stroke-opacity="0.32" />
-  <!-- specular: the bright catch-light, and a thin bounce off the far rim -->
-  <ellipse class="mark__spec" cx="17.4" cy="15.0" rx="4.3" ry="2.2"
-           transform="rotate(-38 17.4 15.0)" fill="#fff" opacity="0.34"
-           stroke="none" filter={`url(#${uid}-spec)`} />
-  <path class="mark__spec2" d="M31.8 33.8 A17 17 0 0 0 36.6 27.6"
-        stroke="#fff" stroke-opacity="0.30" stroke-width="1.1" fill="none"
-        filter={`url(#${uid}-spec)`} />
-</svg>
+<canvas class={`mark ${cls}`} data-flamemark role="img" aria-label="" aria-hidden="true"></canvas>
 
 <style>
-  /* Self-sized so it works no matter which component renders it (Astro scopes
-     styles per-component; a parent's width rule would not reach this svg). Glass
-     and web inherit via currentColor. Override size with --mark-size. */
   .mark {
+    /* a flame lives in a square box so nav/footer alignment doesn't shift; the
+       fire just doesn't fill the corners */
     width: var(--mark-size, 32px);
-    height: auto;
+    height: var(--mark-size, 32px);
     display: block;
-    overflow: visible;
-    filter: drop-shadow(0 0 7px rgba(61, 139, 255, 0.42));
-  }
-
-  /* every rotation pivots on the sphere's centre — view-box units, so this is
-     unambiguous for groups and shapes alike (fill-box on a <g> is shakier) */
-  .mark__web,
-  .mark__meridian {
-    transform-box: view-box;
-    transform-origin: 24px 24px;
-  }
-
-  /* THE PARTICLE MATERIAL: a near-zero dash under a round linecap renders each
-     ring as a row of soft circular dots rather than a line. */
-  .mark__limb,
-  .mark__equator,
-  .mark__meridian {
-    stroke-dasharray: 0.01 2.9;
-    stroke-linecap: round;
-  }
-
-  .mark__web {
-    opacity: 0.85;
-    animation: mark-oscillate 9s ease-in-out infinite;
-  }
-  /* the idle shimmer — dots crawl slowly around their own ring */
-  .mark__limb { opacity: 0.95; animation: mark-drift 14s linear infinite; }
-  .mark__equator { opacity: 0.85; animation: mark-drift 11s linear infinite reverse; }
-
-  /* half a period apart, so one is edge-on while the other is face-on */
-  .mark__meridian--a { animation: mark-meridian 7s linear infinite; }
-  .mark__meridian--b { animation: mark-meridian 7s linear infinite -3.5s; }
-
-  /* the flame pivots on its own base, not the sphere's centre */
-  .mark__flame {
-    transform-box: view-box;
-    transform-origin: 24px 33.7px;
-    animation: mark-flicker 2.4s ease-in-out infinite;
-  }
-  .mark__bloom { animation: mark-bloom 2.4s ease-in-out infinite; }
-  .mark__core { animation: mark-core 2.4s ease-in-out infinite; }
-
-  /* TRANSMISSION: the copy of the web seen through the glass is compressed
-     toward the flame's centre — that scale mismatch against the outer web is
-     the refraction. Blurred a touch for the material's roughness, brightened
-     because glass focuses what's behind it. The copy carries the same web
-     classes, so it spins in perfect sync with the outer one. */
-  .mark__lens {
-    transform-box: view-box;
-    transform-origin: 24px 25px;
-    transform: scale(0.74);
-    filter: blur(0.35px) brightness(1.5);
-  }
-
-  /* THE BLAZE: embers rise off the flame's shoulders, wobble sideways, fade in
-     fast and out slow (their smoothstep envelope). Negative delays pre-stagger
-     the flock so it never starts in unison. */
-  .mark__ember {
-    opacity: 0;
-    animation: mark-ember var(--ed, 2.8s) linear infinite;
-    animation-delay: var(--el, 0s);
-  }
-
-  /* a meridian seen edge-on is a line, not a gap — floor the scale just above 0
-     so the dots never fully vanish and pop back */
-  @keyframes mark-meridian {
-    0%   { transform: scaleX(1); }
-    25%  { transform: scaleX(0.04); }
-    50%  { transform: scaleX(1); }
-    75%  { transform: scaleX(0.04); }
-    100% { transform: scaleX(1); }
-  }
-
-  @keyframes mark-oscillate {
-    0%, 100% { transform: rotate(-5deg); }
-    50%      { transform: rotate(5deg); }
-  }
-
-  @keyframes mark-drift {
-    to { stroke-dashoffset: -31; }  /* a whole number of dashes: no jump on loop */
-  }
-
-  @keyframes mark-flicker {
-    0%, 100% { transform: scale(1, 1); }
-    30%      { transform: scale(0.97, 1.05); }
-    55%      { transform: scale(1.03, 0.97); }
-    78%      { transform: scale(0.99, 1.02); }
-  }
-
-  @keyframes mark-bloom {
-    0%, 100% { opacity: 0.75; }
-    40%      { opacity: 0.95; }
-    70%      { opacity: 0.62; }
-  }
-
-  @keyframes mark-core {
-    0%, 100% { opacity: 1; }
-    45%      { opacity: 0.82; }
-  }
-
-  /* rise ~7px with a sine-ish sideways wobble, bright by 15%, gone by the end */
-  @keyframes mark-ember {
-    0%   { transform: translate(0, 0); opacity: 0; }
-    15%  { opacity: 0.95; }
-    45%  { transform: translate(calc(var(--ex, 1px) * 0.6), -3.2px); }
-    70%  { transform: translate(calc(var(--ex, 1px) * 0.2), -5.1px); opacity: 0.5; }
-    100% { transform: translate(var(--ex, 1px), -7.2px); opacity: 0; }
-  }
-
-  /* frozen, but frozen in a GOOD pose: meridians held at two different sweeps so
-     it still reads as a sphere rather than a circle with two stacked rings */
-  @media (prefers-reduced-motion: reduce) {
-    .mark__web,
-    .mark__meridian,
-    .mark__limb,
-    .mark__equator,
-    .mark__flame,
-    .mark__bloom,
-    .mark__core,
-    .mark__ember {
-      animation: none;
-    }
-    .mark__meridian--a { transform: scaleX(0.86); }
-    .mark__meridian--b { transform: scaleX(0.4); }
-    /* embers only exist as motion — with animations off they stay invisible
-       (base opacity 0) instead of freezing as a scatter of dots */
+    /* the fire blooms into the page — blur scales with size so it never smears a
+       small mark (a fixed radius blurs a 32px mark's digits into mush) */
+    filter: drop-shadow(0 0 calc(var(--mark-size, 32px) * 0.09) rgba(61, 139, 255, 0.5));
+    touch-action: none;
   }
 </style>
+
+<script>
+  // ── One shared controller for every flame mark on the page ──────────────────
+  // Astro hoists + dedupes this module script, so it runs once no matter how many
+  // <FlameGlobe/> render. It owns the rAF loop and the single global pointer.
+
+  // Digital embers — for "Spark Digital": each rising spark is a binary/hex glyph
+  // that flickers between characters as it climbs, instead of a round dot.
+  type Spark = { x: number; y: number; vx: number; vy: number; life: number; max: number; r: number; hot: number; glyph: string; flip: number };
+
+  // mostly 0/1 (binary), a sprinkle of hex — reads as "digital" at a glance
+  function digit() {
+    return Math.random() < 0.82
+      ? (Math.random() < 0.5 ? '0' : '1')
+      : '0123456789ABCDEF'[(Math.random() * 16) | 0];
+  }
+
+  type Flame = {
+    el: HTMLCanvasElement;
+    ctx: CanvasRenderingContext2D;
+    fire: HTMLCanvasElement;   // offscreen fire buffer (1:1 with backing up to a cap)
+    fctx: CanvasRenderingContext2D;
+    img: ImageData;
+    w: number; h: number;      // backing-store (device) px
+    cssW: number; cssH: number;
+    seed: number;              // desyncs each instance's flicker
+    present: number; lean: number; flare: number; // smoothed state
+    sparks: Spark[];
+    spawn: number;             // fractional spark accumulator
+    visible: boolean;
+    fw: number; fh: number;    // fire-buffer resolution (tracks backing store)
+    dprUsed: number;           // dpr the backing store was last sized for
+  };
+
+  // value-noise fbm — cheap, seamless enough for fire. 4 octaves for finer licks.
+  function hash(x: number, y: number) {
+    const n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
+    return n - Math.floor(n);
+  }
+  function vnoise(x: number, y: number) {
+    const xi = Math.floor(x), yi = Math.floor(y);
+    const xf = x - xi, yf = y - yi;
+    const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+    const a = hash(xi, yi), b = hash(xi + 1, yi), c = hash(xi, yi + 1), d = hash(xi + 1, yi + 1);
+    return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+  }
+  function fbm(x: number, y: number) {
+    let s = 0, amp = 0.5, f = 1;
+    for (let i = 0; i < 4; i++) { s += amp * vnoise(x * f, y * f); f *= 2; amp *= 0.5; }
+    return s;
+  }
+  const smoothstep = (a: number, b: number, x: number) => {
+    const t = Math.min(Math.max((x - a) / (b - a), 0), 1);
+    return t * t * (3 - 2 * t);
+  };
+
+  function initController() {
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // global pointer, in client coords; -1 y means "no pointer yet"
+    const ptr = { x: -1, y: -1, active: false };
+    let clickAt = -1e9, clickX = 0, clickY = 0;
+
+    window.addEventListener('pointermove', (e) => { ptr.x = e.clientX; ptr.y = e.clientY; ptr.active = true; }, { passive: true });
+    window.addEventListener('pointerdown', (e) => { clickAt = performance.now(); clickX = e.clientX; clickY = e.clientY; ptr.x = e.clientX; ptr.y = e.clientY; ptr.active = true; }, { passive: true });
+    // a touch/pointer leaving the window relaxes the flame back to idle
+    window.addEventListener('pointerleave', () => { ptr.active = false; }, { passive: true });
+
+    const flames: Flame[] = [];
+
+    const clamp = (x: number, lo: number, hi: number) => Math.min(Math.max(x, lo), hi);
+
+    function size(f: Flame) {
+      // follow the real device-pixel-ratio (browser zoom raises it) up to 3, so a
+      // zoomed-in mark gets a bigger backing store instead of a stretched raster
+      const dpr = Math.min(window.devicePixelRatio || 1, 4);
+      f.dprUsed = dpr;
+      const r = f.el.getBoundingClientRect();
+      f.cssW = r.width; f.cssH = r.height;
+      f.w = Math.max(1, Math.round(r.width * dpr));
+      f.h = Math.max(1, Math.round(r.height * dpr));
+      f.el.width = f.w; f.el.height = f.h;
+      f.ctx.imageSmoothingEnabled = true;
+      (f.ctx as any).imageSmoothingQuality = 'high';
+      // fire buffer TRACKS THE BACKING STORE 1:1 (up to a cap) — no upscale, so no
+      // blur when zoomed; the value-noise is continuous, so 1:1 stays smooth, not
+      // pixelated. Only past the cap (a very large mark) does it soften.
+      const fw = clamp(f.w, 44, 280);
+      const fh = clamp(f.h, 60, 340);
+      if (fw !== f.fw || fh !== f.fh) {
+        f.fw = fw; f.fh = fh;
+        f.fire.width = fw; f.fire.height = fh;
+        f.img = f.fctx.createImageData(fw, fh);
+      }
+    }
+
+    document.querySelectorAll<HTMLCanvasElement>('canvas[data-flamemark]').forEach((el) => {
+      const ctx = el.getContext('2d');
+      if (!ctx) return;
+      const fire = document.createElement('canvas');
+      const fctx = fire.getContext('2d')!;
+      const f: Flame = {
+        el, ctx, fire, fctx, img: fctx.createImageData(1, 1),
+        w: 0, h: 0, cssW: 0, cssH: 0, fw: 0, fh: 0, dprUsed: 0, seed: Math.random() * 100,
+        present: 0, lean: 0, flare: 0, sparks: [], spawn: 0, visible: true,
+      };
+      size(f);
+      flames.push(f);
+    });
+
+    if (!flames.length) return;
+
+    // pause when off-screen — the footer flame costs nothing while scrolled away
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((ents) => {
+        ents.forEach((en) => {
+          const f = flames.find((x) => x.el === en.target);
+          if (f) f.visible = en.isIntersecting;
+        });
+        kick();
+      }, { rootMargin: '40px' });
+      flames.forEach((f) => io.observe(f.el));
+    }
+
+    let ro: ResizeObserver | null = null;
+    if ('ResizeObserver' in window) {
+      ro = new ResizeObserver(() => flames.forEach(size));
+      flames.forEach((f) => ro!.observe(f.el));
+    }
+    window.addEventListener('resize', () => flames.forEach(size), { passive: true });
+
+    // ── the fire itself ──────────────────────────────────────────────────────
+    function renderFire(f: Flame, time: number) {
+      const FW = f.fw, FH = f.fh;
+      const data = f.img.data;
+      const t = time * 0.001;
+      for (let y = 0; y < FH; y++) {
+        const v = 1 - y / (FH - 1);                 // 0 at base (bottom), 1 at tip
+        // TEARDROP width: narrow at the very root, widest in the lower third,
+        // tightening again to the tip — a parabola in v whose minimum (widest
+        // point) sits at ~0.30. No wide floor-skirt, no clipped band.
+        const dv = v - 0.30;
+        const kw = 3.2 + 16 * dv * dv;               // horizontal tightness
+        // ROOT FADE: taper the bottom rows to zero so the base rounds and lifts
+        // off the canvas floor instead of ending in a straight cut
+        const root = smoothstep(0.0, 0.16, v);
+        // steepen the falloff near the tip (the v*v term) so it tapers to a lick
+        const rise = (v * 0.5 + v * v * 0.58) * (1 - f.flare * 0.26 - f.present * 0.14);
+        for (let x = 0; x < FW; x++) {
+          let u = (x / (FW - 1)) * 2 - 1;            // -1..1 across
+          u += f.lean * v * v * 0.9;                 // bend toward the cursor, most at the tip
+          const wind = Math.sin(t * 1.3 + v * 3.1 + f.seed) * 0.05;
+          // higher base frequency + the 4th octave in fbm = finer licking ridges
+          const turb = fbm((u + wind) * 3.3 + f.seed, v * 4.2 - t * 2.0);
+          const shape = Math.exp(-(u * u) * kw) * root;
+          let heat = (turb * 1.24 + 0.30) * shape - rise * root + f.flare * 0.22 * shape;
+          if (heat <= 0.02) { const o = (y * FW + x) * 4; data[o + 3] = 0; continue; }
+          heat = heat > 1 ? 1 : heat;
+          // blue-fire ramp: deep blue → brand blue → white-hot heart
+          const toBlue = Math.min(Math.max((heat - 0.10) / 0.34, 0), 1);
+          const toWhite = Math.min(Math.max((heat - 0.56) / 0.34, 0), 1);
+          let r = 23 + (79 - 23) * toBlue;
+          let g = 51 + (138 - 51) * toBlue;
+          let b = 191 + (255 - 191) * toBlue;
+          r = r + (236 - r) * toWhite;
+          g = g + (247 - g) * toWhite;
+          b = b + (255 - b) * toWhite;
+          const a = Math.min(Math.max((heat - 0.04) / 0.14, 0), 1);
+          const o = (y * FW + x) * 4;
+          data[o] = r; data[o + 1] = g; data[o + 2] = b; data[o + 3] = a * 255;
+        }
+      }
+      f.fctx.putImageData(f.img, 0, 0);
+    }
+
+    function drawSparks(f: Flame, dt: number, time: number) {
+      // spawn: idle trickle, more when the cursor is near, a burst is added on click
+      const rate = (0.5 + f.present * 2.2) * (dt / 16.7);
+      f.spawn += rate;
+      while (f.spawn >= 1 && f.sparks.length < 24) {
+        f.spawn -= 1;
+        const u = (Math.random() - 0.5) * 0.5 + f.lean * 0.4;
+        f.sparks.push({
+          x: u, y: 0.16 + Math.random() * 0.16,
+          vx: (Math.random() - 0.5) * 0.12, vy: 0.5 + Math.random() * 0.5,
+          life: 0, max: 0.7 + Math.random() * 0.7,
+          r: 0.6 + Math.random() * 0.9, hot: Math.random(),
+          glyph: digit(), flip: Math.random() * 0.12,
+        });
+      }
+      const ctx = f.ctx;
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      for (let i = f.sparks.length - 1; i >= 0; i--) {
+        const s = f.sparks[i];
+        s.life += dt / 1000;
+        if (s.life >= s.max) { f.sparks.splice(i, 1); continue; }
+        const p = s.life / s.max;
+        s.x += (s.vx + Math.sin(time * 0.004 + s.hot * 6.28) * 0.06) * (dt / 1000);
+        s.y += s.vy * (dt / 1000);
+        // flip to a new digit every ~120ms — the "digital" shimmer
+        s.flip -= dt / 1000;
+        if (s.flip <= 0) { s.glyph = digit(); s.flip = 0.09 + Math.random() * 0.14; }
+        // snap to whole device pixels so the small glyphs render crisp, not soft
+        const px = Math.round((s.x * 0.5 + 0.5) * f.w);
+        const py = Math.round((1 - s.y) * f.h);
+        const alpha = Math.sin(p * Math.PI) * 0.95;      // fade in + out
+        // small digits: ~6% of the mark height, min 5px device, integer size
+        const fontPx = Math.max(5, Math.round(f.h * (0.062 + (s.r - 0.6) * 0.025) * (1 - p * 0.2)));
+        ctx.font = `700 ${fontPx}px ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace`;
+        const hot = s.hot > 0.62;
+        ctx.fillStyle = hot ? `rgba(232,246,255,${alpha})` : `rgba(120,190,255,${alpha})`;
+        ctx.fillText(s.glyph, px, py);
+      }
+      ctx.restore();
+    }
+
+    function step(f: Flame, now: number, dt: number) {
+      // target pointer state for THIS flame, from the global cursor vs its box
+      let pTarget = 0, lTarget = 0, flareImpulse = 0;
+      if (ptr.active && ptr.x >= 0) {
+        const r = f.el.getBoundingClientRect();
+        const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+        const dx = ptr.x - cx, dy = ptr.y - cy;
+        const dist = Math.hypot(dx, dy);
+        const reach = 200;
+        pTarget = Math.max(0, 1 - dist / reach);
+        lTarget = Math.max(-1, Math.min(1, dx / 120)) * pTarget;
+        const since = now - clickAt;
+        if (since < 320) {
+          const cdist = Math.hypot(clickX - cx, clickY - cy);
+          flareImpulse = Math.max(0, 1 - cdist / reach) * Math.exp(-since / 150);
+        }
+      }
+      f.present += (pTarget - f.present) * 0.12;
+      f.lean += (lTarget - f.lean) * 0.12;
+      f.flare += (Math.max(flareImpulse, 0) - f.flare) * 0.25;
+
+      renderFire(f, now + f.seed * 1000);
+      f.ctx.clearRect(0, 0, f.w, f.h);
+      f.ctx.drawImage(f.fire, 0, 0, f.w, f.h);
+      drawSparks(f, dt, now);
+    }
+
+    let raf = 0, last = 0;
+    function frame(now: number) {
+      raf = 0;
+      const dt = last ? Math.min(now - last, 50) : 16.7;
+      last = now;
+      let anyVisible = false;
+      const curDpr = Math.min(window.devicePixelRatio || 1, 4);
+      for (const f of flames) {
+        if (!f.visible) continue;
+        anyVisible = true;
+        if (f.dprUsed !== curDpr) size(f);   // re-crisp on browser zoom
+        step(f, now, dt);
+      }
+      if (anyVisible && !reduce) raf = requestAnimationFrame(frame);
+    }
+    function kick() { if (!raf && !reduce) { last = 0; raf = requestAnimationFrame(frame); } }
+
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) kick(); });
+
+    if (reduce) {
+      // one calm, centered frame — no motion, no pointer reaction
+      for (const f of flames) { f.present = 0; f.lean = 0; f.flare = 0; step(f, 1200, 16.7); }
+    } else {
+      kick();
+    }
+  }
+
+  if (!(window as any).__flameMark) {
+    (window as any).__flameMark = true;
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initController);
+    else initController();
+  }
+</script>
