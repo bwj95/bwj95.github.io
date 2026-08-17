@@ -51,8 +51,8 @@ const all: Project[] = [
     blurb: 'Visual synthesizer — a canvas that breathes and blooms.' },
   { id: 'tool-molecule', name: 'Molecular Observation', kind: 'toy', url: '/t/molecular/',
     blurb: 'Molecules turned in the light to see how they are put together.' },
-  { id: 'tool-cosmic', name: 'Cosmic Observation', kind: 'toy', url: '/t/cosmic/',
-    blurb: 'The night sky, made to be poked at.' },
+  { id: 'tool-cosmic', name: 'Cosmic Observation', kind: 'game', url: 'https://cosmic-observation.pages.dev/', external: true,
+    blurb: 'Fly a defender ship and hold the solar system against invading alien planets.' },
 
   { id: 'tool-galaga', name: 'Galaga', kind: 'game', url: '/t/galaga/',
     blurb: 'The arcade shooter, rebuilt for the browser.' },
