@@ -1,5 +1,5 @@
 ---
-// The site's identity mark — a live blue flame (bwj95.github.io is this site).
+// The site's identity mark — a live green flame (bwj95.github.io is this site).
 //
 // NAME NOTE: the file is still FlameGlobe.astro (imported by Nav + footer, and
 // mirrored by name in traditions + customizer) but the GLOBE IS GONE — this is
@@ -23,7 +23,7 @@
 // never grows). A SINGLE shared controller drives every flame on the page from
 // one rAF and one global pointer, and pauses when nothing is on-screen.
 //
-// The flame is FIXED blue (the brand palette, matching canvasui's [0.31,0.54,1]),
+// The flame is FIXED green (deep green → vivid green → white-hot heart),
 // not currentColor. Override size with --mark-size.
 
 interface Props { class?: string }
@@ -40,7 +40,7 @@ const { class: cls = '' } = Astro.props;
     display: block;
     /* the fire blooms into the page — blur scales with size so it never smears a
        small mark (a fixed radius blurs a 32px mark's digits into mush) */
-    filter: drop-shadow(0 0 calc(var(--mark-size, 32px) * 0.09) rgba(61, 139, 255, 0.5));
+    filter: drop-shadow(0 0 calc(var(--mark-size, 32px) * 0.09) rgba(60, 220, 120, 0.5));
     touch-action: none;
   }
 </style>
@@ -202,15 +202,15 @@ const { class: cls = '' } = Astro.props;
           let heat = (turb * 1.24 + 0.30) * shape - rise * root + f.flare * 0.22 * shape;
           if (heat <= 0.02) { const o = (y * FW + x) * 4; data[o + 3] = 0; continue; }
           heat = heat > 1 ? 1 : heat;
-          // blue-fire ramp: deep blue → brand blue → white-hot heart
-          const toBlue = Math.min(Math.max((heat - 0.10) / 0.34, 0), 1);
+          // green-fire ramp: deep green → vivid green → white-hot heart
+          const toGreen = Math.min(Math.max((heat - 0.10) / 0.34, 0), 1);
           const toWhite = Math.min(Math.max((heat - 0.56) / 0.34, 0), 1);
-          let r = 23 + (79 - 23) * toBlue;
-          let g = 51 + (138 - 51) * toBlue;
-          let b = 191 + (255 - 191) * toBlue;
-          r = r + (236 - r) * toWhite;
-          g = g + (247 - g) * toWhite;
-          b = b + (255 - b) * toWhite;
+          let r = 16 + (86 - 16) * toGreen;
+          let g = 108 + (236 - 108) * toGreen;
+          let b = 44 + (120 - 44) * toGreen;
+          r = r + (238 - r) * toWhite;
+          g = g + (255 - g) * toWhite;
+          b = b + (232 - b) * toWhite;
           const a = Math.min(Math.max((heat - 0.04) / 0.14, 0), 1);
           const o = (y * FW + x) * 4;
           data[o] = r; data[o + 1] = g; data[o + 2] = b; data[o + 3] = a * 255;
@@ -257,7 +257,7 @@ const { class: cls = '' } = Astro.props;
         const fontPx = Math.max(5, Math.round(f.h * (0.062 + (s.r - 0.6) * 0.025) * (1 - p * 0.2)));
         ctx.font = `700 ${fontPx}px ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace`;
         const hot = s.hot > 0.62;
-        ctx.fillStyle = hot ? `rgba(232,246,255,${alpha})` : `rgba(120,190,255,${alpha})`;
+        ctx.fillStyle = hot ? `rgba(236,255,238,${alpha})` : `rgba(130,240,150,${alpha})`;
         ctx.fillText(s.glyph, px, py);
       }
       ctx.restore();
