@@ -1,0 +1,168 @@
+---
+// Contact section — a real POST form. It sends to the contact-worker (Cloudflare
+// Worker), which emails the message via Resend. No address is exposed in the page
+// and nothing is stored client-side.
+//
+// The endpoint's CORS allows bwj95.github.io + localhost:4321-4323, so this works
+// both live and in `npm run dev` (dev posts to the same live worker).
+const ENDPOINT = 'https://contact-worker.bwj9515.workers.dev/api/contact';
+---
+<section class="section wrap contact" id="contact">
+  <p class="eyebrow contact__label">Contact</p>
+  <div class="contact__grid">
+    <div class="contact__intro">
+      <h2 class="contact__title">Start a conversation.</h2>
+      <p class="contact__lead">
+        Have something to build, a question, or just want to say hello? Send a note —
+        it lands straight in my inbox.
+      </p>
+    </div>
+
+    <form class="contact__form glass" id="contactForm" novalidate>
+      <div class="field">
+        <label for="cf-name">Name</label>
+        <input id="cf-name" name="name" type="text" autocomplete="name" required maxlength="120" />
+      </div>
+      <div class="field">
+        <label for="cf-email">Email</label>
+        <input id="cf-email" name="email" type="email" autocomplete="email" required />
+      </div>
+      <div class="field">
+        <label for="cf-message">Message</label>
+        <textarea id="cf-message" name="message" rows="5" required minlength="5" maxlength="5000"></textarea>
+      </div>
+
+      <!-- honeypot: hidden from humans, catches bots. Real users leave it empty. -->
+      <div class="field field--trap" aria-hidden="true">
+        <label for="cf-website">Website</label>
+        <input id="cf-website" name="website" type="text" tabindex="-1" autocomplete="off" />
+      </div>
+
+      <div class="contact__actions">
+        <button type="submit" class="contact__submit" id="cfSubmit">
+          <span class="contact__submit-label">Send message</span>
+        </button>
+        <p class="contact__status" id="cfStatus" role="status" aria-live="polite"></p>
+      </div>
+    </form>
+  </div>
+</section>
+
+<style>
+  .contact { padding-block: clamp(3rem, 7vw, 5.5rem); }
+  .contact__label { margin-bottom: clamp(1.4rem, 3vw, 2rem); }
+
+  .contact__grid {
+    display: grid; gap: clamp(1.6rem, 4vw, 3rem);
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 820px) {
+    .contact__grid { grid-template-columns: 0.85fr 1.15fr; align-items: start; }
+  }
+
+  .contact__title {
+    font-size: clamp(1.6rem, 3.4vw, 2.3rem); line-height: 1.1; letter-spacing: -0.01em;
+    margin: 0 0 0.75rem;
+  }
+  .contact__lead { color: var(--text-dim); max-width: 42ch; line-height: 1.55; }
+
+  .contact__form { padding: clamp(1.3rem, 3vw, 1.9rem); display: grid; gap: 1.05rem; }
+
+  .field { display: grid; gap: 0.4rem; }
+  .field label {
+    font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--text-dim);
+  }
+  .field input,
+  .field textarea {
+    width: 100%; font: inherit; color: var(--text);
+    background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 0.7rem 0.85rem;
+    transition: border-color 0.18s var(--ease), box-shadow 0.18s var(--ease);
+    resize: vertical;
+  }
+  .field input::placeholder,
+  .field textarea::placeholder { color: var(--text-faint); }
+  .field input:focus-visible,
+  .field textarea:focus-visible {
+    outline: none; border-color: var(--border-bright);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  /* honeypot: kept in the DOM + tab order out, but visually gone */
+  .field--trap { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+  .contact__actions { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-top: 0.2rem; }
+
+  .contact__submit {
+    font: inherit; font-weight: 600; cursor: pointer;
+    color: #10101a; background: var(--accent);
+    border: none; border-radius: 999px; padding: 0.66rem 1.4rem;
+    transition: filter 0.18s var(--ease), transform 0.18s var(--ease), opacity 0.18s var(--ease);
+  }
+  .contact__submit:hover { filter: brightness(1.08); }
+  .contact__submit:active { transform: translateY(1px); }
+  .contact__submit:disabled { opacity: 0.55; cursor: default; filter: none; transform: none; }
+
+  .contact__status { font-family: var(--font-mono); font-size: 0.8rem; margin: 0; color: var(--text-dim); }
+  .contact__status.is-ok { color: hsl(150 70% 62%); }
+  .contact__status.is-err { color: hsl(4 82% 68%); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .contact__submit, .field input, .field textarea { transition: none; }
+  }
+</style>
+
+<script>
+  const ENDPOINT = 'https://contact-worker.bwj9515.workers.dev/api/contact';
+
+  const form = document.getElementById('contactForm') as HTMLFormElement | null;
+  const btn = document.getElementById('cfSubmit') as HTMLButtonElement | null;
+  const status = document.getElementById('cfStatus');
+  const label = form?.querySelector('.contact__submit-label') as HTMLElement | null;
+
+  if (form && btn && status && label) {
+    const setStatus = (msg: string, kind: '' | 'ok' | 'err' = '') => {
+      status.textContent = msg;
+      status.classList.toggle('is-ok', kind === 'ok');
+      status.classList.toggle('is-err', kind === 'err');
+    };
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!form.reportValidity()) return;
+
+      const data = {
+        name: (form.elements.namedItem('name') as HTMLInputElement).value,
+        email: (form.elements.namedItem('email') as HTMLInputElement).value,
+        message: (form.elements.namedItem('message') as HTMLTextAreaElement).value,
+        website: (form.elements.namedItem('website') as HTMLInputElement).value, // honeypot
+      };
+
+      btn.disabled = true;
+      label.textContent = 'Sending…';
+      setStatus('');
+
+      try {
+        const res = await fetch(ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const out = await res.json().catch(() => ({}));
+        if (res.ok && out.ok) {
+          form.reset();
+          label.textContent = 'Send message';
+          setStatus('Sent — thanks. I’ll get back to you.', 'ok');
+        } else {
+          label.textContent = 'Send message';
+          setStatus(out.error || 'Could not send — please try again.', 'err');
+        }
+      } catch {
+        label.textContent = 'Send message';
+        setStatus('Network error — please try again.', 'err');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  }
+</script>

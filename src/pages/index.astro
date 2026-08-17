@@ -2,6 +2,7 @@
 import Base from '../layouts/Base.astro';
 import ProjectSelector from '../components/ProjectSelector.astro';
 import Bookmarks from '../components/Bookmarks.astro';
+import Contact from '../components/Contact.astro';
 import ShaderHero from '../components/ShaderHero.astro';
 import { projects } from '../data/projects';
 import { bookmarkCount } from '../data/bookmarks';
@@ -31,6 +32,9 @@ import { bookmarkCount } from '../data/bookmarks';
     <p class="eyebrow bookmarks__label">Bookmarks</p>
     <Bookmarks />
   </section>
+
+  <!-- ============ CONTACT ============ -->
+  <Contact />
 </Base>
 
 <style>
