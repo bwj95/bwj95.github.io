@@ -11,8 +11,9 @@ const links = [
       gutter and max-width as every section below, so the mark lines up with
       the page rather than floating off the viewport corner */}
   <div class="nav__inner wrap">
-    <a class="nav__brand" href="/" aria-label="Home">
+    <a class="nav__brand" href="/" aria-label="Spark Digital — home">
       <FlameGlobe class="nav__mark" />
+      <span class="nav__wordmark">Spark<span class="nav__wordmark-dim"> Digital</span></span>
     </a>
 
     <nav class="nav__links" aria-label="Primary">
@@ -99,8 +100,12 @@ const links = [
   }
 
   /* colour only — no transform, so the mark never shifts out from under the cursor */
-  .nav__brand { --mark-size: 32px; display: inline-flex; align-items: center; flex: 0 0 auto; color: var(--accent); transition: color 0.2s var(--ease); }
+  .nav__brand { --mark-size: 32px; display: inline-flex; align-items: center; gap: 0.5rem; flex: 0 0 auto; color: var(--accent); transition: color 0.2s var(--ease); }
   .nav__brand:hover { color: var(--text); }
+  /* wordmark: mono for the "digital" read; "Spark" bright, "Digital" dimmed */
+  .nav__wordmark { font-family: var(--font-mono); font-weight: 600; font-size: 0.98rem; letter-spacing: 0.01em; color: var(--text); white-space: nowrap; }
+  .nav__wordmark-dim { color: var(--text-dim); }
+  @media (max-width: 560px) { .nav__wordmark { display: none; } }
   .nav__links { display: flex; gap: clamp(0.9rem, 2.6vw, 1.7rem); }
   .nav__links a { font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.04em; color: var(--text-dim); transition: color 0.2s; }
   .nav__links a:hover { color: var(--text); }
