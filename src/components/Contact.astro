@@ -8,23 +8,14 @@
 const ENDPOINT = 'https://contact-worker.bwj9515.workers.dev/api/contact';
 ---
 <section class="section wrap contact" id="contact">
-  <p class="eyebrow contact__label">Contact</p>
+  {/* Same dropdown pattern as a bookmarks group: a native <details>, closed by
+      default, whose <summary> IS the section label. Works with JS off. */}
+  <details class="contact__group" id="contactGroup">
+    <summary class="contact__summary">
+      <span class="contact__group-title">Contact</span>
+      <span class="contact__chev" aria-hidden="true"></span>
+    </summary>
 
-  {/* The whole section — heading, lead and form card — starts collapsed. The
-      button is the only thing visible until it's opened. */}
-  <button class="contact__toggle" id="contactToggle" type="button"
-          aria-expanded="false" aria-controls="contactPanel">
-    <span class="contact__toggle-label">Get in touch</span>
-    <svg class="contact__chev" viewBox="0 0 16 16" aria-hidden="true">
-      <path d="M3.5 6 L8 10.5 L12.5 6" fill="none" stroke="currentColor"
-            stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
-    </svg>
-  </button>
-
-  {/* grid-template-rows 0fr -> 1fr is the height animation; `inert` (set by the
-      script) keeps the collapsed content out of tab order and out of find-in-page */}
-  <div class="contact__panel" id="contactPanel">
-   <div class="contact__panel-inner">
     <div class="contact__grid">
       <div class="contact__intro">
         <h2 class="contact__title">Start a conversation.</h2>
@@ -62,44 +53,44 @@ const ENDPOINT = 'https://contact-worker.bwj9515.workers.dev/api/contact';
         </div>
       </form>
     </div>
-   </div>
-  </div>
+  </details>
 </section>
 
 <style>
   .contact { padding-block: clamp(3rem, 7vw, 5.5rem); }
-  .contact__label { margin-bottom: clamp(1rem, 2.4vw, 1.4rem); }
 
-  /* ---- the toggle (all that's visible when collapsed) ---- */
-  .contact__toggle {
-    display: inline-flex; align-items: center; gap: 0.6rem;
-    font: inherit; font-weight: 600; cursor: pointer;
-    color: var(--text); background: rgba(255, 255, 255, 0.035);
-    border: 1px solid var(--border); border-radius: 999px;
-    padding: 0.62rem 1.05rem 0.62rem 1.3rem;
-    transition: border-color 0.2s var(--ease), background 0.2s var(--ease), color 0.2s var(--ease);
+  /* ---- the dropdown header: same rule + chevron as a bookmarks group ---- */
+  .contact__summary {
+    display: flex; align-items: center; gap: 0.55rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer; list-style: none;
+    transition: border-color 0.2s var(--ease);
   }
-  .contact__toggle:hover { border-color: var(--border-bright); background: rgba(255, 255, 255, 0.06); }
+  .contact__summary::-webkit-details-marker { display: none; }
+  .contact__summary:hover { border-color: var(--border-bright); }
+  .contact__summary:hover .contact__group-title { color: var(--text-dim); }
+
+  .contact__group-title {
+    font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.28em;
+    text-transform: uppercase; color: var(--text-faint); font-weight: 400;
+    transition: color 0.2s var(--ease);
+  }
   .contact__chev {
-    width: 15px; height: 15px; flex: 0 0 auto; color: var(--accent);
-    transition: transform 0.35s var(--ease);
+    flex: 0 0 auto; width: 7px; height: 7px; margin-left: auto;
+    border-right: 1.5px solid var(--text-faint); border-bottom: 1.5px solid var(--text-faint);
+    transform: rotate(45deg) translate(-1px, -1px);
+    transition: transform 0.25s var(--ease), border-color 0.2s var(--ease);
   }
-  .contact__toggle[aria-expanded='true'] .contact__chev { transform: rotate(180deg); }
+  .contact__group[open] .contact__chev { transform: rotate(-135deg) translate(-1px, -1px); }
+  .contact__summary:hover .contact__chev { border-color: var(--text-dim); }
 
-  /* ---- the collapsible panel ---- */
-  .contact__panel {
-    display: grid;
-    grid-template-rows: 0fr;
-    opacity: 0;
-    transition: grid-template-rows 0.42s var(--ease), opacity 0.3s var(--ease);
-  }
-  .contact__panel-inner { overflow: hidden; min-height: 0; }
-  .contact__panel.is-open { grid-template-rows: 1fr; opacity: 1; }
-  /* the top gap belongs to the content, so it collapses along with it */
-  .contact__panel .contact__grid { padding-top: clamp(1.4rem, 3vw, 2rem); }
+  .contact__group[open] .contact__grid { animation: contact-open 0.28s var(--ease) both; }
+  @keyframes contact-open { from { opacity: 0; translate: 0 -6px; } to { opacity: 1; translate: 0 0; } }
 
   .contact__grid {
     display: grid; gap: clamp(1.6rem, 4vw, 3rem);
+    padding-top: clamp(1.4rem, 3vw, 2rem);
     grid-template-columns: 1fr;
   }
   @media (min-width: 820px) {
@@ -154,38 +145,24 @@ const ENDPOINT = 'https://contact-worker.bwj9515.workers.dev/api/contact';
   .contact__status.is-err { color: hsl(4 82% 68%); }
 
   @media (prefers-reduced-motion: reduce) {
-    .contact__submit, .field input, .field textarea,
-    .contact__panel, .contact__chev { transition: none; }
+    .contact__submit, .field input, .field textarea, .contact__chev { transition: none; }
+    .contact__group[open] .contact__grid { animation: none; }
   }
 </style>
 
 <script>
-  // ---- collapse / expand ----
-  const toggle = document.getElementById('contactToggle');
-  const panel = document.getElementById('contactPanel');
+  // Opening is native. The only thing JS adds: any link that points at #contact
+  // (nav, burger menu, a deep link on load) should OPEN the dropdown, not just
+  // scroll to a closed one. A hashchange listener alone isn't enough — clicking
+  // Contact while the hash is already #contact fires no hashchange.
+  const group = document.getElementById('contactGroup') as HTMLDetailsElement | null;
 
-  if (toggle && panel) {
-    const setOpen = (open: boolean) => {
-      toggle.setAttribute('aria-expanded', String(open));
-      panel.classList.toggle('is-open', open);
-      // collapsed content stays in the DOM but out of tab order / find-in-page
-      if (open) panel.removeAttribute('inert');
-      else panel.setAttribute('inert', '');
-    };
-
-    setOpen(false);
-    toggle.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
-
-    // any link that points at #contact should also open it, not just scroll to a
-    // closed box — covers the nav, the burger menu and a deep link on load
-    const openFromHash = () => {
-      if (location.hash === '#contact') setOpen(true);
-    };
-    openFromHash();
-    window.addEventListener('hashchange', openFromHash);
+  if (group) {
+    const open = () => { group.open = true; };
+    if (location.hash === '#contact') open();
+    window.addEventListener('hashchange', () => { if (location.hash === '#contact') open(); });
     document.addEventListener('click', (e) => {
-      const a = (e.target as HTMLElement | null)?.closest?.('a[href$="#contact"]');
-      if (a) setOpen(true);
+      if ((e.target as HTMLElement | null)?.closest?.('a[href$="#contact"]')) open();
     });
   }
 
