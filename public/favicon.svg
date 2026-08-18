@@ -1,12 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Flame">
+  <!-- The site mark, frozen: the same green-fire ramp the live canvas flame
+       uses (deep green -> vivid green -> white-hot heart). No name, just the flame. -->
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#6ceaff"/>
-      <stop offset="0.5" stop-color="#a78bfa"/>
-      <stop offset="1" stop-color="#ff6ec7"/>
+    <linearGradient id="body" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#6bef8c"/><stop offset="0.5" stop-color="#56ec78"/><stop offset="1" stop-color="#0f6b2b"/>
     </linearGradient>
+    <radialGradient id="heart" cx="0.5" cy="0.72" r="0.55">
+      <stop offset="0" stop-color="#f2fff0"/><stop offset="0.5" stop-color="#c6ffd2" stop-opacity="0.9"/><stop offset="1" stop-color="#56ec78" stop-opacity="0"/>
+    </radialGradient>
   </defs>
   <rect width="100" height="100" rx="24" fill="#050505"/>
-  <text x="50" y="68" font-family="Outfit, sans-serif" font-size="52" font-weight="800"
-        text-anchor="middle" fill="url(#g)">b</text>
+  <path d="M53 5 C57 20, 66 28, 69 39 C71 47, 70 54, 70 61 C70 78, 61 92, 50 92 C39 92, 30 78, 30 61 C30 51, 35 42, 42 35 C41 43, 43 48, 46 49 C41 38, 45 17, 53 5 Z" fill="url(#body)"/>
+  <path d="M50 42 C56 52, 62 57, 62 66 C62 76, 56 82, 50 82 C44 82, 38 76, 38 66 C38 57, 44 52, 50 42 Z" fill="url(#heart)"/>
 </svg>

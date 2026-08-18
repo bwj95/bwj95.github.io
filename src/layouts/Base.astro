@@ -24,7 +24,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
 
     <!-- Open Graph / social -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content={title} />
+    <meta property="og:title" content={title || site.tagline} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical.href} />
     <meta name="twitter:card" content="summary_large_image" />

@@ -9,48 +9,94 @@ const ENDPOINT = 'https://contact-worker.bwj9515.workers.dev/api/contact';
 ---
 <section class="section wrap contact" id="contact">
   <p class="eyebrow contact__label">Contact</p>
-  <div class="contact__grid">
-    <div class="contact__intro">
-      <h2 class="contact__title">Start a conversation.</h2>
-      <p class="contact__lead">
-        Have something to build, a question, or just want to say hello? Send a note —
-        it lands straight in my inbox.
-      </p>
+
+  {/* The whole section — heading, lead and form card — starts collapsed. The
+      button is the only thing visible until it's opened. */}
+  <button class="contact__toggle" id="contactToggle" type="button"
+          aria-expanded="false" aria-controls="contactPanel">
+    <span class="contact__toggle-label">Get in touch</span>
+    <svg class="contact__chev" viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M3.5 6 L8 10.5 L12.5 6" fill="none" stroke="currentColor"
+            stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+  </button>
+
+  {/* grid-template-rows 0fr -> 1fr is the height animation; `inert` (set by the
+      script) keeps the collapsed content out of tab order and out of find-in-page */}
+  <div class="contact__panel" id="contactPanel">
+   <div class="contact__panel-inner">
+    <div class="contact__grid">
+      <div class="contact__intro">
+        <h2 class="contact__title">Start a conversation.</h2>
+        <p class="contact__lead">
+          Have something to build, a question, or just want to say hello? Send a note —
+          it lands straight in my inbox.
+        </p>
+      </div>
+
+      <form class="contact__form glass" id="contactForm" novalidate>
+        <div class="field">
+          <label for="cf-name">Name</label>
+          <input id="cf-name" name="name" type="text" autocomplete="name" required maxlength="120" />
+        </div>
+        <div class="field">
+          <label for="cf-email">Email</label>
+          <input id="cf-email" name="email" type="email" autocomplete="email" required />
+        </div>
+        <div class="field">
+          <label for="cf-message">Message</label>
+          <textarea id="cf-message" name="message" rows="5" required minlength="5" maxlength="5000"></textarea>
+        </div>
+
+        <!-- honeypot: hidden from humans, catches bots. Real users leave it empty. -->
+        <div class="field field--trap" aria-hidden="true">
+          <label for="cf-website">Website</label>
+          <input id="cf-website" name="website" type="text" tabindex="-1" autocomplete="off" />
+        </div>
+
+        <div class="contact__actions">
+          <button type="submit" class="contact__submit" id="cfSubmit">
+            <span class="contact__submit-label">Send message</span>
+          </button>
+          <p class="contact__status" id="cfStatus" role="status" aria-live="polite"></p>
+        </div>
+      </form>
     </div>
-
-    <form class="contact__form glass" id="contactForm" novalidate>
-      <div class="field">
-        <label for="cf-name">Name</label>
-        <input id="cf-name" name="name" type="text" autocomplete="name" required maxlength="120" />
-      </div>
-      <div class="field">
-        <label for="cf-email">Email</label>
-        <input id="cf-email" name="email" type="email" autocomplete="email" required />
-      </div>
-      <div class="field">
-        <label for="cf-message">Message</label>
-        <textarea id="cf-message" name="message" rows="5" required minlength="5" maxlength="5000"></textarea>
-      </div>
-
-      <!-- honeypot: hidden from humans, catches bots. Real users leave it empty. -->
-      <div class="field field--trap" aria-hidden="true">
-        <label for="cf-website">Website</label>
-        <input id="cf-website" name="website" type="text" tabindex="-1" autocomplete="off" />
-      </div>
-
-      <div class="contact__actions">
-        <button type="submit" class="contact__submit" id="cfSubmit">
-          <span class="contact__submit-label">Send message</span>
-        </button>
-        <p class="contact__status" id="cfStatus" role="status" aria-live="polite"></p>
-      </div>
-    </form>
+   </div>
   </div>
 </section>
 
 <style>
   .contact { padding-block: clamp(3rem, 7vw, 5.5rem); }
-  .contact__label { margin-bottom: clamp(1.4rem, 3vw, 2rem); }
+  .contact__label { margin-bottom: clamp(1rem, 2.4vw, 1.4rem); }
+
+  /* ---- the toggle (all that's visible when collapsed) ---- */
+  .contact__toggle {
+    display: inline-flex; align-items: center; gap: 0.6rem;
+    font: inherit; font-weight: 600; cursor: pointer;
+    color: var(--text); background: rgba(255, 255, 255, 0.035);
+    border: 1px solid var(--border); border-radius: 999px;
+    padding: 0.62rem 1.05rem 0.62rem 1.3rem;
+    transition: border-color 0.2s var(--ease), background 0.2s var(--ease), color 0.2s var(--ease);
+  }
+  .contact__toggle:hover { border-color: var(--border-bright); background: rgba(255, 255, 255, 0.06); }
+  .contact__chev {
+    width: 15px; height: 15px; flex: 0 0 auto; color: var(--accent);
+    transition: transform 0.35s var(--ease);
+  }
+  .contact__toggle[aria-expanded='true'] .contact__chev { transform: rotate(180deg); }
+
+  /* ---- the collapsible panel ---- */
+  .contact__panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition: grid-template-rows 0.42s var(--ease), opacity 0.3s var(--ease);
+  }
+  .contact__panel-inner { overflow: hidden; min-height: 0; }
+  .contact__panel.is-open { grid-template-rows: 1fr; opacity: 1; }
+  /* the top gap belongs to the content, so it collapses along with it */
+  .contact__panel .contact__grid { padding-top: clamp(1.4rem, 3vw, 2rem); }
 
   .contact__grid {
     display: grid; gap: clamp(1.6rem, 4vw, 3rem);
@@ -108,11 +154,41 @@ const ENDPOINT = 'https://contact-worker.bwj9515.workers.dev/api/contact';
   .contact__status.is-err { color: hsl(4 82% 68%); }
 
   @media (prefers-reduced-motion: reduce) {
-    .contact__submit, .field input, .field textarea { transition: none; }
+    .contact__submit, .field input, .field textarea,
+    .contact__panel, .contact__chev { transition: none; }
   }
 </style>
 
 <script>
+  // ---- collapse / expand ----
+  const toggle = document.getElementById('contactToggle');
+  const panel = document.getElementById('contactPanel');
+
+  if (toggle && panel) {
+    const setOpen = (open: boolean) => {
+      toggle.setAttribute('aria-expanded', String(open));
+      panel.classList.toggle('is-open', open);
+      // collapsed content stays in the DOM but out of tab order / find-in-page
+      if (open) panel.removeAttribute('inert');
+      else panel.setAttribute('inert', '');
+    };
+
+    setOpen(false);
+    toggle.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
+
+    // any link that points at #contact should also open it, not just scroll to a
+    // closed box — covers the nav, the burger menu and a deep link on load
+    const openFromHash = () => {
+      if (location.hash === '#contact') setOpen(true);
+    };
+    openFromHash();
+    window.addEventListener('hashchange', openFromHash);
+    document.addEventListener('click', (e) => {
+      const a = (e.target as HTMLElement | null)?.closest?.('a[href$="#contact"]');
+      if (a) setOpen(true);
+    });
+  }
+
   const ENDPOINT = 'https://contact-worker.bwj9515.workers.dev/api/contact';
 
   const form = document.getElementById('contactForm') as HTMLFormElement | null;
