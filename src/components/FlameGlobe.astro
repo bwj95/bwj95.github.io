@@ -11,7 +11,7 @@
 //
 // WHY A CANVAS, NOT SVG — the flame is meant to read like canvasui.dev's
 // flame-wrap: turbulent licking ridges, a white-hot heart, rising DIGITAL embers
-// (binary/hex glyphs, for the eventual "Spark Digital" name), and it
+// (binary/hex glyphs — the "digital" read), and it
 // has to bend toward the cursor and flare on click. That's a per-pixel noise
 // fire; an SVG path (even morphed) can't do turbulence or react smoothly. Per the
 // standing canvasui-look pattern we don't ship their WebGL — we rebuild the look
@@ -50,7 +50,7 @@ const { class: cls = '' } = Astro.props;
   // Astro hoists + dedupes this module script, so it runs once no matter how many
   // <FlameGlobe/> render. It owns the rAF loop and the single global pointer.
 
-  // Digital embers — for "Spark Digital": each rising spark is a binary/hex glyph
+  // Digital embers: each rising spark is a binary/hex glyph
   // that flickers between characters as it climbs, instead of a round dot.
   type Spark = { x: number; y: number; vx: number; vy: number; life: number; max: number; r: number; hot: number; glyph: string; flip: number };
 

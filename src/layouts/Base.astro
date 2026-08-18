@@ -51,10 +51,9 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
     <footer class="foot">
       <div class="wrap foot__inner">
         <div>
-          <a class="foot__mark" href="/" aria-label="Spark Digital — home">
+          <a class="foot__mark" href="/" aria-label="Home">
             <FlameGlobe class="foot__mark-svg" />
           </a>
-          <p class="foot__name">Spark<span class="foot__name-dim"> Digital</span></p>
           <p class="foot__tag">{site.tagline}</p>
         </div>
         <div class="foot__links">
@@ -121,9 +120,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
   .foot__inner { display: flex; flex-wrap: wrap; gap: 2rem; justify-content: space-between; align-items: flex-start; }
   .foot__mark { --mark-size: clamp(40px, 7vw, 52px); display: inline-block; color: var(--text-dim); transition: color 0.2s var(--ease); }
   .foot__mark:hover { color: var(--accent); }
-  .foot__name { font-family: var(--font-mono); font-weight: 600; font-size: 1.05rem; letter-spacing: 0.01em; color: var(--text); margin-top: 0.6rem; }
-  .foot__name-dim { color: var(--text-dim); }
-  .foot__tag { color: var(--text-dim); max-width: 42ch; margin-top: 0.35rem; }
+  .foot__tag { color: var(--text-dim); max-width: 42ch; margin-top: 0.9rem; }
   .foot__links { display: flex; flex-wrap: wrap; gap: 1.4rem; font-family: var(--font-mono); font-size: 0.82rem; }
   .foot__links a { color: var(--text-dim); transition: color 0.2s; }
   .foot__links a:hover { color: var(--text); }
