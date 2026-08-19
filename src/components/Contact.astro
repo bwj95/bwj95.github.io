@@ -45,6 +45,16 @@ const ENDPOINT = 'https://contact-worker.bwj9515.workers.dev/api/contact';
           <input id="cf-website" name="website" type="text" tabindex="-1" autocomplete="off" />
         </div>
 
+        <!-- Cloudflare Turnstile: the real bot gate. Renders a light/no-friction
+             check and injects a single-use token the worker verifies before send. -->
+        <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+        <div
+          class="cf-turnstile"
+          data-sitekey="0x4AAAAAAEVm0YWJdQxeYbbK"
+          data-action="turnstile-spin-v2"
+          data-theme="dark"
+        ></div>
+
         <div class="contact__actions">
           <button type="submit" class="contact__submit" id="cfSubmit">
             <span class="contact__submit-label">Send message</span>
@@ -184,11 +194,20 @@ const ENDPOINT = 'https://contact-worker.bwj9515.workers.dev/api/contact';
       e.preventDefault();
       if (!form.reportValidity()) return;
 
+      // Turnstile drops a single-use token into this hidden input once solved.
+      const token =
+        (form.elements.namedItem('cf-turnstile-response') as HTMLInputElement | null)?.value || '';
+      if (!token) {
+        setStatus('Please complete the verification check.', 'err');
+        return;
+      }
+
       const data = {
         name: (form.elements.namedItem('name') as HTMLInputElement).value,
         email: (form.elements.namedItem('email') as HTMLInputElement).value,
         message: (form.elements.namedItem('message') as HTMLTextAreaElement).value,
         website: (form.elements.namedItem('website') as HTMLInputElement).value, // honeypot
+        token, // Turnstile token — verified server-side before anything is sent
       };
 
       btn.disabled = true;
@@ -215,6 +234,8 @@ const ENDPOINT = 'https://contact-worker.bwj9515.workers.dev/api/contact';
         setStatus('Network error — please try again.', 'err');
       } finally {
         btn.disabled = false;
+        // Token is single-use — clear it so the next submit gets a fresh one.
+        (window as any).turnstile?.reset();
       }
     });
   }

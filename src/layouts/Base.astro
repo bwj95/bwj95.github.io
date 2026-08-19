@@ -27,7 +27,13 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
     <meta property="og:title" content={title || site.tagline} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical.href} />
+    <meta property="og:image" content={new URL('/og.png', canonical).href} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title || site.tagline} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={new URL('/og.png', canonical).href} />
 
     <!-- fonts: self-hosted Satoshi (body/headings) + Array (hero), preloaded -->
     <link rel="preload" href="/fonts/Satoshi-Variable.woff2" as="font" type="font/woff2" crossorigin />
@@ -41,7 +47,6 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   </head>
   <body>
-    <div class="progress" aria-hidden="true"><span class="progress__bar" id="progressBar"></span></div>
     <ParticleField />
     <Nav />
     <main id="top">
@@ -79,20 +84,6 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
       );
       document.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
 
-      // top scroll-progress bar (scaleX 0→1 across the document)
-      const bar = document.getElementById('progressBar');
-      if (bar) {
-        let pTick = false;
-        const pUpdate = () => {
-          const max = document.documentElement.scrollHeight - window.innerHeight;
-          bar.style.transform = `scaleX(${max > 0 ? Math.min(1, window.scrollY / max) : 0})`;
-          pTick = false;
-        };
-        window.addEventListener('scroll', () => { if (!pTick) { requestAnimationFrame(pUpdate); pTick = true; } }, { passive: true });
-        window.addEventListener('resize', pUpdate, { passive: true });
-        pUpdate();
-      }
-
       // NOTE: the "magnetic button" hover (translate the element toward the
       // cursor) was removed — it jitters. Moving the box toward the pointer
       // changes the pointer's position relative to it, and near an edge the
@@ -108,14 +99,6 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
      starts flush beneath it. --nav-h lives in global.css; see the note there. */
   main { padding-top: var(--nav-h); }
 
-  /* top scroll-progress hairline */
-  .progress { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 60; pointer-events: none; }
-  .progress__bar {
-    display: block; width: 100%; height: 100%;
-    background: var(--spectrum);
-    transform: scaleX(0); transform-origin: 0 50%;
-    will-change: transform;
-  }
   .foot { border-top: 1px solid var(--border); margin-top: 4rem; padding-block: 3.5rem 2.5rem; background: rgba(255,255,255,0.01); }
   .foot__inner { display: flex; flex-wrap: wrap; gap: 2rem; justify-content: space-between; align-items: flex-start; }
   .foot__mark { --mark-size: clamp(40px, 7vw, 52px); display: inline-block; color: var(--text-dim); transition: color 0.2s var(--ease); }
