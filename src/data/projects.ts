@@ -31,6 +31,12 @@ const all: Project[] = [
     blurb: 'Restyle a whole site live — pick a look from a game-menu style select, then tune every knob.' },
   { id: 'bazi', name: 'BaZi Calculator', kind: 'site', url: 'https://bazi.bwj9515.workers.dev/', external: true,
     blurb: 'Four Pillars chart from a birth moment — astronomy computed from scratch, not table lookups.' },
+  { id: 'demo-universe', name: 'Cosmos Universe', kind: 'site', url: '/d/universe/',
+    blurb: 'Interactive 3D universe demo using Astro, React Three Fiber, and GSAP.' },
+  { id: 'demo-dog-breeds', name: 'Dog Breeds', kind: 'site', url: '/d/dog-breeds/',
+    blurb: 'Editorial content site showcasing 77 breeds with vanilla-JS search and filtering.' },
+  { id: 'demo-tempo-landing', name: 'Tempo Landing Page', kind: 'site', url: '/d/tempo-landing/',
+    blurb: 'Conversion-focused SaaS landing page with interactive pricing toggle and FAQ.' },
 
   { id: 'tool-image', name: 'Image Toolkit', kind: 'tool', url: '/t/image/',
     blurb: 'Compress, resize and convert PNG / JPEG / WebP. Batch, nothing uploaded.' },
