@@ -1,0 +1,135 @@
+---
+// PixelButton.astro — pixel-clipped button with a dither-flicker hover fill.
+// Ported from Cooking/Pot/pixel-playground/src/components/PixelButton.astro,
+// made theme-aware 2026-08-25.
+//
+// Fill/foreground are --navy/--on-dark, NOT --ink/--paper: --ink is meant to
+// flip (dark text in light mode, light text in dark mode), so a solid button
+// built from --ink would turn into a near-white button with near-white text
+// the moment the OS switches to dark. --navy stays a dark navy in both
+// palettes on purpose (see tokens.css) — same "signature colour doesn't
+// invert" contract the pixel-field bands and the galaxy-header palette use.
+interface Props extends astroHTML.JSX.HTMLAttributes {
+  href?: string;
+  class?: string;
+}
+const { href, class: className = '', ...rest } = Astro.props;
+const Tag = href ? 'a' : 'button';
+---
+
+<Tag {href} class={`pxbtn ${className}`} {...rest}>
+  <slot />
+</Tag>
+
+<style is:global>
+  .pxbtn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-size: clamp(15px, 1.2vw, 18px);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    padding: 16px 36px;
+    background: var(--navy);
+    color: var(--on-dark);
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+    /* Pixel-stepped corner mask */
+    clip-path: polygon(
+      10px 0, calc(100% - 10px) 0, calc(100% - 10px) 5px, calc(100% - 5px) 5px,
+      calc(100% - 5px) 10px, 100% 10px, 100% calc(100% - 10px),
+      calc(100% - 5px) calc(100% - 10px), calc(100% - 5px) calc(100% - 5px),
+      calc(100% - 10px) calc(100% - 5px), calc(100% - 10px) 100%, 10px 100%,
+      10px calc(100% - 5px), 5px calc(100% - 5px), 5px calc(100% - 10px),
+      0 calc(100% - 10px), 0 10px, 5px 10px, 5px 5px, 10px 5px, 10px 0
+    );
+  }
+
+  .pxbtn:hover { background: var(--blue); }
+
+  .pxbtn .lbl { position: relative; z-index: 2; pointer-events: none; }
+
+  .pxbtn .pxfx {
+    position: absolute; inset: 0; z-index: 1;
+    display: grid;
+    pointer-events: none;
+  }
+
+  .pxbtn .pxfx i {
+    display: block; width: 100%; height: 100%;
+    transition: background 0.1s ease;
+  }
+</style>
+
+<script>
+  (function () {
+    const CELL = 9;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Fixed, not theme-reactive — a confetti of accent flecks over the fill,
+    // same contract as PixelField's BANDS: signature colours, not tokens
+    // that invert with the OS theme. The last one is a "flicker off" cell
+    // close to --navy's own tone in both palettes.
+    const ACC = ['#d8ff00', '#f5c518', '#e0492a', '#141b30'];
+
+    function attach(b: HTMLElement) {
+      if (!b || (b as any).__pxd) return;
+      (b as any).__pxd = true;
+
+      const lbl = document.createElement('span');
+      lbl.className = 'lbl';
+      while (b.firstChild) lbl.appendChild(b.firstChild);
+
+      const fx = document.createElement('span');
+      fx.className = 'pxfx';
+      fx.setAttribute('aria-hidden', 'true');
+
+      b.appendChild(fx);
+      b.appendChild(lbl);
+
+      let cells: HTMLElement[] = [];
+
+      function build() {
+        fx.textContent = '';
+        cells = [];
+        const cols = Math.ceil(b.offsetWidth / CELL);
+        const rows = Math.ceil(b.offsetHeight / CELL);
+        fx.style.gridTemplateColumns = `repeat(${cols}, ${CELL}px)`;
+        fx.style.gridAutoRows = `${CELL}px`;
+        for (let i = 0; i < cols * rows; i++) {
+          const c = document.createElement('i');
+          cells.push(fx.appendChild(c));
+        }
+      }
+      build();
+      if (window.ResizeObserver) new ResizeObserver(build).observe(b);
+      if (reduce) return;
+
+      let timer: number | null = null;
+      function tick() {
+        for (let i = 0; i < cells.length; i++) {
+          cells[i].style.background =
+            Math.random() < 0.14 ? ACC[Math.floor(Math.random() * ACC.length)] : 'transparent';
+        }
+      }
+      function clear() {
+        for (let i = 0; i < cells.length; i++) cells[i].style.background = 'transparent';
+      }
+
+      b.addEventListener('mouseenter', () => {
+        if (timer) return;
+        tick();
+        timer = window.setInterval(tick, 130);
+      });
+      b.addEventListener('mouseleave', () => {
+        if (timer !== null) { clearInterval(timer); timer = null; }
+        clear();
+      });
+    }
+
+    document.querySelectorAll('.pxbtn').forEach((b) => attach(b as HTMLElement));
+  })();
+</script>

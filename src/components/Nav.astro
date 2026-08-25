@@ -7,7 +7,7 @@ const links = [
   { label: 'Contact', href: '/#contact' },
 ];
 ---
-<header class="nav" id="nav">
+<header class="nav pxsafe" id="nav">
   {/* the bar is full-bleed; this inner .wrap keeps its contents on the same
       gutter and max-width as every section below, so the mark lines up with
       the page rather than floating off the viewport corner */}
@@ -72,9 +72,8 @@ const links = [
     z-index: 50;
     height: var(--nav-h);
     border-bottom: 1px solid var(--border);
-    background: linear-gradient(180deg, rgba(12, 12, 15, 0.86), rgba(8, 8, 10, 0.74));
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    /* no background — the dithered canvas shows straight through the bar,
+       same as every other section (Brayden: no boxes hiding the pixels) */
     transition: transform 0.4s var(--ease);
   }
   /* slides straight up out of view — no opacity fade, so it reads as one solid
@@ -111,10 +110,10 @@ const links = [
     display: flex; align-items: center; gap: 0.45rem;
     height: 34px; padding: 0 0.5rem 0 0.6rem;
     border: 1px solid var(--border); border-radius: 100px;
-    background: rgba(255,255,255,0.035);
+    background: var(--paper-alt);
     transition: border-color 0.2s var(--ease), background 0.2s var(--ease);
   }
-  .nav__search:focus-within { border-color: var(--border-bright); background: rgba(255,255,255,0.06); }
+  .nav__search:focus-within { border-color: var(--border-bright); background: var(--line-2); }
   .nav__search-icon { width: 13px; height: 13px; flex: 0 0 auto; color: var(--text-faint); }
   .nav__search:focus-within .nav__search-icon { color: var(--accent); }
 

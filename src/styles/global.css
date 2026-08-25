@@ -1,75 +1,103 @@
 /* =========================================================================
-   bwj95 — the gallery. One opinionated design: dark, glass, a living spectrum
-   accent, and a WebGL shader hero. (The multi-vibe Design Console was removed
-   2026-08-15 in favour of a single committed look — see ShaderHero.astro.)
+   bwj95 — the launcher. Pixel-theme reskin 2026-08-25: ported from
+   Cooking/Pot/pixel-playground (itself inspired by craft.wild.as) via
+   Cooking/Pipeline/pixel-theme/ — an interactive dithered canvas background
+   and pixel-clipped buttons with a dither hover fill. The original was
+   light-only; here it's light AND dark, switching on prefers-color-scheme
+   (see the token block below) — the previous design's dark-glass/
+   spectrum-shader look (ShaderHero, ParticleField) is retired to
+   Cooking/Pipeline/galaxy-header for reuse elsewhere, not deleted.
+
+   Sections carry NO background — transparent, so the dithered canvas shows
+   straight through everywhere except the small card/popup surfaces (.glass:
+   the dropdown, search panel, contact form) that need solid ground to stay
+   legible. No load/scroll animation on page content either (Brayden's call,
+   2026-08-25) — StepReveal.astro exists in Pipeline if a future page wants
+   scroll-reveal, just isn't wired in here.
    ========================================================================= */
 
-/* ---- self-hosted display face: Array (Fontshare, free commercial) — hero only ---- */
-@font-face {
-  font-family: 'Array';
-  src: url('/fonts/Array-Regular.woff2') format('woff2');
-  font-weight: 400; font-style: normal; font-display: swap;
-}
-@font-face {
-  font-family: 'Array';
-  src: url('/fonts/Array-Semibold.woff2') format('woff2');
-  font-weight: 600; font-style: normal; font-display: swap;
-}
-@font-face {
-  font-family: 'Array';
-  src: url('/fonts/Array-Bold.woff2') format('woff2');
-  font-weight: 700; font-style: normal; font-display: swap;
-}
-
-/* ---- primary sans: Satoshi (Fontshare, variable 300–900) — body + headings ---- */
-@font-face {
-  font-family: 'Satoshi';
-  src: url('/fonts/Satoshi-Variable.woff2') format('woff2-variations');
-  font-weight: 300 900; font-style: normal; font-display: swap;
-}
-
 :root {
-  /* type */
-  --font-hero: 'Array', 'Satoshi', system-ui, sans-serif; /* dot-matrix — hero headline only */
-  --font-display: 'Satoshi', system-ui, sans-serif;
-  --font-body: 'Satoshi', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  /* type — the SAME system stack as pixel-playground (craft.wild.as's own
+     choice): no webfont load, maximum neutrality, lets the dither/pixel
+     interaction be the thing that reads as designed. Replaces the previous
+     self-hosted Satoshi + JetBrains Mono per Brayden's 2026-08-25 call. */
+  --font-display: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'SFMono-Regular', ui-monospace, Menlo, Consolas, monospace;
 
-  /* the surface */
-  --bg: #050505;
-  --bg-2: #0a0a0c;
-  --panel: rgba(255, 255, 255, 0.028);
-  --panel-2: rgba(255, 255, 255, 0.05);
-  --border: rgba(255, 255, 255, 0.09);
-  --border-bright: rgba(255, 255, 255, 0.18);
-  --blur: 18px;
+  /* ---- pixel-theme tokens (Cooking/Pipeline/pixel-theme/tokens.css) ----
+     Light is the default; dark below flips via prefers-color-scheme. Every
+     other var in this file (--bg, --text, --border, --accent, --panel…) is
+     an ALIAS onto these, so components written against the old dark-only
+     names re-theme for free — see the alias block further down. */
+  --paper: #ffffff;
+  --paper-rgb: 255, 255, 255;
+  --paper-alt: #fafafa;
+  --ink: #0a0a0a;
+  --ink-rgb: 10, 10, 10;
+  --muted: #8b8b8b;
+  --red: #e0492a;
+  --neon: #d8ff00;
+  --blue: #3b5bd9;
+  --navy: #1c2541;
+  --yellow: #f5c518;
+  --on-dark: #f5f5f0;
+  --line: rgba(10, 10, 10, 0.12);
+  --line-2: rgba(10, 10, 10, 0.06);
+  --line-strong: rgba(10, 10, 10, 0.28);
 
-  /* text */
-  --text: #f4f4f6;
-  --text-dim: #8a8a90;
-  --text-faint: #55555b;
-
-  /* the living accent — a spectrum, not a single color */
-  --hue: 265;
-  --accent: hsl(var(--hue) 90% 72%);
-  --accent-soft: hsl(var(--hue) 90% 72% / 0.14);
-  --spectrum: linear-gradient(115deg, #6ceaff 0%, #a78bfa 46%, #ff6ec7 100%);
-  --spectrum-soft: linear-gradient(115deg,
-      rgba(108, 234, 255, 0.16), rgba(167, 139, 250, 0.16), rgba(255, 110, 199, 0.16));
-
-  --radius: 18px;
-  --radius-sm: 12px;
+  --radius: 10px;
+  --radius-sm: 8px;
   --maxw: 1200px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --gutter: clamp(1.1rem, 4vw, 2.5rem);
 
   /* Height of the fixed top bar. Lives here, not in Nav.astro, because THREE
      places have to agree on it: the bar itself, the clearance reserved for it
-     under `main`, and the scroll offset for #anchor jumps. Astro scopes styles
-     per-component, so a value defined inside Nav could not reach the other two
-     and they would silently drift apart. */
+     under `main`, and the scroll offset for #anchor jumps. */
   --nav-h: 60px;
-  /* the page gutter, shared by .wrap and the nav bar so their contents line up */
-  --gutter: clamp(1.1rem, 4vw, 2.5rem);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0a0a0c; --paper-rgb: 10, 10, 12; --paper-alt: #131316;
+    --ink: #f2f1ec; --ink-rgb: 242, 241, 236; --muted: #8a8a8a;
+    --red: #ff5c3d; --neon: #d8ff00; --blue: #5c7aff; --navy: #141b30; --yellow: #ffd94d;
+    --line: rgba(245, 245, 240, 0.14); --line-2: rgba(245, 245, 240, 0.07);
+    --line-strong: rgba(245, 245, 240, 0.32);
+  }
+}
+/* explicit override wins over the OS preference, either direction — no
+   toggle wired yet, but the hook is here the way traditions' data-bg is */
+:root[data-theme='light'] {
+  --paper: #ffffff; --paper-rgb: 255, 255, 255; --paper-alt: #fafafa;
+  --ink: #0a0a0a; --ink-rgb: 10, 10, 10; --muted: #8b8b8b;
+  --red: #e0492a; --neon: #d8ff00; --blue: #3b5bd9; --navy: #1c2541; --yellow: #f5c518;
+  --line: rgba(10, 10, 10, 0.12); --line-2: rgba(10, 10, 10, 0.06); --line-strong: rgba(10, 10, 10, 0.28);
+}
+:root[data-theme='dark'] {
+  --paper: #0a0a0c; --paper-rgb: 10, 10, 12; --paper-alt: #131316;
+  --ink: #f2f1ec; --ink-rgb: 242, 241, 236; --muted: #8a8a8a;
+  --red: #ff5c3d; --neon: #d8ff00; --blue: #5c7aff; --navy: #141b30; --yellow: #ffd94d;
+  --line: rgba(245, 245, 240, 0.14); --line-2: rgba(245, 245, 240, 0.07); --line-strong: rgba(245, 245, 240, 0.32);
+}
+
+/* ---- alias layer: every component in this repo was written against these
+   names (--bg/--text/--border/--accent/--panel…) — point them at the
+   pixel-theme tokens instead of rewriting every component's CSS. */
+:root {
+  --bg: var(--paper);
+  --bg-2: var(--paper-alt);
+  --panel: var(--paper);
+  --panel-2: var(--line-2);
+  --border: var(--line);
+  --border-bright: var(--line-strong);
+  --text: var(--ink);
+  --text-dim: var(--muted);
+  --text-faint: color-mix(in srgb, var(--muted) 75%, var(--paper));
+  --accent: var(--blue);
+  --accent-soft: color-mix(in srgb, var(--blue) 18%, transparent);
+  --spectrum: linear-gradient(108deg, var(--red) 0%, var(--yellow) 46%, var(--blue) 100%);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -92,18 +120,9 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* ambient mesh behind everything (canvas + shader sit above this) */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -2;
-  background:
-    radial-gradient(60vw 60vw at 12% -8%, rgba(167, 139, 250, 0.10), transparent 60%),
-    radial-gradient(50vw 50vw at 100% 10%, rgba(108, 234, 255, 0.08), transparent 55%),
-    radial-gradient(60vw 60vw at 80% 105%, rgba(255, 110, 199, 0.07), transparent 60%),
-    var(--bg);
-}
+/* No ambient gradient mesh here anymore — PixelField (fixed, full-viewport,
+   z-index:0) IS the background now; a second decorative layer under it
+   would just muddy the dither read. */
 
 a { color: inherit; text-decoration: none; }
 img, svg, canvas { display: block; max-width: 100%; }
@@ -113,21 +132,22 @@ button { font: inherit; cursor: pointer; }
 .wrap { width: 100%; max-width: var(--maxw); margin-inline: auto; padding-inline: var(--gutter); }
 .section { position: relative; padding-block: clamp(4rem, 10vw, 8rem); }
 
+/* PixelField skips drawing coloured "heat" cells under any .pxsafe element
+   (+24px pad) — the grid lines themselves still draw everywhere regardless.
+   Used sparingly on purpose (2026-08-25, Brayden's explicit call): only the
+   fixed nav bar, which is on-screen at all times and needs to stay legible
+   as chrome. Every scrolling content section — launcher, bookmarks, contact,
+   footer — carries NO safe zone and NO background, so the dithered grid AND
+   the cursor-tracked colour both paint straight through everything, nothing
+   boxed off. */
+.pxsafe { position: relative; }
+
 /* ---- type ---- */
 .display {
   font-family: var(--font-display);
   font-weight: 800;
   line-height: 0.98;
   letter-spacing: -0.03em;
-}
-/* Array is the one big statement — hero headline only. font-synthesis:none
-   keeps it from ever fake-bolding (its heaviest web cut is 700). */
-.font-hero {
-  font-family: var(--font-hero);
-  font-weight: 700;
-  font-synthesis: none;
-  letter-spacing: 0.005em; /* dot-matrix breathes better with a hair of tracking */
-  line-height: 1.02;
 }
 .eyebrow {
   font-family: var(--font-mono);
@@ -144,66 +164,31 @@ button { font: inherit; cursor: pointer; }
 }
 .lead { color: var(--text-dim); font-size: clamp(1.05rem, 2vw, 1.3rem); max-width: 56ch; }
 
-/* ---- pill badge (status chip — ref: the "MANAGE ALL…" tag) ---- */
-.pill {
-  display: inline-flex; align-items: center; gap: 0.55rem;
-  padding: 0.4rem 0.9rem 0.4rem 0.75rem;
-  border: 1px solid var(--border); border-radius: 100px;
-  background: rgba(255,255,255,0.03);
-  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-  font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.24em;
-  text-transform: uppercase; color: var(--text-dim);
-}
-.pill__dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: #52e39b; box-shadow: 0 0 0 0 rgba(82,227,155,0.6);
-  animation: pill-pulse 2.6s var(--ease) infinite;
-}
-@keyframes pill-pulse {
-  0% { box-shadow: 0 0 0 0 rgba(82,227,155,0.55); }
-  70%, 100% { box-shadow: 0 0 0 7px rgba(82,227,155,0); }
-}
-@media (prefers-reduced-motion: reduce) { .pill__dot { animation: none; } }
-
-/* ---- glass panel ---- */
+/* ---- "glass" panel — kept the class name (touched by half the components),
+   redefined as an OPAQUE paper card. Reserved for actual floating overlay
+   UI (the dropdown, search results, contact form, mobile menu) — the ONE
+   deliberate exception to "no boxes hiding the pixels": a popup stacked
+   over other content still needs solid ground to read, unlike a page
+   section. The old translucent backdrop-blur treatment doesn't have a role
+   here either way — it mis-composited over the previous animated shader. */
 .glass {
-  background: var(--panel);
+  background: var(--paper);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  backdrop-filter: blur(var(--blur));
-  -webkit-backdrop-filter: blur(var(--blur));
 }
 
-/* The generic .btn/.btn-primary pills were removed: the only button left is the
-   launcher's Open control, which owns its own extruded treatment in
-   ProjectSelector.astro (.openbtn). Nothing here should re-introduce a global
-   hover `transform` — moving an element's own box under the cursor is what made
-   hovers flicker. */
-
-/* ---- scroll reveal (staggered rise) ----
-   Keyframe animation on `translate` (not a `transition` on `transform`) so a
-   child's scoped transform-transition can't clobber the fade + stagger. */
-[data-reveal] { opacity: 0; }
-[data-reveal].in {
-  animation: reveal-rise 0.7s var(--ease) both;
-  animation-delay: var(--reveal-delay, 0ms);
-}
-@keyframes reveal-rise {
-  from { opacity: 0; translate: 0 26px; }
-  to   { opacity: 1; translate: 0 0; }
-}
-@media (prefers-reduced-motion: reduce) {
-  [data-reveal] { opacity: 1; }
-  [data-reveal].in { animation: none; }
-}
+/* ---- scroll reveal: stepped, not eased — see StepReveal.astro for the
+   .reveal class + IntersectionObserver script this feeds. The old
+   [data-reveal]/reveal-rise system was fully unused (defined, never applied
+   to an element) and is gone. */
 
 /* selection + focus */
-::selection { background: rgba(167, 139, 250, 0.35); color: #fff; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+::selection { background: color-mix(in srgb, var(--blue) 35%, transparent); color: var(--on-dark); }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; border-radius: 4px; }
 
 /* thin scrollbar — native, on the right where it belongs */
-html { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.14) transparent; } /* Firefox */
+html { scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; } /* Firefox */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 100px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
+::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 100px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }

@@ -3,25 +3,12 @@ import Base from '../layouts/Base.astro';
 import ProjectSelector from '../components/ProjectSelector.astro';
 import Bookmarks from '../components/Bookmarks.astro';
 import Contact from '../components/Contact.astro';
-import ShaderHero from '../components/ShaderHero.astro';
 import { projects } from '../data/projects';
-import { bookmarkCount } from '../data/bookmarks';
 ---
 <Base>
   <!-- ============ LAUNCHER ============ -->
   <section class="launch" id="built">
-    <ShaderHero />
-    <div class="launch__aura" aria-hidden="true"></div>
-    <div class="launch__grain" aria-hidden="true"></div>
-
     <div class="launch__inner wrap">
-      <div class="launch__mark">
-        <span class="pill">
-          <span class="pill__dot" aria-hidden="true"></span>
-          {projects.length} built · {bookmarkCount} bookmarked
-        </span>
-      </div>
-
       <p class="eyebrow launch__label">Everything built</p>
       <ProjectSelector items={projects} id="built" />
     </div>
@@ -38,46 +25,23 @@ import { bookmarkCount } from '../data/bookmarks';
 </Base>
 
 <style>
-  /* ---- launcher band: shader-backed, sized to its content ---- */
-  /* sized to its content — the shader is a header band, not a landing screen.
-     NO `overflow: clip` here: it would trap the absolutely-positioned dropdown
-     inside the band and cut the list off. Every decorative layer below is
-     inset:0 instead, so there is nothing to clip. */
+  /* ---- launcher band ----
+     No background, no .pxsafe — PixelField's dithered grid AND its
+     cursor-tracked heat both paint straight through the content, same as
+     everywhere else on the page now (Brayden's explicit call: no boxes
+     hiding the pixels, even behind text). `position:relative` still lives
+     on `.launch`: the WHOLE positioned subtree paints above the fixed
+     z-index:0 canvas together, which is what stacks the text on top — that
+     part is unrelated to `.pxsafe` and still needed. */
   .launch {
-    position: relative;
+    position: relative; z-index: 1;
     display: flex; align-items: center;
     padding-block: clamp(2.2rem, 5vh, 3.4rem);
     border-bottom: 1px solid var(--border);
   }
-  .launch__inner { position: relative; z-index: 2; width: 100%; }
-
-  /* wash over the shader so the controls stay legible */
-  .launch__aura {
-    position: absolute; inset: 0; z-index: 1; pointer-events: none;
-    background:
-      linear-gradient(100deg, rgba(5,5,7,0.88) 0%, rgba(5,5,7,0.55) 36%, transparent 66%),
-      radial-gradient(50vw 44vw at 6% 52%, rgba(5,5,7,0.58), transparent 68%);
-  }
-  /* fine grain — kills gradient banding */
-  .launch__grain {
-    position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: 0.16;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
-    mix-blend-mode: overlay;
-  }
-
-  .launch__mark { margin-bottom: clamp(1.6rem, 4vw, 2.6rem); }
+  .launch__inner { width: 100%; }
 
   .launch__label { margin-bottom: 0.85rem; }
-
-  /* content fades in on load (CSS only — never tied to the scroll observer) */
-  .launch__inner > * { opacity: 0; animation: launch-in 0.75s var(--ease) forwards; }
-  .launch__inner > *:nth-child(1) { animation-delay: 0ms; }
-  .launch__inner > *:nth-child(2) { animation-delay: 90ms; }
-  .launch__inner > *:nth-child(3) { animation-delay: 170ms; }
-  @keyframes launch-in { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
-  @media (prefers-reduced-motion: reduce) {
-    .launch__inner > * { animation: none; opacity: 1; }
-  }
 
   /* ---- bookmarks ---- */
   .bookmarks { padding-block: clamp(2.8rem, 6vw, 4.5rem); }

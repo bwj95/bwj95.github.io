@@ -1,6 +1,6 @@
 ---
 import '../styles/global.css';
-import ParticleField from '../components/ParticleField.astro';
+import PixelField from '../components/PixelField.astro';
 import Nav from '../components/Nav.astro';
 import FlameGlobe from '../components/FlameGlobe.astro';
 import { site } from '../data/site';
@@ -20,7 +20,8 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical.href} />
-    <meta name="theme-color" content="#050505" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0a0c" />
 
     <!-- Open Graph / social -->
     <meta property="og:type" content="website" />
@@ -35,19 +36,12 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={new URL('/og.png', canonical).href} />
 
-    <!-- fonts: self-hosted Satoshi (body/headings) + Array (hero), preloaded -->
-    <link rel="preload" href="/fonts/Satoshi-Variable.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="/fonts/Array-Bold.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap"
-      rel="stylesheet"
-    />
+    <!-- fonts: system stack only, same as pixel-playground — no webfont to
+         load, see the type note in global.css -->
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   </head>
   <body>
-    <ParticleField />
+    <PixelField />
     <Nav />
     <main id="top">
       <slot />
@@ -68,29 +62,17 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
       </div>
       <div class="wrap foot__base">
         <span>© {new Date().getFullYear()}</span>
-        <span class="foot__built">Built by hand — Astro + WebGL. The site is its own argument.</span>
+        <span class="foot__built">Built by hand — Astro + a dithered canvas. The site is its own argument.</span>
       </div>
     </footer>
 
-    <script>
-      // scroll reveal
-      const io = new IntersectionObserver(
-        (entries) => {
-          for (const e of entries) {
-            if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
-          }
-        },
-        { threshold: 0.12, rootMargin: '0px 0px -8% 0px' }
-      );
-      document.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
-
-      // NOTE: the "magnetic button" hover (translate the element toward the
-      // cursor) was removed — it jitters. Moving the box toward the pointer
-      // changes the pointer's position relative to it, and near an edge the
-      // element slides out from under the cursor, firing pointerleave → reset →
-      // pointerenter, over and over. Hover affordances here change paint
-      // (colour, shadow, inner content), never the element's own hit box.
-    </script>
+    <!-- NOTE: the "magnetic button" hover (translate the element toward the
+         cursor) was removed — it jitters. Moving the box toward the pointer
+         changes the pointer's position relative to it, and near an edge the
+         element slides out from under the cursor, firing pointerleave →
+         reset → pointerenter, over and over. Hover affordances here change
+         paint (colour, shadow, inner content), never the element's own hit
+         box. -->
   </body>
 </html>
 
@@ -99,7 +81,12 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
      starts flush beneath it. --nav-h lives in global.css; see the note there. */
   main { padding-top: var(--nav-h); }
 
-  .foot { border-top: 1px solid var(--border); margin-top: 4rem; padding-block: 3.5rem 2.5rem; background: rgba(255,255,255,0.01); }
+  /* position+z-index (not .pxsafe — the footer doesn't use it, same as
+     every other section now): PixelField is fixed at z-index:0, so
+     anything meant to read on top of it needs to out-stack it. No
+     background either — transparent, so the dithered grid AND the
+     cursor-tracked heat both paint straight through, nothing hidden. */
+  .foot { position: relative; z-index: 1; border-top: 1px solid var(--border); margin-top: 4rem; padding-block: 3.5rem 2.5rem; }
   .foot__inner { display: flex; flex-wrap: wrap; gap: 2rem; justify-content: space-between; align-items: flex-start; }
   .foot__mark { --mark-size: clamp(40px, 7vw, 52px); display: inline-block; color: var(--text-dim); transition: color 0.2s var(--ease); }
   .foot__mark:hover { color: var(--accent); }

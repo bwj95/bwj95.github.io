@@ -1,5 +1,6 @@
 ---
 import { KIND_LABEL, type Project } from '../data/projects';
+import PixelButton from './PixelButton.astro';
 interface Props { items: Project[]; id: string; }
 const { items, id } = Astro.props;
 const first = items[0];
@@ -36,18 +37,15 @@ const first = items[0];
       </ul>
     </div>
 
-    <a
-      class="openbtn"
+    <PixelButton
+      class="sel__open"
       data-sel-open
       href={first?.url}
       target={first?.external ? '_blank' : undefined}
       rel={first?.external ? 'noopener' : undefined}
     >
-      <span class="openbtn__face">
-        <span class="openbtn__label">Open</span>
-        <span class="openbtn__glyph" aria-hidden="true">▸</span>
-      </span>
-    </a>
+      Open <span class="sel__open-glyph" aria-hidden="true">▸</span>
+    </PixelButton>
   </div>
 
   <p class="sel__desc" data-sel-desc-text>{first?.blurb}</p>
@@ -60,12 +58,11 @@ const first = items[0];
 
   .sel__dd { position: relative; flex: 1 1 auto; min-width: 0; }
 
-  /* keeps the glass treatment — just squared off and tightened */
   .sel__trigger {
     width: 100%;
     display: flex; align-items: center; justify-content: space-between; gap: 1rem;
     padding: 0.6rem 0.85rem;
-    border-radius: 0;
+    border-radius: var(--radius);
     font-size: 0.88rem; color: var(--text); text-align: left;
     cursor: pointer;
     transition: border-color 0.2s var(--ease), background 0.2s var(--ease);
@@ -84,18 +81,18 @@ const first = items[0];
   .sel__list {
     position: absolute; top: calc(100% + 0.4rem); left: 0; right: 0; z-index: 20;
     list-style: none; padding: 0.3rem; margin: 0;
-    /* Solid ground, NOT .glass: a backdrop-filter popup over the animated
-       shader mis-composites — the panel rendered as a rounded blob that clipped
-       the option text at its edges. An opaque panel is also simply more
-       readable over a moving background. */
-    background: linear-gradient(180deg, #14141a, #0b0b0f);
+    /* Opaque paper, not .glass/blur: a backdrop-filter popup over the moving
+       PixelField canvas mis-composited in the previous design (rounded into
+       a blob that clipped option text). Solid ground is also just more
+       readable over an animated background. */
+    background: var(--paper);
     border: 1px solid var(--border-bright);
-    border-radius: 0;
+    border-radius: var(--radius);
     display: flex; flex-direction: column; gap: 0.05rem;
     max-height: min(58vh, 400px); overflow-y: auto; overscroll-behavior: contain;
     opacity: 0; visibility: hidden; transform: translateY(-8px);
     transition: opacity 0.2s var(--ease), transform 0.2s var(--ease), visibility 0.2s;
-    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.18);
   }
   .sel__list.is-open { opacity: 1; visibility: visible; transform: translateY(0); }
 
@@ -115,83 +112,22 @@ const first = items[0];
   }
   .sel__opt[aria-selected="true"] .sel__opt-kind { color: var(--accent); }
 
-  /* ---- Open: a small extruded lozenge, lit like the shader behind it ----
-     Deliberately NOT .btn — it owns its own transform (press + lift), and the
-     generic magnetic-hover treatment would fight it. */
-  /* The <a> is the hit box and NEVER moves. Only .openbtn__face lifts and presses,
-     so the cursor can't fall outside the target mid-hover and start flickering. */
-  .openbtn {
-    --sx: 50%; --sy: 0%;
+  /* ---- Open: the shared PixelButton (dither hover fill, pixel-clipped
+     corners) — just its sizing as a flex item next to the dropdown trigger.
+     The old extruded-glass lozenge + pointer-tracked specular highlight is
+     gone with the shader it was lit to match; see PixelButton.astro for the
+     actual button treatment. */
+  :global(.sel__open) {
     flex: 0 0 auto; align-self: center;
-    display: inline-flex;
-    border-radius: 100px;
-    color: #0b0a14;
     white-space: nowrap;
+    padding: 0 1rem;
+    height: 38px;
+    font-family: var(--font-mono); font-size: 0.76rem; letter-spacing: 0.04em;
   }
-  .openbtn__face {
-    position: relative; isolation: isolate;
-    display: inline-flex; align-items: center; gap: 0.4rem;
-    height: 38px; padding: 0 0.95rem;
-    border-radius: inherit;
-    font-family: var(--font-mono); font-weight: 600;
-    font-size: 0.76rem; letter-spacing: 0.04em;
-    background:
-      /* top-lit cap → reads as a cylinder, not a flat pill */
-      linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0) 52%),
-      linear-gradient(118deg, #7fe9ff 0%, #b39bff 47%, #ff86d1 100%);
-    box-shadow:
-      inset 0 1px 0.5px rgba(255,255,255,0.92),      /* rim light, top */
-      inset 0 -1.5px 1px rgba(64,24,104,0.5),        /* self-shading, bottom */
-      inset 0 0 0 1px rgba(255,255,255,0.16),        /* bevel edge */
-      0 1px 1px rgba(0,0,0,0.5),                     /* contact shadow */
-      0 5px 12px -5px rgba(0,0,0,0.8),               /* cast shadow */
-      0 8px 24px -10px rgba(167,139,250,0.8);        /* colour bounce */
-    transition:
-      transform 0.16s var(--ease), box-shadow 0.16s var(--ease), filter 0.16s var(--ease);
-  }
-
-  /* specular highlight that tracks the pointer — the same trick the shader
-     uses, so the button reads as the same material */
-  .openbtn__face::after {
-    content: ''; position: absolute; inset: 0; z-index: 1;
-    border-radius: inherit; pointer-events: none;
-    background: radial-gradient(38px circle at var(--sx) var(--sy), rgba(255,255,255,0.6), transparent 68%);
-    opacity: 0; transition: opacity 0.2s var(--ease);
-  }
-  .openbtn:hover .openbtn__face::after { opacity: 1; }
-  .openbtn__face > * { position: relative; z-index: 2; }
-
-  .openbtn:hover .openbtn__face {
-    transform: translateY(-1.5px);
-    filter: brightness(1.05);
-    box-shadow:
-      inset 0 1px 0.5px rgba(255,255,255,0.95),
-      inset 0 -1.5px 1px rgba(64,24,104,0.5),
-      inset 0 0 0 1px rgba(255,255,255,0.2),
-      0 1px 1px rgba(0,0,0,0.5),
-      0 9px 18px -6px rgba(0,0,0,0.8),
-      0 12px 32px -10px rgba(167,139,250,0.9);
-  }
-  /* press: sink onto the surface and collapse the shadow */
-  .openbtn:active .openbtn__face {
-    transform: translateY(1.5px) scale(0.985);
-    filter: brightness(0.97);
-    box-shadow:
-      inset 0 1.5px 2px rgba(64,24,104,0.55),
-      inset 0 1px 0.5px rgba(255,255,255,0.5),
-      0 1px 1px rgba(0,0,0,0.4),
-      0 2px 5px -3px rgba(0,0,0,0.7);
-    transition-duration: 0.06s;
-  }
-  .openbtn:focus-visible { outline: none; }
-  .openbtn:focus-visible .openbtn__face { outline: 2px solid var(--accent); outline-offset: 3px; }
-
-  .openbtn__glyph { transition: translate 0.2s var(--ease); }
-  .openbtn:hover .openbtn__glyph { translate: 2px 0; }
-
+  .sel__open-glyph { display: inline-block; transition: translate 0.2s var(--ease); }
+  :global(.sel__open:hover) .sel__open-glyph { translate: 2px 0; }
   @media (prefers-reduced-motion: reduce) {
-    .openbtn__face, .openbtn__glyph, .openbtn__face::after { transition: none; }
-    .openbtn:hover .openbtn__face, .openbtn:active .openbtn__face { transform: none; }
+    .sel__open-glyph { transition: none; }
   }
 
   .sel__desc {
@@ -257,16 +193,5 @@ const first = items[0];
     document.addEventListener('click', (e) => {
       if (isOpen() && !root.contains(e.target as Node)) closeList();
     });
-
-    // move the button's specular highlight with the pointer. This only writes
-    // custom properties — never a transform — so the element's box never moves
-    // out from under the cursor (which is what makes magnetic buttons jitter).
-    if (matchMedia('(pointer: fine)').matches) {
-      openBtn.addEventListener('pointermove', (e) => {
-        const r = openBtn.getBoundingClientRect();
-        openBtn.style.setProperty('--sx', `${((e.clientX - r.left) / r.width) * 100}%`);
-        openBtn.style.setProperty('--sy', `${((e.clientY - r.top) / r.height) * 100}%`);
-      });
-    }
   });
 </script>

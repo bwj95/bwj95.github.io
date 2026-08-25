@@ -5,6 +5,7 @@
 //
 // The endpoint's CORS allows bwj95.github.io + localhost:4321-4323, so this works
 // both live and in `npm run dev` (dev posts to the same live worker).
+import PixelButton from './PixelButton.astro';
 const ENDPOINT = 'https://contact-worker.bwj9515.workers.dev/api/contact';
 ---
 <section class="section wrap contact" id="contact">
@@ -52,13 +53,13 @@ const ENDPOINT = 'https://contact-worker.bwj9515.workers.dev/api/contact';
           class="cf-turnstile"
           data-sitekey="0x4AAAAAAEVm0YWJdQxeYbbK"
           data-action="turnstile-spin-v2"
-          data-theme="dark"
+          data-theme="auto"
         ></div>
 
         <div class="contact__actions">
-          <button type="submit" class="contact__submit" id="cfSubmit">
+          <PixelButton class="contact__submit" id="cfSubmit" type="submit">
             <span class="contact__submit-label">Send message</span>
-          </button>
+          </PixelButton>
           <p class="contact__status" id="cfStatus" role="status" aria-live="polite"></p>
         </div>
       </form>
@@ -95,7 +96,7 @@ const ENDPOINT = 'https://contact-worker.bwj9515.workers.dev/api/contact';
   .contact__group[open] .contact__chev { transform: rotate(-135deg) translate(-1px, -1px); }
   .contact__summary:hover .contact__chev { border-color: var(--text-dim); }
 
-  .contact__group[open] .contact__grid { animation: contact-open 0.28s var(--ease) both; }
+  .contact__group[open] .contact__grid { animation: contact-open 0.32s steps(5) both; }
   @keyframes contact-open { from { opacity: 0; translate: 0 -6px; } to { opacity: 1; translate: 0 0; } }
 
   .contact__grid {
@@ -140,22 +141,17 @@ const ENDPOINT = 'https://contact-worker.bwj9515.workers.dev/api/contact';
 
   .contact__actions { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-top: 0.2rem; }
 
-  .contact__submit {
-    font: inherit; font-weight: 600; cursor: pointer;
-    color: #10101a; background: var(--accent);
-    border: none; border-radius: 999px; padding: 0.66rem 1.4rem;
-    transition: filter 0.18s var(--ease), transform 0.18s var(--ease), opacity 0.18s var(--ease);
-  }
-  .contact__submit:hover { filter: brightness(1.08); }
-  .contact__submit:active { transform: translateY(1px); }
-  .contact__submit:disabled { opacity: 0.55; cursor: default; filter: none; transform: none; }
+  /* button chrome (fill, dither hover, pixel-clipped corners) comes from
+     PixelButton's own .pxbtn — this just covers the disabled state, which
+     PixelButton doesn't need an opinion on (its buttons are never disabled). */
+  :global(.contact__submit:disabled) { opacity: 0.55; cursor: default; }
 
   .contact__status { font-family: var(--font-mono); font-size: 0.8rem; margin: 0; color: var(--text-dim); }
   .contact__status.is-ok { color: hsl(150 70% 62%); }
   .contact__status.is-err { color: hsl(4 82% 68%); }
 
   @media (prefers-reduced-motion: reduce) {
-    .contact__submit, .field input, .field textarea, .contact__chev { transition: none; }
+    .field input, .field textarea, .contact__chev { transition: none; }
     .contact__group[open] .contact__grid { animation: none; }
   }
 </style>
