@@ -3,12 +3,12 @@
 // Ported from Cooking/Pot/pixel-playground/src/components/PixelGrid.astro
 // (itself inspired by craft.wild.as) and made theme-aware 2026-08-25: the
 // original hardcoded white paper + fixed hex bands, so it only ever worked
-// on a light page. This reads --paper/--paper-alt/--navy/--blue/--yellow/
+// on a light page. This reads --paper/--line/--navy/--blue/--yellow/
 // --red/--neon from CSS (see tokens.css) at boot AND on every OS theme
 // flip, so the same file is correct in light and dark without edits.
 //
 // A hidden backing store accumulates "heat" wherever the cursor (or, when
-// idle, a wandering Pac-Man-style walker) has passed; heat fades every
+// idle, a couple of DVD-logo-style bouncing blobs) has passed; heat fades every
 // frame and is re-thresholded into the BANDS colour ramp each frame, so the
 // visible grid is always a live function of recent pointer activity, not a
 // texture. Double-click drops an explosion (shockwave heat ring + particle
@@ -252,60 +252,45 @@ const { controls = true } = Astro.props;
       pmx = x; pmy = y;
     }
 
-    let pacOn = false, pacx = 0, pacy = 0, pacDir = 1, pacStart = 0, pacAge = 0, PFOOD = 34;
-    function pacman(cx: number, cy: number, rad: number, ang: number, mouth: number, val: number) {
-      const c0 = Math.floor((cx - rad) / cell), c1 = Math.ceil((cx + rad) / cell);
-      const r0 = Math.floor((cy - rad) / cell), r1 = Math.ceil((cy + rad) / cell);
-      const rr = rad * rad;
-      for (let r = r0; r <= r1; r++) {
-        for (let c = c0; c <= c1; c++) {
-          if (c < 0 || r < 0 || c >= cols || r >= rows) continue;
-          const dx = (c + 0.5) * cell - cx, dy = (r + 0.5) * cell - cy;
-          if (dx * dx + dy * dy > rr) continue;
-          const da = Math.abs((((Math.atan2(dy, dx) - ang) % (2 * Math.PI)) + 3 * Math.PI) % (2 * Math.PI) - Math.PI);
-          if (da < mouth) continue;
-          const id = r * cols + c;
-          const v = val + 0.03 * Math.sin((c * 0.7 + r * 0.7) - t * 0.01);
-          if (v > heat[id]) heat[id] = v;
-        }
+    // Idle animation: a couple of soft blobs bounce around the viewport like
+    // a DVD-logo screensaver, depositing heat as they go so each leaves a
+    // gentle comet-tail through the SAME dep()/decay machinery the cursor's
+    // own trail uses — no separate rendering path needed.
+    interface Bouncer { x: number; y: number; vx: number; vy: number; }
+    let bouncers: Bouncer[] = [];
+    let wanderOn = false;
+    function initWander(restx: number, resty: number) {
+      wanderOn = true;
+      bouncers = [];
+      const n = 2;
+      for (let i = 0; i < n; i++) {
+        const ang = Math.random() * Math.PI * 2;
+        const spd = 1.6 + Math.random() * 1.1;
+        bouncers.push({
+          x: i === 0 ? restx : Math.random() * W,
+          y: i === 0 ? resty : Math.random() * H,
+          vx: Math.cos(ang) * spd,
+          vy: Math.sin(ang) * spd,
+        });
       }
     }
     function wander(restx: number, resty: number, ns: number) {
-      if (!pacOn) {
-        pacOn = true;
-        pacDir = restx < W * 0.5 ? 1 : -1;
-        pacx = restx; pacy = resty; pacStart = restx; pacAge = 0;
-        PFOOD = BRUSH * 3.4;
+      if (!wanderOn) initWander(restx, resty);
+      const pad = 24;
+      for (const b of bouncers) {
+        b.x += b.vx; b.y += b.vy;
+        // bounce off the edges, DVD-logo style
+        if (b.x < pad) { b.x = pad; b.vx = Math.abs(b.vx); }
+        else if (b.x > W - pad) { b.x = W - pad; b.vx = -Math.abs(b.vx); }
+        if (b.y < pad) { b.y = pad; b.vy = Math.abs(b.vy); }
+        else if (b.y > H - pad) { b.y = H - pad; b.vy = -Math.abs(b.vy); }
+        dep(b.x, b.y, 0.10, BRUSH * 1.6);
       }
-      const rad = BRUSH * 3.4;
-      pacAge++;
-      pacx += pacDir * 2.6;
-      if (pacx > W + rad + 12 || pacx < -rad - 12) {
-        pacDir = Math.random() < 0.5 ? 1 : -1;
-        pacy = 70 + Math.random() * (H - 140);
-        pacx = pacDir > 0 ? -rad : W + rad;
-        pacStart = pacx; pacAge = 0;
-      }
-      const ang = pacDir > 0 ? 0 : Math.PI;
-      const pr = Math.round(pacy / cell);
-      for (let k = 1; k <= 80; k++) {
-        const px = pacStart + pacDir * PFOOD * k;
-        if (px < -20 || px > W + 20) continue;
-        if (pacDir * (px - pacx) > rad * 0.7) {
-          const pc = Math.round(px / cell);
-          if (pc >= 0 && pr >= 0 && pc < cols && pr < rows) {
-            const pid = pr * cols + pc;
-            if (0.72 > heat[pid]) heat[pid] = 0.72;
-          }
-        }
-      }
-      const mouth = 0.05 + 0.6 * Math.abs(Math.sin(pacAge * 0.16));
-      pacman(pacx, pacy, rad, ang, mouth, 0.72);
     }
 
     window.addEventListener('pointermove', function (e) {
       lastMove = performance.now() / 1000;
-      pacOn = false;
+      wanderOn = false;
       mx = e.clientX; my = e.clientY; hov = true;
     });
     window.addEventListener('click', function (e) {

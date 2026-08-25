@@ -61,7 +61,10 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --paper: #0a0a0c; --paper-rgb: 10, 10, 12; --paper-alt: #131316;
-    --ink: #f2f1ec; --ink-rgb: 242, 241, 236; --muted: #8a8a8a;
+    /* brighter than a typical off-white on purpose (Brayden: "more white and
+       readable") — #f2f1ec read as dim/grayish against near-black; --muted
+       bumped to match so descriptions stay legibly secondary, not just dim */
+    --ink: #fafaf8; --ink-rgb: 250, 250, 248; --muted: #b3b3af;
     --red: #ff5c3d; --neon: #d8ff00; --blue: #5c7aff; --navy: #141b30; --yellow: #ffd94d;
     --line: rgba(245, 245, 240, 0.14); --line-2: rgba(245, 245, 240, 0.07);
     --line-strong: rgba(245, 245, 240, 0.32);
@@ -77,7 +80,7 @@
 }
 :root[data-theme='dark'] {
   --paper: #0a0a0c; --paper-rgb: 10, 10, 12; --paper-alt: #131316;
-  --ink: #f2f1ec; --ink-rgb: 242, 241, 236; --muted: #8a8a8a;
+  --ink: #fafaf8; --ink-rgb: 250, 250, 248; --muted: #b3b3af;
   --red: #ff5c3d; --neon: #d8ff00; --blue: #5c7aff; --navy: #141b30; --yellow: #ffd94d;
   --line: rgba(245, 245, 240, 0.14); --line-2: rgba(245, 245, 240, 0.07); --line-strong: rgba(245, 245, 240, 0.32);
 }
