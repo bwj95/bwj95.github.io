@@ -11,8 +11,9 @@
 // idle, a couple of DVD-logo-style bouncing blobs) has passed; heat fades every
 // frame and is re-thresholded into the BANDS colour ramp each frame, so the
 // visible grid is always a live function of recent pointer activity, not a
-// texture. Double-click drops an explosion (shockwave heat ring + particle
-// debris). `.pxsafe` elements anywhere on the page carve out a no-draw
+// texture. A click on empty space drops an explosion (shockwave heat ring +
+// particle debris) — real interactive elements (see the click handler's
+// exclusion list) never trigger one. `.pxsafe` elements carve out a no-draw
 // rectangle (+24px pad) so page content never gets pixels drawn under it.
 //
 // Usage: <PixelField /> — one per page, behind everything (z-index:0,
@@ -302,7 +303,20 @@ const { controls = true } = Astro.props;
       mx = e.clientX; my = e.clientY; hov = true;
     });
     window.addEventListener('click', function (e) {
-      if ((e.target as HTMLElement).closest('a, button, input, .pxctl, .smiley, .smiley-wrapper')) return;
+      // Explode only on genuinely empty space. `a, button, input` alone
+      // missed real interactive surfaces that aren't one of those tags:
+      // dropdown OPTIONS are <li role="option">, the options panel itself
+      // is <ul role="listbox">, and the bookmarks/contact section toggles
+      // are <summary> — none of those are a, button, or input. [role]
+      // catches the first two semantically (every listbox/option/combobox
+      // in this codebase is already ARIA-marked for a11y, so this piggy-
+      // backs on that instead of hand-listing every current and future
+      // dropdown class); .glass catches the floating panels themselves
+      // (search results, contact form, mobile menu, the dropdown trigger)
+      // so a click landing in a panel's padding doesn't explode either.
+      if ((e.target as HTMLElement).closest(
+        'a, button, input, textarea, select, summary, [role], .glass, .pxctl, .smiley, .smiley-wrapper'
+      )) return;
       spawnAnimeExplosion(e.clientX, e.clientY);
     });
 
