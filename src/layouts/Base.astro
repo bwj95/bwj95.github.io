@@ -77,9 +77,11 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? 'https://bwj95.githu
 </html>
 
 <style>
-  /* the top bar is fixed (out of flow) — reserve exactly its height so content
-     starts flush beneath it. --nav-h lives in global.css; see the note there. */
-  main { padding-top: var(--nav-h); }
+  /* the top bar is fixed (out of flow) and now floats with a gap above it —
+     reserve the gap, the bar's own height, and a matching gap below it so
+     content starts clear of the whole floating pill. --nav-h/--nav-gap live
+     in global.css; see the note there. */
+  main { padding-top: calc(var(--nav-h) + var(--nav-gap) * 2); }
 
   /* position+z-index (not .pxsafe — the footer doesn't use it, same as
      every other section now): PixelField is fixed at z-index:0, so

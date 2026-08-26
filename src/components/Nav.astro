@@ -7,55 +7,56 @@ const links = [
   { label: 'Contact', href: '/#contact' },
 ];
 ---
-<header class="nav pxsafe" id="nav">
-  {/* the bar is full-bleed; this inner .wrap keeps its contents on the same
-      gutter and max-width as every section below, so the mark lines up with
-      the page rather than floating off the viewport corner */}
-  <div class="nav__inner wrap">
-    <a class="nav__brand" href="/" aria-label="Home">
-      <FlameGlobe class="nav__mark" />
-    </a>
+{/* Two independent floating pieces, not one bar — the logo pinned to the
+    true top-left corner, and a small hamburger+search cluster centred.
+    Neither carries .pxsafe: PixelField's grid (and heat/explosions) now
+    render right through this whole area, same as everywhere else on the
+    page — no punched-transparent "hole" sitting behind them. The search
+    field stays legible on its own opaque pill; the logo just sits over
+    whatever's there, same as it would over any busy background. */}
+<a class="nav__brand nav-float" href="/" aria-label="Home">
+  <FlameGlobe class="nav__mark" />
+</a>
 
-    <nav class="nav__links" aria-label="Primary">
-      {links.map((l) => <a href={l.href}>{l.label}</a>)}
-    </nav>
+<div class="nav__cluster nav-float">
+  {/* The menu button is deliberately NOT styled as a piece of UI chrome —
+      idle, its 9 cells are just hairline outlines sized off --px-cell (the
+      SAME size PixelField draws its own grid at), so it reads as nine empty
+      grid squares rather than a button. Hovering dither-flickers them
+      through the accent palette (PixelButton's trick); open fills them
+      solid accent, same as a real "hot" cell in the background would look. */}
+  <button class="nav__burger" id="navBurger" aria-label="Open menu" aria-expanded="false" aria-controls="navMenu">
+    <span class="nav__grid" aria-hidden="true">
+      <i></i><i></i><i></i>
+      <i></i><i></i><i></i>
+      <i></i><i></i><i></i>
+    </span>
+  </button>
 
-    <div class="nav__right">
-      <div class="nav__search">
-        <svg class="nav__search-icon" viewBox="0 0 16 16" aria-hidden="true">
-          <circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.6" />
-          <line x1="10.4" y1="10.4" x2="14" y2="14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-        </svg>
-        <input
-          type="search"
-          id="navSearch"
-          class="nav__search-input"
-          placeholder="Search"
-          aria-label="Search everything built and bookmarked"
-          autocomplete="off"
-          spellcheck="false"
-          role="combobox"
-          aria-expanded="false"
-          aria-controls="searchPanel"
-          aria-autocomplete="list"
-        />
-        <kbd class="nav__search-kbd" aria-hidden="true">/</kbd>
-      </div>
-
-      <button class="nav__burger" id="navBurger" aria-label="Open menu" aria-expanded="false" aria-controls="navMenu">
-        <span class="nav__burger-box" aria-hidden="true"><span class="nav__burger-line"></span></span>
-      </button>
-    </div>
+  <div class="nav__search">
+    <svg class="nav__search-icon" viewBox="0 0 16 16" aria-hidden="true">
+      <circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.6" />
+      <line x1="10.4" y1="10.4" x2="14" y2="14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+    </svg>
+    <input
+      type="search"
+      id="navSearch"
+      class="nav__search-input"
+      placeholder="Search"
+      aria-label="Search everything built and bookmarked"
+      autocomplete="off"
+      spellcheck="false"
+      role="combobox"
+      aria-expanded="false"
+      aria-controls="searchPanel"
+      aria-autocomplete="list"
+    />
+    <kbd class="nav__search-kbd" aria-hidden="true">/</kbd>
   </div>
-</header>
+</div>
 
 <Search />
 
-<!-- menu lives OUTSIDE the bar: the bar's backdrop-filter makes it a containing
-     block for position:fixed children, which would trap this. Body-level → true
-     viewport anchoring. The outer div is only a positioner (it mirrors .wrap's
-     width + gutter so the panel lands flush under the burger at any viewport);
-     the glass panel is the child. -->
 <div class="nav__menu" id="navMenu">
   <nav class="nav__menu-panel glass" aria-label="Menu">
     {links.map((l) => <a href={l.href}>{l.label}</a>)}
@@ -63,66 +64,56 @@ const links = [
 </div>
 
 <style>
-  /* Full-bleed bar, flush to the top edge. Height comes from --nav-h in
-     global.css — `main` reserves exactly that much clearance and #anchor jumps
-     offset by it, so all three stay in step. */
-  .nav {
+  /* Both floating pieces hide/reveal on scroll together via the shared
+     .nav-float class (there's no longer one parent element to toggle a
+     class on — see the script). translate (not transform) carries both the
+     fixed screen position and the hide-offset so a horizontal centring
+     value and a vertical hide value never have to fight in one transform. */
+  .nav-float {
     position: fixed;
-    top: 0; left: 0; right: 0;
+    top: var(--nav-gap);
     z-index: 50;
-    height: var(--nav-h);
-    border-bottom: 1px solid var(--border);
-    /* no background — the dithered canvas shows straight through the bar,
-       same as every other section (Brayden: no boxes hiding the pixels) */
-    transition: transform 0.4s var(--ease);
+    transition: translate 0.4s var(--ease);
   }
-  /* slides straight up out of view — no opacity fade, so it reads as one solid
-     bar leaving rather than dissolving in place */
-  .nav.is-hidden {
-    transform: translateY(-100%);
-    pointer-events: none;
-  }
+  .nav-float.is-hidden { pointer-events: none; }
 
-  .nav__inner {
-    height: 100%;
-    display: flex;
-    align-items: center;
-    gap: clamp(0.9rem, 2.6vw, 1.9rem);
+  .nav__brand {
+    left: var(--nav-gap);
+    translate: 0 0;
+    --mark-size: 24px; display: inline-flex; align-items: center;
+    color: var(--accent);
+    transition: color 0.2s var(--ease), translate 0.4s var(--ease);
   }
-  /* everything after the links is pushed to the right edge of the bar */
-  .nav__right {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    min-width: 0;   /* lets the search field shrink instead of overflowing */
-  }
-
-  /* colour only — no transform, so the mark never shifts out from under the cursor */
-  .nav__brand { --mark-size: 32px; display: inline-flex; align-items: center; gap: 0.5rem; flex: 0 0 auto; color: var(--accent); transition: color 0.2s var(--ease); }
   .nav__brand:hover { color: var(--text); }
-  .nav__links { display: flex; gap: clamp(0.9rem, 2.6vw, 1.7rem); }
-  .nav__links a { font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.04em; color: var(--text-dim); transition: color 0.2s; }
-  .nav__links a:hover { color: var(--text); }
-  /* ---- search field, in the bar ---- */
+  .nav__brand.is-hidden { translate: 0 calc(-100% - var(--nav-gap)); }
+
+  .nav__cluster {
+    left: 50%;
+    translate: -50% 0;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .nav__cluster.is-hidden { translate: -50% calc(-100% - var(--nav-gap)); }
+
+  /* ---- search field — the one piece here that KEEPS an opaque fill, so
+     the grid never shows through the actual input surface ---- */
   .nav__search {
     position: relative;
-    display: flex; align-items: center; gap: 0.45rem;
-    height: 34px; padding: 0 0.5rem 0 0.6rem;
+    display: flex; align-items: center; gap: 0.4rem;
+    height: 27px; padding: 0 0.45rem 0 0.55rem;
     border: 1px solid var(--border); border-radius: 100px;
     background: var(--paper-alt);
     transition: border-color 0.2s var(--ease), background 0.2s var(--ease);
   }
   .nav__search:focus-within { border-color: var(--border-bright); background: var(--line-2); }
-  .nav__search-icon { width: 13px; height: 13px; flex: 0 0 auto; color: var(--text-faint); }
+  .nav__search-icon { width: 12px; height: 12px; flex: 0 0 auto; color: var(--text-faint); }
   .nav__search:focus-within .nav__search-icon { color: var(--accent); }
 
   .nav__search-input {
-    width: clamp(96px, 17vw, 190px);
+    width: clamp(84px, 14vw, 160px);
     min-width: 0;
     border: 0; background: none; outline: none;
     color: var(--text);
-    font-family: var(--font-mono); font-size: 0.76rem; letter-spacing: 0.02em;
+    font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.02em;
   }
   .nav__search-input::placeholder { color: var(--text-faint); }
   /* the field carries its own affordance — drop the UA clear button */
@@ -136,39 +127,49 @@ const links = [
     color: var(--text-faint);
   }
   .nav__search:focus-within .nav__search-kbd { opacity: 0; }
-  @media (max-width: 900px) { .nav__search-kbd { display: none; } }
+  @media (max-width: 560px) { .nav__search-kbd { display: none; } }
 
-  /* ---- hamburger (hidden until the taskbar can't fit, or in Minimal mode) ---- */
-  .nav__burger { display: none; align-items: center; justify-content: center; width: 36px; height: 36px; background: transparent; border: none; color: var(--text); flex: 0 0 auto; }
-  .nav__burger-box { position: relative; width: 18px; height: 12px; }
-  .nav__burger-line, .nav__burger-line::before, .nav__burger-line::after {
-    position: absolute; left: 0; width: 18px; height: 2px; background: currentColor; border-radius: 2px;
-    transition: transform 0.3s var(--ease), opacity 0.2s var(--ease);
+  /* ---- menu button: camouflaged into the grid at rest ---- */
+  .nav__burger {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 6px;
+    background: transparent; border: none;
+    cursor: pointer; flex: 0 0 auto;
   }
-  .nav__burger-line { top: 5px; }
-  .nav__burger-line::before { content: ''; top: -5px; }
-  .nav__burger-line::after { content: ''; top: 5px; }
-  .nav__burger[aria-expanded="true"] .nav__burger-line { background: transparent; }
-  .nav__burger[aria-expanded="true"] .nav__burger-line::before { top: 0; transform: rotate(45deg); }
-  .nav__burger[aria-expanded="true"] .nav__burger-line::after { top: 0; transform: rotate(-45deg); }
+  .nav__grid {
+    display: grid;
+    /* -1px + a 1px gap: cell walls sit on the same lines PixelField's own
+       grid stroke would, so the icon lines up with the pattern around it
+       instead of just approximating its size. */
+    grid-template-columns: repeat(3, calc(var(--px-cell, 9px) - 1px));
+    grid-template-rows: repeat(3, calc(var(--px-cell, 9px) - 1px));
+    gap: 1px;
+  }
+  .nav__grid i {
+    display: block;
+    box-sizing: border-box;
+    background: transparent;
+    border: 1px solid var(--line);
+    transition: background 0.12s ease, border-color 0.12s ease;
+  }
+  /* open = solid accent, exactly like a "hot" cell in the real background */
+  .nav__burger[aria-expanded="true"] .nav__grid i { background: var(--blue); border-color: var(--blue); }
 
   /* ---- the menu (dropdown, body-level) ----
-     Fixed + body-level so it anchors to the viewport. z-index below the bar
-     (50) so the burger stays on top and can close it. */
+     Fixed + body-level so it anchors to the viewport. Centred under the
+     cluster (the burger's own position within it), same as the cluster. */
   .nav__menu {
     position: fixed;
-    top: calc(var(--nav-h) + 8px);
-    left: 0; right: 0;
-    margin-inline: auto;
-    max-width: var(--maxw);
-    padding-inline: var(--gutter);
+    top: calc(var(--nav-gap) + var(--nav-h) + 8px);
+    left: 50%;
+    translate: -50% 0;
     display: flex;
-    justify-content: flex-end;   /* panel lands under the burger */
+    justify-content: center;
     z-index: 49;
     pointer-events: none;        /* positioner only — never eats clicks */
   }
   .nav__menu-panel {
-    width: min(280px, calc(100vw - 1.6rem));
+    width: min(240px, calc(100vw - 1.6rem));
     padding: 0.55rem;
     display: flex; flex-direction: column; gap: 0.1rem;
     opacity: 0; visibility: hidden; transform: translateY(-8px);
@@ -178,33 +179,26 @@ const links = [
   .nav__menu.is-open .nav__menu-panel { opacity: 1; visibility: visible; transform: translateY(0); }
   .nav__menu a { padding: 0.7rem 0.9rem; border-radius: max(6px, calc(var(--radius-sm) - 6px)); color: var(--text-dim); font-family: var(--font-mono); font-size: 0.92rem; transition: color 0.2s, background 0.2s; }
   .nav__menu a:hover { color: var(--text); background: var(--panel-2); }
-  .nav__menu-cta { justify-content: center; margin-top: 0.35rem; }
-
-  /* show the burger when the inline links are hidden */
-  @media (max-width: 720px) {
-    .nav__links { display: none; }
-    .nav__burger { display: inline-flex; }
-  }
 
   @media (prefers-reduced-motion: reduce) {
-    .nav, .nav__menu-panel, .nav__burger-line, .nav__burger-line::before, .nav__burger-line::after { transition: none; }
+    .nav-float, .nav__menu-panel, .nav__grid i { transition: none; }
   }
 </style>
 
 <script>
-  const nav = document.getElementById('nav');
+  const navFloats = [...document.querySelectorAll<HTMLElement>('.nav-float')];
   const burger = document.getElementById('navBurger');
   const menu = document.getElementById('navMenu');
 
-  // hide-on-scroll-down / reveal-on-scroll-up
+  // hide-on-scroll-down / reveal-on-scroll-up — both floating pieces move together
   let last = window.scrollY;
   let ticking = false;
   const THRESHOLD = 6;
   function update() {
     const y = window.scrollY;
-    if (y < 90) nav?.classList.remove('is-hidden');
-    else if (y > last + THRESHOLD) { nav?.classList.add('is-hidden'); closeMenu(); }
-    else if (y < last - THRESHOLD) nav?.classList.remove('is-hidden');
+    if (y < 90) navFloats.forEach((el) => el.classList.remove('is-hidden'));
+    else if (y > last + THRESHOLD) { navFloats.forEach((el) => el.classList.add('is-hidden')); closeMenu(); }
+    else if (y < last - THRESHOLD) navFloats.forEach((el) => el.classList.remove('is-hidden'));
     last = y;
     ticking = false;
   }
@@ -229,4 +223,39 @@ const links = [
   document.addEventListener('click', (e) => {
     if (menu?.classList.contains('is-open') && !menu.contains(e.target as Node) && !burger?.contains(e.target as Node)) closeMenu();
   });
+
+  // Menu-button dither flicker on hover — same technique as PixelButton's
+  // hover fill. Setting style.background/borderColor to '' on mouseleave
+  // clears the inline override entirely, so the stylesheet's idle (outline
+  // only) or open (solid accent) rule takes back over rather than getting
+  // stuck on whatever colour the flicker last landed on.
+  const gridCells = burger ? [...burger.querySelectorAll<HTMLElement>('.nav__grid i')] : [];
+  const ACCENTS = ['var(--neon)', 'var(--yellow)', 'var(--red)', 'var(--blue)'];
+  let flickerTimer: number | null = null;
+  function flickerTick() {
+    gridCells.forEach((c) => {
+      if (Math.random() < 0.55) {
+        const col = ACCENTS[(Math.random() * ACCENTS.length) | 0];
+        c.style.background = col;
+        c.style.borderColor = col;
+      } else {
+        c.style.background = '';
+        c.style.borderColor = '';
+      }
+    });
+  }
+  function flickerStop() {
+    gridCells.forEach((c) => { c.style.background = ''; c.style.borderColor = ''; });
+  }
+  if (burger && gridCells.length && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    burger.addEventListener('mouseenter', () => {
+      if (flickerTimer) return;
+      flickerTick();
+      flickerTimer = window.setInterval(flickerTick, 130);
+    });
+    burger.addEventListener('mouseleave', () => {
+      if (flickerTimer !== null) { clearInterval(flickerTimer); flickerTimer = null; }
+      flickerStop();
+    });
+  }
 </script>

@@ -52,10 +52,13 @@
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --gutter: clamp(1.1rem, 4vw, 2.5rem);
 
-  /* Height of the fixed top bar. Lives here, not in Nav.astro, because THREE
-     places have to agree on it: the bar itself, the clearance reserved for it
-     under `main`, and the scroll offset for #anchor jumps. */
-  --nav-h: 60px;
+  /* Height of the fixed top bar, and its floating inset from the viewport
+     edges. Live here, not in Nav.astro, because FOUR places have to agree
+     on them: the bar itself, the clearance reserved for it under `main`,
+     the scroll offset for #anchor jumps, and the dropdown menu positioned
+     below it. */
+  --nav-h: 46px;
+  --nav-gap: 10px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -105,7 +108,7 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; scroll-padding-top: calc(var(--nav-h) + 16px); }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; scroll-padding-top: calc(var(--nav-h) + var(--nav-gap) * 2 + 16px); }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
