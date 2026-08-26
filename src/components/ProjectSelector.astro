@@ -4,8 +4,12 @@ import PixelButton from './PixelButton.astro';
 interface Props { items: Project[]; id: string; }
 const { items, id } = Astro.props;
 const first = items[0];
+
+// Everything in this list is mid-build — flip back to true piece by piece as
+// each one is actually finished and ready to deploy, not all at once.
+const BUILT_AVAILABLE = false;
 ---
-<div class="sel" data-selector>
+<div class="sel" data-selector data-built-available={BUILT_AVAILABLE ? '1' : '0'}>
   <div class="sel__bar">
     <div class="sel__dd">
       <button
@@ -31,7 +35,7 @@ const first = items[0];
             aria-selected={i === 0 ? 'true' : 'false'}
           >
             <span class="sel__opt-name">{p.name}</span>
-            <span class="sel__opt-kind">{KIND_LABEL[p.kind]}</span>
+            <span class="sel__opt-kind">{BUILT_AVAILABLE ? KIND_LABEL[p.kind] : 'In Progress'}</span>
           </li>
         ))}
       </ul>
@@ -40,11 +44,15 @@ const first = items[0];
     <PixelButton
       class="sel__open"
       data-sel-open
-      href={first?.url}
-      target={first?.external ? '_blank' : undefined}
-      rel={first?.external ? 'noopener' : undefined}
+      href={BUILT_AVAILABLE ? first?.url : undefined}
+      target={BUILT_AVAILABLE && first?.external ? '_blank' : undefined}
+      rel={BUILT_AVAILABLE && first?.external ? 'noopener' : undefined}
+      disabled={BUILT_AVAILABLE ? undefined : true}
+      aria-disabled={BUILT_AVAILABLE ? undefined : 'true'}
     >
-      Open <span class="sel__open-glyph" aria-hidden="true">▸</span>
+      {BUILT_AVAILABLE
+        ? <>Open <span class="sel__open-glyph" aria-hidden="true">▸</span></>
+        : 'In progress'}
     </PixelButton>
   </div>
 
@@ -126,6 +134,12 @@ const first = items[0];
   }
   .sel__open-glyph { display: inline-block; transition: translate 0.2s var(--ease); }
   :global(.sel__open:hover) .sel__open-glyph { translate: 2px 0; }
+  :global(.sel__open:disabled) {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: var(--panel-2);
+    color: var(--text-faint);
+  }
   @media (prefers-reduced-motion: reduce) {
     .sel__open-glyph { transition: none; }
   }
@@ -153,6 +167,7 @@ const first = items[0];
     const openBtn = root.querySelector<HTMLAnchorElement>('[data-sel-open]')!;
 
     const opts = [...root.querySelectorAll<HTMLElement>('.sel__opt')];
+    const available = root.dataset.builtAvailable === '1';
     let idx = 0;
 
     const isOpen = () => trigger.getAttribute('aria-expanded') === 'true';
@@ -165,11 +180,16 @@ const first = items[0];
       nameEl.textContent = opts[idx].querySelector('.sel__opt-name')?.textContent || '';
       descText.textContent = opts[idx].getAttribute('data-desc') || '';
 
-      openBtn.href = opts[idx].getAttribute('data-url') || '#';
-      if (opts[idx].getAttribute('data-external') === '1') {
-        openBtn.target = '_blank'; openBtn.rel = 'noopener';
-      } else {
-        openBtn.removeAttribute('target'); openBtn.removeAttribute('rel');
+      // Unavailable build: openBtn renders as a real <button disabled>, not an
+      // <a> — leave it with no href so there's never anything to navigate to,
+      // even if a selection changes underneath it.
+      if (available) {
+        openBtn.href = opts[idx].getAttribute('data-url') || '#';
+        if (opts[idx].getAttribute('data-external') === '1') {
+          openBtn.target = '_blank'; openBtn.rel = 'noopener';
+        } else {
+          openBtn.removeAttribute('target'); openBtn.removeAttribute('rel');
+        }
       }
       if (scroll) opts[idx].scrollIntoView({ block: 'nearest' });
     };
