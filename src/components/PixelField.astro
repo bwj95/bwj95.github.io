@@ -8,7 +8,8 @@
 // flip, so the same file is correct in light and dark without edits.
 //
 // A hidden backing store accumulates "heat" wherever the cursor (or, when
-// idle, a couple of DVD-logo-style bouncing blobs) has passed; heat fades every
+// idle, a couple of wandering points — bounce/orbit/lissajous/drift, picked
+// at random) has passed; heat fades every
 // frame and is re-thresholded into the BANDS colour ramp each frame, so the
 // visible grid is always a live function of recent pointer activity, not a
 // texture. A click on empty space drops an explosion (shockwave heat ring +
@@ -261,39 +262,99 @@ const { controls = true } = Astro.props;
       pmx = x; pmy = y;
     }
 
-    // Idle animation: a couple of soft blobs bounce around the viewport like
-    // a DVD-logo screensaver, depositing heat as they go so each leaves a
-    // gentle comet-tail through the SAME dep()/decay machinery the cursor's
-    // own trail uses — no separate rendering path needed.
-    interface Bouncer { x: number; y: number; vx: number; vy: number; }
-    let bouncers: Bouncer[] = [];
+    // Idle animation: a couple of wandering points drift the viewport,
+    // depositing heat as they go so each leaves a gentle comet-tail through
+    // the SAME dep()/decay machinery the cursor's own trail uses — no
+    // separate rendering path needed. Each point is independently assigned
+    // one of four motion kinds at random whenever a new idle period starts,
+    // so which mix shows up (and where) is different every time:
+    //   bounce     — DVD-logo screensaver bounce off the viewport edges.
+    //   orbit      — circles a slowly drifting center point.
+    //   lissajous  — a Lissajous curve (two out-of-sync sine waves), the
+    //                same "orbiting" figure language as the customizer globe.
+    //   drift      — an organic random-walk meander that steers itself back
+    //                toward center instead of hard-bouncing off edges.
+    type WanderKind = 'bounce' | 'orbit' | 'lissajous' | 'drift';
+    const WANDER_KINDS: WanderKind[] = ['bounce', 'orbit', 'lissajous', 'drift'];
+    interface Wanderer {
+      kind: WanderKind;
+      x: number; y: number;
+      vx: number; vy: number; // bounce; also drives the orbit center's drift
+      cx: number; cy: number; ang: number; angVel: number; radius: number; // orbit
+      ampX: number; ampY: number; fx: number; fy: number; phase: number; age: number; // lissajous
+      heading: number; speed: number; // drift
+    }
+    function spawnWanderer(x: number, y: number): Wanderer {
+      const kind = WANDER_KINDS[Math.floor(Math.random() * WANDER_KINDS.length)];
+      const ang0 = Math.random() * Math.PI * 2;
+      const spd = 1.6 + Math.random() * 1.1;
+      return {
+        kind, x, y,
+        vx: Math.cos(ang0) * spd, vy: Math.sin(ang0) * spd,
+        cx: x, cy: y,
+        ang: Math.random() * Math.PI * 2,
+        angVel: (Math.random() < 0.5 ? -1 : 1) * (0.012 + Math.random() * 0.02),
+        radius: 40 + Math.random() * 90,
+        ampX: 50 + Math.random() * 130, ampY: 50 + Math.random() * 130,
+        fx: 0.4 + Math.random() * 0.6, fy: 0.4 + Math.random() * 0.9,
+        phase: Math.random() * Math.PI * 2, age: 0,
+        heading: ang0, speed: 1.2 + Math.random() * 1.1,
+      };
+    }
+    let wanderers: Wanderer[] = [];
     let wanderOn = false;
     function initWander(restx: number, resty: number) {
       wanderOn = true;
-      bouncers = [];
+      wanderers = [];
       const n = 2;
       for (let i = 0; i < n; i++) {
-        const ang = Math.random() * Math.PI * 2;
-        const spd = 1.6 + Math.random() * 1.1;
-        bouncers.push({
-          x: i === 0 ? restx : Math.random() * W,
-          y: i === 0 ? resty : Math.random() * H,
-          vx: Math.cos(ang) * spd,
-          vy: Math.sin(ang) * spd,
-        });
+        wanderers.push(spawnWanderer(i === 0 ? restx : Math.random() * W, i === 0 ? resty : Math.random() * H));
+      }
+    }
+    function stepWanderer(w: Wanderer) {
+      const pad = 24;
+      switch (w.kind) {
+        case 'bounce':
+          w.x += w.vx; w.y += w.vy;
+          if (w.x < pad) { w.x = pad; w.vx = Math.abs(w.vx); }
+          else if (w.x > W - pad) { w.x = W - pad; w.vx = -Math.abs(w.vx); }
+          if (w.y < pad) { w.y = pad; w.vy = Math.abs(w.vy); }
+          else if (w.y > H - pad) { w.y = H - pad; w.vy = -Math.abs(w.vy); }
+          break;
+        case 'orbit': {
+          const rpad = pad + w.radius;
+          w.cx += w.vx; w.cy += w.vy;
+          if (w.cx < rpad) { w.cx = rpad; w.vx = Math.abs(w.vx); }
+          else if (w.cx > W - rpad) { w.cx = W - rpad; w.vx = -Math.abs(w.vx); }
+          if (w.cy < rpad) { w.cy = rpad; w.vy = Math.abs(w.vy); }
+          else if (w.cy > H - rpad) { w.cy = H - rpad; w.vy = -Math.abs(w.vy); }
+          w.ang += w.angVel;
+          w.x = w.cx + Math.cos(w.ang) * w.radius;
+          w.y = w.cy + Math.sin(w.ang) * w.radius;
+          break;
+        }
+        case 'lissajous':
+          w.age += 0.016 * w.speed;
+          w.x = w.cx + Math.sin(w.age * w.fx + w.phase) * w.ampX;
+          w.y = w.cy + Math.sin(w.age * w.fy) * w.ampY;
+          break;
+        case 'drift':
+          w.heading += (Math.random() - 0.5) * 0.15;
+          w.x += Math.cos(w.heading) * w.speed;
+          w.y += Math.sin(w.heading) * w.speed;
+          if (w.x < pad || w.x > W - pad || w.y < pad || w.y > H - pad) {
+            // steer back toward center instead of a hard bounce — reads as
+            // organic wandering rather than a screensaver ricochet.
+            w.heading = Math.atan2(H / 2 - w.y, W / 2 - w.x) + (Math.random() - 0.5) * 0.6;
+          }
+          break;
       }
     }
     function wander(restx: number, resty: number, ns: number) {
       if (!wanderOn) initWander(restx, resty);
-      const pad = 24;
-      for (const b of bouncers) {
-        b.x += b.vx; b.y += b.vy;
-        // bounce off the edges, DVD-logo style
-        if (b.x < pad) { b.x = pad; b.vx = Math.abs(b.vx); }
-        else if (b.x > W - pad) { b.x = W - pad; b.vx = -Math.abs(b.vx); }
-        if (b.y < pad) { b.y = pad; b.vy = Math.abs(b.vy); }
-        else if (b.y > H - pad) { b.y = H - pad; b.vy = -Math.abs(b.vy); }
-        dep(b.x, b.y, 0.10, BRUSH * 1.6);
+      for (const w of wanderers) {
+        stepWanderer(w);
+        dep(w.x, w.y, 0.10, BRUSH * 1.6);
       }
     }
 
