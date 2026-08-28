@@ -117,6 +117,11 @@ const { controls = true } = Astro.props;
     let BRUSH = 10;
     let cols = 0, rows = 0;
     let heat: Float32Array;
+    // -1 = "no owner, use the shared magnitude ramp" (cursor/clicks/waves,
+    // unchanged behaviour); >=0 = index into WANDER_PALETTE, set only by
+    // idle wanderers so each one paints its own hue instead of all of them
+    // resolving through the same navy->blue->yellow->red ramp.
+    let heatColor: Int8Array;
     let t = 0;
     const SEED = Math.random() * 1000;
 
@@ -132,6 +137,10 @@ const { controls = true } = Astro.props;
     let PAPER = '#ffffff', GRID_LINE = 'rgba(10,10,10,0.12)';
     let BANDS: Array<[number, string]> = [];
     let NEON = '#d8ff00';
+    // One hue per idle wanderer, same 5 tokens the rest of the theme uses —
+    // no new colours invented, just a different assignment than the fixed
+    // magnitude ramp above.
+    let WANDER_PALETTE: string[] = [];
     function readPalette() {
       const s = getComputedStyle(document.documentElement);
       const v = (name: string, fallback: string) => (s.getPropertyValue(name).trim() || fallback);
@@ -149,6 +158,10 @@ const { controls = true } = Astro.props;
         [0.46, v('--blue', '#3b5bd9')],
         [0.62, v('--yellow', '#f5c518')],
         [0.78, v('--red', '#e0492a')],
+      ];
+      WANDER_PALETTE = [
+        v('--navy', '#1c2541'), v('--blue', '#3b5bd9'), v('--yellow', '#f5c518'),
+        v('--red', '#e0492a'), v('--neon', '#d8ff00'),
       ];
     }
     readPalette();
@@ -207,6 +220,7 @@ const { controls = true } = Astro.props;
       cols = Math.ceil(W / cell) + 1;
       rows = Math.ceil(H / cell) + 1;
       heat = new Float32Array(cols * rows);
+      heatColor = new Int8Array(cols * rows).fill(-1);
       syncCellVar();
     }
     size();
@@ -231,7 +245,12 @@ const { controls = true } = Astro.props;
       return 0.5 + 0.5 * Math.sin(nx * 2.1 + tt * 0.12 + SEED * 0.7) * Math.cos(ny * 1.8 - tt * 0.09 + SEED * 0.3);
     }
 
-    function dep(x: number, y: number, amt: number, sig: number) {
+    // colorIdx: -1 (default) leaves each touched cell's colour tag alone if
+    // it's already a strong contribution, otherwise clears it back to "use
+    // the shared magnitude ramp" — an idle wanderer's leftover tint gets
+    // painted over the instant the real cursor (or a click wave) revisits
+    // that cell. >=0 stamps the cell as owned by that WANDER_PALETTE hue.
+    function dep(x: number, y: number, amt: number, sig: number, colorIdx = -1) {
       const cc = x / cell, cr = y / cell;
       const rad = Math.ceil(sig * 1.6);
       const inv = 1 / (2 * sig * sig * 0.18);
@@ -245,6 +264,7 @@ const { controls = true } = Astro.props;
           const id = r * cols + c;
           const vv = heat[id] + amt * w;
           heat[id] = vv > 1 ? 1 : vv;
+          if (w > 0.05) heatColor[id] = colorIdx;
         }
       }
     }
@@ -278,6 +298,7 @@ const { controls = true } = Astro.props;
     const WANDER_KINDS: WanderKind[] = ['bounce', 'orbit', 'lissajous', 'drift'];
     interface Wanderer {
       kind: WanderKind;
+      colorIdx: number; // index into WANDER_PALETTE — this point's own hue
       x: number; y: number;
       vx: number; vy: number; // bounce; also drives the orbit center's drift
       cx: number; cy: number; ang: number; angVel: number; radius: number; // orbit
@@ -290,6 +311,7 @@ const { controls = true } = Astro.props;
       const spd = 1.6 + Math.random() * 1.1;
       return {
         kind, x, y,
+        colorIdx: Math.floor(Math.random() * WANDER_PALETTE.length),
         vx: Math.cos(ang0) * spd, vy: Math.sin(ang0) * spd,
         cx: x, cy: y,
         ang: Math.random() * Math.PI * 2,
@@ -307,8 +329,16 @@ const { controls = true } = Astro.props;
       wanderOn = true;
       wanderers = [];
       const n = 2;
+      const usedColors = new Set<number>();
       for (let i = 0; i < n; i++) {
-        wanderers.push(spawnWanderer(i === 0 ? restx : Math.random() * W, i === 0 ? resty : Math.random() * H));
+        const w = spawnWanderer(i === 0 ? restx : Math.random() * W, i === 0 ? resty : Math.random() * H);
+        // keep simultaneous points visually distinct instead of leaving it
+        // to chance that two land on the same hue
+        while (usedColors.has(w.colorIdx) && usedColors.size < WANDER_PALETTE.length) {
+          w.colorIdx = Math.floor(Math.random() * WANDER_PALETTE.length);
+        }
+        usedColors.add(w.colorIdx);
+        wanderers.push(w);
       }
     }
     function stepWanderer(w: Wanderer) {
@@ -354,7 +384,7 @@ const { controls = true } = Astro.props;
       if (!wanderOn) initWander(restx, resty);
       for (const w of wanderers) {
         stepWanderer(w);
-        dep(w.x, w.y, 0.10, BRUSH * 1.6);
+        dep(w.x, w.y, 0.10, BRUSH * 1.6, w.colorIdx);
       }
     }
 
@@ -398,6 +428,14 @@ const { controls = true } = Astro.props;
           safes.push([b.left - pad, b.top - pad, b.right + pad, b.bottom + pad, cell * 2.4]);
         }
       });
+    }
+
+    // Assumes a 6-digit hex token (every WANDER_PALETTE entry is one) —
+    // lets a wanderer's own hue still fade in/out with heat magnitude
+    // instead of always painting fully solid.
+    function hexToRgba(hex: string, a: number) {
+      const n = parseInt(hex.slice(1), 16);
+      return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
     }
 
     function render(timestamp: number) {
@@ -475,11 +513,22 @@ const { controls = true } = Astro.props;
           }
           if (v < 0.3) continue;
 
-          let col = BANDS[0][1];
-          if (v >= BANDS[1][0]) col = BANDS[1][1];
-          if (v >= BANDS[2][0]) col = BANDS[2][1];
-          if (v >= BANDS[3][0]) col = BANDS[3][1];
-          if (v >= 0.86) col = NEON;
+          const tag = heatColor[r * cols + c];
+          let col: string;
+          if (v >= 0.86) {
+            // hot-core flash stays universal — cursor, clicks, and every
+            // wanderer hue alike all crest into the same neon at max heat.
+            col = NEON;
+          } else if (tag >= 0) {
+            // a wanderer owns this cell: its own hue, fading with heat
+            // instead of graduating through the shared 4-colour ramp.
+            col = hexToRgba(WANDER_PALETTE[tag], Math.min(1, 0.4 + v * 0.75));
+          } else {
+            col = BANDS[0][1];
+            if (v >= BANDS[1][0]) col = BANDS[1][1];
+            if (v >= BANDS[2][0]) col = BANDS[2][1];
+            if (v >= BANDS[3][0]) col = BANDS[3][1];
+          }
 
           ctx!.fillStyle = col;
           ctx!.fillRect(c * cell, vy, s, s);
